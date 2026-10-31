@@ -179,7 +179,7 @@ maskcheck:
 # ---------------------------------------------------------------------------------------------
 train:
   seed: 0                       # training.seed (모델 초기화/슬라이스 순열). 학습 시드 3 이상은 사람 확정 사항이며 TODO.
-  seeds: [0]                    # 학습할 시드 목록. 늘리면 비용이 시드 수만큼 늘어난다 (사람 승인 필요).
+  seeds: [0, 1, 2]              # 학습할 시드 목록. 시드 1, 2 는 사용자가 2026-10-31 추가 승인 (overnight.sh 가 학습). 시드 수만큼 비용이 늘어난다.
   hydra_overrides:
     frameskip: 5
     num_hist: 1
@@ -189,9 +189,10 @@ train:
     "training.batch_size": 24
     # env 는 선택된 데이터셋 블록의 train_hydra_env 로 채워진다 (load_config)
   # 사람이 승인한 분포. 여기에 없는 분포는 `python run.py train` 이 거부한다 (환경변수 EXP001_APPROVED="baseline_single mix_wide" 로도 지정).
-  approved_distributions: []    # TODO 사람 확정 필요
+  approved_distributions: []    # TODO 사람 확정 필요. 비워 두고 환경변수 EXP001_APPROVED 를 쓴다 (overnight.sh 는 "baseline_single" 만 설정; 대조군 분포는 승인되지 않음)
   run_name_template: "exp001_{dist}_s{seed}"      # $DINO_TRAIN/outputs/<run_name>
-  models_to_diagnose: ["baseline_single:0"]   # "분포:시드". 대조군은 사람이 승인하고 학습한 뒤 추가
+  # "분포:시드". 대조군은 사람이 승인하고 학습한 뒤 추가. 시드 1, 2 는 사용자가 2026-10-31 추가 승인 (overnight.sh 의 대상)
+  models_to_diagnose: ["baseline_single:0", "baseline_single:1", "baseline_single:2"]
 
 # ---------------------------------------------------------------------------------------------
 # 재현 확인 단계 (1순위). 재생성본이므로 baseline 이 a026/a248 에서 '학습 크기로 수축'을 실제로 보이는지는 보장되지 않는다.

@@ -56,6 +56,48 @@ def summarize_intervention(iv):
     return out
 
 
+def _flat_numeric(x, prefix="", out=None):
+    """Numeric scalar leaves of a nested dict as {"a/b/c": value}. Lists are skipped (per-episode arrays); CI bounds (lo/hi) and counts (n) are skipped."""
+    out = {} if out is None else out
+    if isinstance(x, dict):
+        for k, v in x.items():
+            if k in ("lo", "hi", "n"):
+                continue
+            _flat_numeric(v, f"{prefix}/{k}" if prefix else str(k), out)
+    elif isinstance(x, (int, float)) and not isinstance(x, bool) and np.isfinite(x):
+        out[prefix] = float(x)
+    return out
+
+
+def across_seeds(runs):
+    """Per distribution: for every numeric leaf present in all seeds of repro_check / diagnose / probe / intervene, the values by seed and
+    mean / std (ddof=1, null if one seed) / min / max. Numbers only; nothing is judged. Leaves missing in some seed are listed in 'partial_leaves_count'."""
+    by_dist = {}
+    for name, r in runs.items():
+        by_dist.setdefault(r["distribution"], {})[r["seed"]] = r
+    out = {}
+    for dist, seeds in by_dist.items():
+        entry = {"seeds_in_config": sorted(seeds), "seeds_with_results": {}, "metrics": {}}
+        flat = {}
+        for sd, r in sorted(seeds.items()):
+            parts = {p: r[p] for p in ("repro_check", "diagnose", "probe", "intervene") if p in r}
+            entry["seeds_with_results"][str(sd)] = sorted(parts)
+            if parts:
+                flat[sd] = _flat_numeric(parts)
+        keys = sorted(set().union(*[set(f) for f in flat.values()])) if flat else []
+        partial = 0
+        for k in keys:
+            vals = {str(sd): f[k] for sd, f in flat.items() if k in f}
+            if len(vals) < len(flat):
+                partial += 1
+            a = np.array(list(vals.values()), float)
+            entry["metrics"][k] = {"by_seed": vals, "n_seeds": int(len(a)), "mean": float(a.mean()),
+                                   "std_ddof1": float(a.std(ddof=1)) if len(a) > 1 else None, "min": float(a.min()), "max": float(a.max())}
+        entry["partial_leaves_count"] = partial
+        out[dist] = entry
+    return out
+
+
 def run(cfg, paths):
     res = {"experiment": cfg["name"], "created": time.strftime("%F %T"), "hypothesis_ids": cfg["hypothesis"], "cloth_sim_branch": cfg["code"]["cloth_sim_branch"],
            "config": {k: v for k, v in cfg.items() if not k.startswith("_")},
@@ -91,5 +133,6 @@ def run(cfg, paths):
         if (d / "intervene.json").exists():
             r["intervene"] = summarize_intervention(read_json(d / "intervene.json"))
         res["runs"][name] = r
+    res["across_seeds"] = across_seeds(res["runs"])
     write_json(res, EXP_DIR / "results.json")
     return res

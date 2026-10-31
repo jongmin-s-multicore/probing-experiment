@@ -272,6 +272,65 @@ python run.py intervene --model baseline_single:0 --suffix _smoke
 
 대조군(mix_adjacent, mix_wide)은 사람 승인 후에만: `DOWNLOAD_DISTS=mix_wide EXP001_APPROVED="baseline_single mix_wide" MODELS="baseline_single:0 mix_wide:0" bash run_all.sh`. 대조군 학습은 baseline 과 같은 비용이 한 번 더 든다.
 
+## 밤샘 실행 (`overnight.sh`)
+
+사용자 결정(2026-10-31): baseline_single 시드 1, 2 학습을 추가하고(학습 시드 3개), 후보 D/E 진단을 시드 0, 1, 2 에 대해 무인으로 진행한다. 시드 0 은 사용자가 이미 학습 중이다. 임계값은 정하지 않았으므로(null) 코드는 판정하지 않고 수치만 기록한다. repro_check 게이트는 끈다: repro_check 결과는 기록만 하고 계속 진행한다(수축이 재현되지 않아도 진단은 계속하며, 그 사실은 `results/<run>/repro_check.json` 과 `results.json` 에 그대로 남는다). 후보 F(mix 분포) 대조군은 선택되지 않았으므로 이 스크립트에 없다(`EXP001_APPROVED` 를 `baseline_single` 로 고정).
+
+### 사용법
+
+```bash
+cd experiments/001_size_collapse_diagnosis
+bash overnight.sh --dry-run                     # 계획과 환경 점검만 (아무것도 실행/기록하지 않음)
+# 방법 1: tmux 안에서
+bash overnight.sh
+# 방법 2: tmux 가 끊겨도 계속 (nohup)
+mkdir -p logs && nohup bash overnight.sh > logs/overnight.log 2>&1 &
+```
+
+- 시작 시 `~/exp001_env.sh` 가 있으면 읽고(`DATASET_DIR`, `EXP001_CACHE`, `DINO_TRAIN` 등), 환경을 점검해 로그에 남긴다: 세 경로가 설정됐고 공백/한글이 없는지, `df -h` 와 필요량 추정(시드당 체크포인트 약 1.7 GB + 추출 캐시 약 5 GB, 둘 다 추정) 대비 여유, `nvidia-smi`, torch 버전과 `torch.cuda.get_arch_list()` 에 `sm_120` 이 있는지. 문제가 있으면 경고만 하고 계속한다(중단하지 않음).
+- conda: `CONDA_ENV`(기본 `dino_wm`, `/venv/dino_wm` 같은 경로도 가능)를 activate 한다. 이미 환경 안이면 `OVERNIGHT_SKIP_ACTIVATE=1`.
+- 환경변수(모두 선택): `TRAIN_PARALLEL`(기본 1), `WAIT_MAX_HOURS`(16), `POLL_SEC`(120), `GRACE_SEC`(180), `HEARTBEAT_MIN`(45), `RETRY_SLEEP`(60), `OVERNIGHT_SEEDS`("0 1 2"). 자세한 뜻은 `overnight.sh` 머리말.
+- 아침에 볼 것: `logs/overnight_status.json`(시드별 단계 상태 pending/running/done/failed/skipped, 시작/종료 시각, 재시도 횟수, 마지막 에러 줄), `logs/overnight_summary.txt`(끝났을 때 요약; 시드별로 어느 단계까지 됐는지, 걸린 시간), `results.json`(`runs` 와 시드 간 요약 `across_seeds`). 단계별 로그는 `logs/overnight_<run>_<단계>_try<N>.log`. 상태 파일 `retries` 는 그 단계에서 실패한 시도 횟수다.
+
+### 실행 순서와 우선순위
+
+1. 시드마다 (`TS` = 학습 상태): `$DINO_TRAIN/outputs/<run>/DONE` 이 있으면 학습을 건너뛴다. DONE 이 없고 학습이 이미 돌고 있으면(프로세스 `hydra.run.dir=...<run>` 가 보이거나 run 폴더에서 `HEARTBEAT_MIN` 분 안에 바뀐 파일이 있음) **새로 시작하지 않고 DONE 이 생길 때까지 기다린다**(폴링 `POLL_SEC`, 상한 `WAIT_MAX_HOURS`; 상한을 넘으면 그 시드를 failed 로 표시하고 프로세스는 건드리지 않는다). 프로세스도 파일 변화도 없는데 DONE 도 없으면 `GRACE_SEC` 뒤에 우리가 학습을 시작한다(`model_latest.pth` 에서 재개되는 기존 동작).
+2. 시드 0 학습이 외부에서 돌고 있으면 그 시드는 건드리지 않는다(프로세스를 죽이거나 그 폴더에 쓰지 않는다. 읽기만: `DONE` 존재, 파일 수정 시각, `pgrep`).
+3. **학습 병렬성(`TRAIN_PARALLEL`, 기본 1)**: 동시에 최대 2개 학습(외부에서 도는 시드 0 도 1개로 센다). 기본 동작: 시드 0 이 학습 중이면 시드 1 을 바로 병렬로 시작하고, 시드 2 는 둘 중 하나가 끝나 슬롯이 비면 시작한다(보통 시드 0 이 먼저 끝난다). `TRAIN_PARALLEL=0` 은 한 번에 1개(시드 0 이 끝난 뒤 시드 1, 그다음 시드 2).
+   - 기본값을 2개로 정한 이유(**추정**): 32 GB 에 학습 1개가 약 7 GB 라는 값은 사용자가 준 정보이고 이 머신에서 확인하지 않았다. 2개는 메모리에 여유가 있을 것으로 보이며, GPU 가 1개 학습으로 포화되지 않았다면(데이터로더가 병목이면) 합계 처리량이 늘 수 있다. 3개 동시는 속도를 더 나눠 쓰고 CPU/디스크 경쟁이 커서 피했다. 동시 학습이 실제로 처리량을 늘리는지는 **미측정**이다.
+4. **우선순위**: 시드 0 의 DONE 이 보이는 즉시 시드 0 의 `repro_check -> extract -> diagnose -> probe -> intervene -> aggregate+sync` 를 시작한다(다른 시드의 학습과 겹쳐 진행. probe/diagnose 는 CPU). GPU 를 쓰는 단계(repro_check, extract, intervene)는 시드 사이에서 잠금(`flock`)으로 한 번에 하나씩 돌고(다른 시드의 학습과는 GPU 를 같이 쓴다), 이미 시작한 다른 시드의 GPU 단계는 끝날 때까지 기다린 뒤 순서가 온다. 시드 1, 2 도 학습이 끝나는 대로 같은 파이프라인이 시작된다.
+5. 시드 하나의 파이프라인이 끝날 때마다 `run.py aggregate` 후 `run.py sync` 를 실행해 일부 결과가 아침 전에 Drive 에 올라가게 한다. sync 실패(rclone 미설정 등)는 실험을 실패시키지 않고 `results/sync_status.json` 에 남는다. 마지막에 한 번 더 aggregate+sync.
+6. 시드 0 을 `run_all.sh` 로 시작했다면 학습 후 `run_all.sh` 가 같은 시드의 repro_check 를 직접 진행하다가 게이트에서 멈춘다. 겹쳐서 같은 파일을 쓰지 않도록, `run_all.sh` 나 `run.py <단계> --model baseline_single:<시드>` 프로세스가 보이는 동안은 그 시드의 파이프라인 시작을 기다린다(끝난 결과는 건너뜀).
+
+### 실패 처리
+
+- 각 단계는 같은 단계를 최대 3회 시도한다(CLAUDE.md 규칙, 시도 사이 `RETRY_SLEEP` 초). 3회 실패하면 그 시드의 후속 단계는 `skipped` 로 표시하고, 마지막 에러 줄(로그의 마지막 비어 있지 않은 줄)을 `overnight_status.json` 에 기록한 뒤 **다른 시드는 계속**한다. 각 시드의 학습과 파이프라인은 별도 서브셸/프로세스이므로 한 시드의 에러가 다른 시드의 학습을 죽이지 않는다.
+- 학습이 재시도되면 `run.py train` 이 `model_latest.pth` 에서 재개한다(기존 동작; 이 환경에서 학습을 돌려 확인한 것이 아님).
+- 스크립트를 Ctrl-C 하거나 종료시키면 **이 스크립트가 시작한** 학습/파이프라인만 종료한다(외부 학습은 건드리지 않는다). 다시 `bash overnight.sh` 를 실행하면 결과가 있는 단계는 건너뛰고 이어서 진행한다.
+
+### 예상 소요 시간 (전부 추정이며 실제 측정이 아니다)
+
+| 구성 | 값 | 근거 |
+|---|---|---|
+| 학습 시드당 | 약 7시간 | RTX 3090 에서의 측정값(사용자 보고). **RTX 5090 은 미측정 = 추정** |
+| 동시 학습 시 속도 | 학습 하나당 느려짐, 정도 미측정 | 최악의 경우 합계 처리량이 그대로여서 2개 동시 = 각 약 2배(추정). GPU 여유가 있으면 그보다 덜 느림. 측정 안 함 |
+| repro_check / extract / diagnose / probe / intervene | 시드당 수십 분 ~ 수 시간 | 측정 없음. 합성 데이터 셀프테스트(CPU)의 probe 가 수 분 걸린 것이 유일한 참고이고 실제 데이터 규모와 다르다 |
+| 디스크 | 시드당 체크포인트 약 1.7 GB + 추출 캐시 약 5 GB | README 의 기존 추정값. 3시드 약 20 GB(추정) |
+
+**아침까지 모든 시드가 끝난다는 보장은 없다.** 시드 0 이 끝난 시점을 모르므로 시드 1, 2 가 언제 끝나는지도 알 수 없다. 단순 추정으로 시드 2 는 시드 0 이 끝난 뒤 학습이 시작되어 최소 수 시간(병렬이면 더 길게)이 필요하므로, 12시간 안에 시드 2 까지 끝나지 않을 수 있다. 시간이 모자라면 예상 동작: 시드 0 의 결과가 가장 먼저(시드 0 DONE 직후부터) 나오고, 시드 1, 2 는 끝난 단계까지만 `overnight_status.json` 에 `done`/`running` 으로 보인다. `results.json` 의 `across_seeds` 는 그 시점에 결과가 있는 시드만으로 계산되며 `seeds_with_results` 에 어느 시드가 들어갔는지 적힌다. 스크립트를 다시 실행하면 이어서 진행한다.
+
+### 시드 간 요약 (`results.json -> across_seeds`)
+
+`python run.py aggregate` 는 분포별로 repro_check / diagnose / probe / intervene 결과의 숫자 필드(신뢰구간 하한/상한/표본 수와 리스트는 제외)마다 시드별 값, 평균, 표준편차(ddof=1, 시드 1개면 null), 최솟값, 최댓값을 `across_seeds.<분포>.metrics.<경로>` 에 담는다. 값만 기록하며 시드 간 변동의 크기를 판정하거나 해석하지 않는다.
+
+### 주의사항
+
+- **확인한 사실**: 오케스트레이션 로직(대기, 중복 학습 방지, 외부 학습이 사라졌을 때 인수, 대기 상한, 3회 재시도, 시드 격리, 상태 파일 갱신, 순차 모드)은 가짜 `run.py` 와 임시 디렉터리로 `bash tests/test_overnight.sh` 에서 확인했다(실제 학습/GPU/rclone 없이). `bash -n`, `py_compile`, `--dry-run` 도 통과했다.
+- **확인하지 못한 것**: 실제 `train.py` 의 프로세스 명령줄에서 `hydra.run.dir=<run 폴더>` 가 `pgrep -f` 로 잡히는지(코드상 `run.py train` 이 이 인자를 붙이지만, 사용자가 시드 0 을 다른 방법으로 시작했다면 다를 수 있다. 그 경우 run 폴더의 파일 변화(`HEARTBEAT_MIN`)가 보조 신호가 된다), `sm_120` 지원 torch 에서의 실제 동작, 동시 학습 시 메모리/속도, 실제 단계별 소요 시간, `model_latest.pth` 재개의 정확한 동작.
+- 병렬 학습 시 CPU 데이터로더 workers(브랜치 conf 기본 12, **이 머신에서 확인하지 못한 값**: 사용자 보고/브랜치 설정 기준) 경쟁: 학습 2개면 workers 가 합쳐 약 24개가 되어 CPU 코어 수가 모자라면 데이터 로딩이 병목이 되고 병렬의 이득이 줄거나 사라질 수 있다(**추정**). 코어 수는 이 스크립트가 출력하지 않으니 시작 전에 `nproc` 으로 확인하고, 모자라면 `TRAIN_PARALLEL=0` 이 안전하다. probe 는 `OMP_NUM_THREADS`(기본 4)를 쓰며 학습과 CPU 를 나눠 쓴다.
+- 시드 간 병렬 학습으로 시드 0 의 학습 속도가 느려질 수 있다(추정). 시드 0 결과를 가장 먼저 보는 것이 중요하면 `TRAIN_PARALLEL=0` 을 쓰면 시드 0 이 끝날 때까지 시드 1, 2 학습이 시작되지 않는다.
+- 이 스크립트는 `--force` 를 쓰지 않는다.
+
 ## 파일
 
 | 파일 | 역할 |
@@ -279,6 +338,8 @@ python run.py intervene --model baseline_single:0 --suffix _smoke
 | `config.yaml` | 모든 설정과 시드. 임계값은 null(TODO). 데이터셋 선택(`data.dataset`), 9개 크기 사양, 학습 분포 |
 | `run.py` | 단계별 CLI |
 | `setup.sh`, `run_all.sh` | 환경 구성, 전체 실행 (둘 다 작성만 했고 실제 실행은 하지 않았다. `bash -n` 구문 검사와 `run_all.sh --dry-run` 만 함) |
+| `overnight.sh`, `overnight_status.py` | 무인(밤샘) 실행과 상태 파일 갱신 도우미 (위 "밤샘 실행" 절) |
+| `tests/test_overnight.sh`, `tests/fake_run.py` | 가짜 run.py 로 하는 오케스트레이션 시험 (GPU/데이터 불필요) |
 | `src/exp001/common.py` | 설정 로딩, 데이터셋 블록 선택, 크기 역할(trained/interp/extrap) 분류 |
 | `src/exp001/data.py` | listing/manifest 생성, manifest 기반 데이터셋/로더 |
 | `src/exp001/maskcheck.py` | (CPU) 영상만으로 마스크 면적비, 입자 수-면적 상관 |
@@ -286,7 +347,7 @@ python run.py intervene --model baseline_single:0 --suffix _smoke
 | `src/exp001/diagnose.py` | (CPU) 면적 표, 크기-면적 곡선, 재현 확인 요약, 수축 지표, latent 거리, 라벨 보조 검증 |
 | `src/exp001/probes.py`, `probe_stage.py` | (CPU) 4개 프로토콜의 크기 probe, 대조군, bootstrap |
 | `src/exp001/intervene.py` | (GPU) 크기 방향 개입 |
-| `src/exp001/aggregate.py` | `results.json` 취합(개입 요약 포함, 해석 없음) |
+| `src/exp001/aggregate.py` | `results.json` 취합(개입 요약, 시드 간 평균/표준편차/범위 `across_seeds` 포함, 해석 없음) |
 | `src/exp001/selftest.py` | 합성 데이터 셀프테스트 |
 | `src/exp001/drive.py` | Drive 에서 rclone 으로 데이터 받기(split 선택, 건너뜀/재개, 쿼터 패턴 안내, `--dry-run`)와 받은 뒤 무결성 점검(`results/download_check.json`) |
 | `src/exp001/hf.py` | (source=hf 일 때만) HF 토큰 조회(env/login)와 401/403 안내 문구 |
