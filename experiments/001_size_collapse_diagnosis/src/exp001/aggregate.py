@@ -57,11 +57,11 @@ def summarize_intervention(iv):
 
 
 def run(cfg, paths):
-    res = {"experiment": cfg["name"], "created": time.strftime("%F %T"), "hypothesis_ids": cfg["hypothesis"],
+    res = {"experiment": cfg["name"], "created": time.strftime("%F %T"), "hypothesis_ids": cfg["hypothesis"], "cloth_sim_branch": cfg["code"]["cloth_sim_branch"],
            "config": {k: v for k, v in cfg.items() if not k.startswith("_")},
            "environment": {"python": platform.python_version(), "platform": platform.platform()},
            "experiment_code_git": _git(["rev-parse", "HEAD"], EXP_DIR), "acwm_phys_src_git": _git(["rev-parse", "HEAD"], paths["acwm_src"]),
-           "gen_midsize": None, "runs": {}}
+           "dataset": {"selected": cfg["data"]["active"], "block": cfg["_ds"]}, "maskcheck": None, "runs": {}}
     try:
         import torch
         res["environment"]["torch"] = torch.__version__
@@ -70,8 +70,8 @@ def run(cfg, paths):
             res["environment"]["gpu"] = torch.cuda.get_device_name(0)
     except Exception:
         res["environment"]["torch"] = None
-    if (paths["manifests"] / "gen_status.json").exists():
-        res["gen_midsize"] = read_json(paths["manifests"] / "gen_status.json")
+    if paths["maskcheck_json"].exists():
+        res["maskcheck"] = read_json(paths["maskcheck_json"])
     for spec in cfg["train"]["models_to_diagnose"]:
         dist, seed = spec.split(":")
         name = cfg["train"]["run_name_template"].format(dist=dist, seed=seed)
@@ -85,7 +85,7 @@ def run(cfg, paths):
                 lines = [json.loads(x) for x in open(lg)]
                 r["train"]["last_epoch_log"] = lines[-1] if lines else None
         d = paths["results_dir"] / name
-        for part in ("diagnose", "probe"):
+        for part in ("repro_check", "diagnose", "probe"):
             if (d / f"{part}.json").exists():
                 r[part] = read_json(d / f"{part}.json")
         if (d / "intervene.json").exists():

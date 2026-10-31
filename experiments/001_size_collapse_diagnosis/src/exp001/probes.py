@@ -2,11 +2,14 @@
 
 Protocols (config.probe.protocols), all with episode-level splits:
   strat_cv     (i)   train/test on the SAME latent type; GroupKFold over episodes stratified by size group
-  logo         (i)   leave-one-group-out (test group never seen in training; extrapolation/interpolation test)
+  logo         (i)   leave-one-group-out (test group never seen in training; one of the 9 sizes held out)
   gt_transfer  (ii)  train on GT encodings only, apply to predicted latents (tf1, ol) of held-out episodes
   upper        (iii) train on GT + predicted latents of all sizes (OoD included), test on held-out predicted latents (upper bound)
+  heldout_size (iv)  train on GT encodings of the sizes the world model was trained on only (train_gids), test on every size's
+                     gt / tf1 / ol of held-out episodes; results are summarised per role (trained / interp / extrap_*)
 Models: ridge (alpha chosen on the first outer fold by inner GroupKFold, then reused) and a small MLP.
-Never report R2 alone: every evaluation returns overall R2, within-group R2, 3-way accuracy, slope of predicted vs real
+Never report R2 alone: every evaluation returns overall R2, within-group R2, size-class accuracy (exact and within +-1 neighbour class
+over the ordered sizes), slope of predicted vs real
 log-area, per-group bias, each with an episode-level cluster-bootstrap CI (resampling episodes within group).
 Controls: label_permute (episode-level label shuffle), constant_mean, and extra latent types (random-init ViT, raw pixel grid).
 """
@@ -128,7 +131,7 @@ class ProbeFactory:
 
 
 # ------------------------------------------------------------------------------ metrics from per-episode sufficient statistics
-STAT_COLS = ["n", "sy", "sh", "syy", "shh", "syh", "n_cls", "correct"]
+STAT_COLS = ["n", "sy", "sh", "syy", "shh", "syh", "n_cls", "correct", "correct_pm1"]
 
 
 def episode_stats(s: Samples, yhat, chat, mask):
@@ -140,7 +143,10 @@ def episode_stats(s: Samples, yhat, chat, mask):
         m = mask & (s.ep == e)
         y, h = s.y[m], yhat[m]
         hasc = s.cls[m] >= 0
-        S[i] = [m.sum(), y.sum(), h.sum(), (y * y).sum(), (h * h).sum(), (y * h).sum(), hasc.sum(), ((chat[m] == s.cls[m]) & hasc).sum()]
+        ch = chat[m]
+        valid = hasc & (ch >= 0)
+        S[i] = [m.sum(), y.sum(), h.sum(), (y * y).sum(), (h * h).sum(), (y * h).sum(), hasc.sum(), ((ch == s.cls[m]) & hasc).sum(),
+                ((np.abs(ch - s.cls[m]) <= 1) & valid).sum()]
         G[i] = s.grp[m][0]
     return eps, S, G
 
@@ -154,7 +160,8 @@ def metrics_from_stats(S, G, w, group_ids):
     out["r2_overall"] = 1 - (syy - 2 * syh + shh) / vy if vy > 1e-12 else np.nan
     cov = syh - sy * sh / max(n, 1)
     out["slope"] = cov / vy if vy > 1e-12 else np.nan
-    out["acc3"] = Sw[:, 7].sum() / Sw[:, 6].sum() if Sw[:, 6].sum() > 0 else np.nan
+    out["acc_cls"] = Sw[:, 7].sum() / Sw[:, 6].sum() if Sw[:, 6].sum() > 0 else np.nan
+    out["acc_cls_pm1"] = Sw[:, 8].sum() / Sw[:, 6].sum() if Sw[:, 6].sum() > 0 else np.nan
     sse_c, sst_c, bias, gm_y, gm_h = 0.0, 0.0, {}, [], []
     for g in group_ids:
         m = G == g
@@ -180,7 +187,7 @@ def bootstrap_metrics(S, G, group_ids, n_boot, seed):
     """Cluster bootstrap over episodes, resampling within each group. Returns {metric: (lo, hi)} (2.5/97.5 percentiles)."""
     rng = np.random.RandomState(seed)
     E = len(G)
-    draws = {k: [] for k in ("r2_overall", "slope", "acc3", "r2_within_group", "slope_group_means")}
+    draws = {k: [] for k in ("r2_overall", "slope", "acc_cls", "acc_cls_pm1", "r2_within_group", "slope_group_means")}
     idx_by_g = {g: np.where(G == g)[0] for g in group_ids}
     for _ in range(n_boot):
         w = np.zeros(E)
@@ -204,7 +211,7 @@ def summarize(s: Samples, yhat, chat, mask, group_ids, n_boot, seed):
 
 
 # ------------------------------------------------------------------------------ protocol driver
-def run_protocol(protocol, ptype_targets, samples, ep_ids, ep_grp, pcfg, kind, pool_key, seed, permute=False, min_k=1):
+def run_protocol(protocol, ptype_targets, samples, ep_ids, ep_grp, pcfg, kind, pool_key, seed, permute=False, min_k=1, train_gids=None):
     """samples: {type: Samples}. ptype_targets: types to evaluate. Returns {type: (yhat, chat)} aligned with samples[type].
     permute: shuffle labels across episodes (episode-level label permutation) in the TRAINING data only."""
     factory = run_protocol.factory.setdefault(pool_key + kind, ProbeFactory(pcfg))
@@ -226,6 +233,9 @@ def run_protocol(protocol, ptype_targets, samples, ep_ids, ep_grp, pcfg, kind, p
             elif protocol == "gt_transfer":
                 g = samples["gt"]
                 tr = g.subset(~np.isin(g.ep, test_eps))
+            elif protocol == "heldout_size":
+                g = samples["gt"]
+                tr = g.subset(~np.isin(g.ep, test_eps) & np.isin(g.grp, list(train_gids)))
             elif protocol == "upper":
                 parts = [samples[n].subset(~np.isin(samples[n].ep, test_eps)) for n in ("gt", "tf1", "ol") if n in samples]
                 tr = concat_samples(parts)

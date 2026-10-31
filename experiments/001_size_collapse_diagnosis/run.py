@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """Experiment 001 entry point.  python run.py <stage> [options]   (see README.md; run_all.sh chains the stages)
 
-Stages: check | download | listing | gen | train | extract | diagnose | probe | intervene | aggregate | selftest
+Stages: check | download | maskcheck | listing | train | repro_check | extract | diagnose | probe | intervene | aggregate | sync | selftest
 Every stage supports --dry-run (prints what it would do, runs nothing heavy). Config: config.yaml (seeds included).
 """
 from __future__ import annotations
@@ -16,7 +16,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE / "src"))
 
-from exp001.common import load_config, resolve_paths, run_dir, write_json, read_json, log, set_seed  # noqa: E402
+from exp001.common import load_config, resolve_paths, run_dir, write_json, read_json, log, set_seed, approved_distributions  # noqa: E402
 
 
 SUFFIX = ""
@@ -32,13 +32,16 @@ def parse_model(cfg, spec):
 
 
 def cmd_check(cfg, paths, args):
-    info = {"acwm_src": str(paths["acwm_src"]), "dataset_dir": str(paths["dataset_dir"]), "clothmove": str(paths["clothmove"])}
+    blk = cfg["_ds"]
+    info = {"dataset": cfg["data"]["active"], "acwm_src": str(paths["acwm_src"]), "dataset_dir": str(paths["dataset_dir"]), "data_root": str(paths["data_root"])}
     src = paths["acwm_src"]
     head = subprocess.run(["git", "-C", str(src), "rev-parse", "HEAD"], capture_output=True, text=True).stdout.strip() if src.exists() else None
     info["acwm_src_exists"] = src.exists()
     info["acwm_src_head"] = head
     info["commit_matches_config"] = head == cfg["code"]["commit"]
-    info["data_present"] = {s: (paths["clothmove"] / s / "metadata.pt").exists() for s in ("ind_train", "ind_test", "ood_test")}
+    info["cloth_sim_branch"] = cfg["code"]["cloth_sim_branch"]
+    splits = sorted(set(blk["download_default_splits"]) | set(blk["eval_sets"]))
+    info["data_present"] = {s: (paths["data_root"] / s / "metadata.pt").exists() for s in splits}
     try:
         import torch
         info["torch"] = torch.__version__
@@ -55,32 +58,109 @@ def cmd_check(cfg, paths, args):
     return 0 if ok else 1
 
 
+def _dist_train_splits(cfg, dists):
+    out = []
+    for d in dists:
+        for spec in cfg["train"]["distributions"][d]:
+            if spec["source"] not in out:
+                out.append(spec["source"])
+    return out
+
+
 def cmd_download(cfg, paths, args):
-    script = paths["acwm_src"] / "repro" / "setup" / "download_acwm_phys.py"
-    dest = paths["dataset_dir"] / "acwm_phys"
-    cmd = [sys.executable, str(script), "--envs", "cloth_move", "--dest", str(dest)]
-    log("download: " + " ".join(cmd) + f"   (HF {cfg['data']['hf_repo']} @ {cfg['data']['hf_revision'][:7]}; pinned in the branch script)")
-    if args.dry_run:
+    """cloth_sim: data.source (env EXP001_DATA_SOURCE) = drive (default, rclone) | hf (huggingface_hub). Needed splits only.
+    Large: not run by the authoring session. After a real download the integrity check writes results/download_check.json."""
+    from exp001 import drive
+    blk = cfg["_ds"]
+    dists = [d for d in (args.dists or os.environ.get("EXP001_DOWNLOAD_DISTS", "")).replace(",", " ").split() if d]
+    if blk["kind"] == "acwm_phys":
+        script = paths["acwm_src"] / "repro" / "setup" / "download_acwm_phys.py"
+        cmd = [sys.executable, str(script), "--envs", "cloth_move", "--dest", str(paths["dataset_dir"] / "acwm_phys")]
+        log("download (legacy acwm_phys): " + " ".join(cmd))
+        return 0 if args.dry_run else subprocess.run(cmd, cwd=paths["acwm_src"]).returncode
+    splits = drive.select_splits(cfg, dists)
+    source = drive.data_source(cfg)
+    if source == "drive":
+        return drive.download(cfg, paths, splits, dry_run=args.dry_run, force=args.force)
+    if source != "hf":
+        log(f"unknown data.source '{source}' (use drive | hf)")
+        return 2
+    rc = _download_hf(cfg, paths, args, splits)
+    if rc == 0 and not args.dry_run:
+        drive.check(cfg, paths, splits)
+    return rc
+
+
+def _download_hf(cfg, paths, args, splits):
+    """data.source = hf. Kept as an option; hanbin5/cloth-sim was reported unusable (technical problem) when the Drive path was added."""
+    blk = cfg["_ds"]
+    patterns = [f"{s}/*" for s in splits]
+    from exp001 import hf
+    repo = blk["hf_repo"]
+    tok, src = hf.get_token()
+    log(f"download: HF {repo} (repo_type={blk['hf_repo_type']}, revision={blk['hf_revision']}) -> {paths['data_root']}")
+    log("  allow_patterns=" + json.dumps(patterns))
+    log(f"  HF token: {'found (' + src + ')' if tok else 'NOT found (set HF_TOKEN or run huggingface-cli login; the repo returned 401 unauthenticated)'}")
+    if args.dry_run and not args.query_size:
         return 0
-    return subprocess.run(cmd, cwd=paths["acwm_src"]).returncode
+    if tok is None:
+        if args.dry_run:
+            log("  dry-run: skipping HF API size query because there is no token")
+            return 0
+        hf.require_token(repo)                       # exits with the instruction text
+    try:
+        from huggingface_hub import HfApi, snapshot_download
+        if args.query_size:
+            import fnmatch
+            info = HfApi().dataset_info(repo, files_metadata=True, timeout=30, token=tok)
+            files = [(f.rfilename, f.size) for f in info.siblings]
+            tot = {p: sum(sz or 0 for n, sz in files if fnmatch.fnmatch(n, p)) for p in patterns}
+            log("  sizes from HF API (bytes): " + json.dumps(tot) + f"  total={sum(tot.values())}")
+        if args.dry_run:
+            return 0
+        snapshot_download(repo, repo_type=blk["hf_repo_type"], revision=blk["hf_revision"], local_dir=str(paths["data_root"]),
+                          allow_patterns=patterns, max_workers=8, token=tok)
+    except SystemExit:
+        raise
+    except Exception as e:
+        msg = hf.explain_error(e, repo)
+        if msg is None:
+            raise
+        log(f"download FAILED: {type(e).__name__}")
+        print(msg, file=sys.stderr)
+        return 3
+    return 0
+
+
+def cmd_maskcheck(cfg, paths, args):
+    from exp001 import maskcheck
+    maskcheck.run(cfg, paths, dry_run=args.dry_run)
+    return 0
 
 
 def cmd_listing(cfg, paths, args):
     from exp001 import data as D
     paths["manifests"].mkdir(parents=True, exist_ok=True)
-    splits = ["ind_train", "ind_test", "ood_test"] + sorted(p.name for p in paths["clothmove"].glob("gen_*") if p.is_dir()) if paths["clothmove"].exists() else []
+    blk = cfg["_ds"]
+    if blk["kind"] == "cloth_sim":
+        splits = [f"{s['name']}_{part}" for s in blk["sizes"] for part in ("train", "test")]
+    else:
+        splits = list(blk["expected_episodes"])
     if args.dry_run:
-        log(f"listing: would read metadata.pt from {paths['clothmove']} splits={splits}")
+        log(f"listing: would read metadata.pt from {paths['data_root']} splits={splits}")
         return 0
-    listing = D.list_episodes(paths["clothmove"], splits)
-    for s, exp in cfg["data"]["expected_episodes"].items():
-        if len(listing.get(s, [])) != exp:
-            log(f"WARNING split {s}: {len(listing.get(s, []))} episodes, expected {exp}")
+    listing, meta = D.list_episodes(paths["data_root"], splits)
+    exp = blk["expected_episodes"]
+    for s, names in listing.items():
+        e = exp.get(s) if blk["kind"] != "cloth_sim" else exp[s.rsplit("_", 1)[1]]
+        if e is not None and len(names) != e:
+            log(f"WARNING split {s}: {len(names)} episodes, expected {e}")
     write_json(listing, paths["manifests"] / "listing.json")
+    write_json(meta, paths["manifests"] / "episode_meta.json")
     mans = {}
     for name, specs in cfg["train"]["distributions"].items():
         try:
-            mans.update(D.build_manifests({**cfg, "train": {**cfg["train"], "distributions": {name: specs}}}, listing, paths["clothmove"]))
+            mans.update(D.build_manifests({**cfg, "train": {**cfg["train"], "distributions": {name: specs}}}, listing, paths["data_root"]))
         except KeyError as e:
             log(f"manifest {name}: skipped, missing source split {e}")
     for name, m in mans.items():
@@ -89,17 +169,15 @@ def cmd_listing(cfg, paths, args):
     return 0
 
 
-def cmd_gen(cfg, paths, args):
-    from exp001 import gen_midsize
-    rc = gen_midsize.run(cfg, paths, dry_run=args.dry_run)
-    return 0 if rc in (0, 3) else rc          # 3 = unavailable/disabled: not an error, status recorded in manifests/gen_status.json
-
-
 def cmd_train(cfg, paths, args):
     dist, seed = parse_model(cfg, args.model)
     name = run_name(cfg, dist, seed)
     rd = run_dir(paths, name)
     man = paths["manifests"] / f"train_{dist}.json"
+    status = cfg["_ds"].get("distribution_status", {}).get(dist)
+    if dist not in approved_distributions(cfg) and not (args.dry_run or args.smoke):
+        log(f"train {dist}: not approved by a human ({status}). Add it to config train.approved_distributions or env EXP001_APPROVED. Refusing.")
+        return 2
     if not man.exists() and not args.dry_run:
         log(f"missing {man}; run: python run.py listing")
         return 1
@@ -145,6 +223,26 @@ def cmd_extract(cfg, paths, args):
     return 0
 
 
+def cmd_repro_check(cfg, paths, args):
+    """Reproduction check, first thing after the baseline is trained: extract only the reported sizes (GPU), then area tables only (CPU).
+    Writes results/<run>/repro_check.json. Numbers only; a human decides whether the phenomenon reproduces."""
+    from exp001 import extract, diagnose
+    rc = cfg["repro_check"]
+    for dist, seed in _models(cfg, args):
+        name = run_name(cfg, dist, seed)
+        out = paths["results_dir"] / name / "repro_check.json"
+        if out.exists() and not args.force:
+            log(f"repro_check {name}: exists, skip")
+            continue
+        log(f"repro_check {name}: groups={rc['groups']} max_eps/group={rc['max_episodes_per_group']}")
+        if args.dry_run:
+            continue
+        extract.run(cfg, paths, name, smoke_max_eps=args.max_eps, groups=rc["groups"], cache_suffix="_repro",
+                    max_per_group=rc["max_episodes_per_group"], overwrite=args.force, light=True)
+        diagnose.run(cfg, paths, name, cache_suffix="_repro", out_name="repro_check.json", area_only=True)
+    return 0
+
+
 def _cpu_stage(mod, cfg, paths, args, outname):
     import importlib
     m = importlib.import_module(f"exp001.{mod}")
@@ -184,14 +282,22 @@ def cmd_aggregate(cfg, paths, args):
     return 0
 
 
+def cmd_sync(cfg, paths, args):
+    from exp001 import sync
+    sync.run(cfg, paths, dry_run=args.dry_run, ckpt=True if args.ckpt else None, cache=True if args.cache else None,
+                  models=[args.model] if args.model else None, run_label=args.run_label)
+    return 0                                  # a failed/skipped upload never fails the experiment; see results/sync_status.json
+
+
 def cmd_selftest(cfg, paths, args):
     from exp001 import selftest
     selftest.run(cfg)
     return 0
 
 
-STAGES = {"check": cmd_check, "download": cmd_download, "listing": cmd_listing, "gen": cmd_gen, "train": cmd_train, "extract": cmd_extract,
-          "diagnose": cmd_diagnose, "probe": cmd_probe, "intervene": cmd_intervene, "aggregate": cmd_aggregate, "selftest": cmd_selftest}
+STAGES = {"check": cmd_check, "download": cmd_download, "maskcheck": cmd_maskcheck, "listing": cmd_listing, "train": cmd_train,
+          "repro_check": cmd_repro_check, "extract": cmd_extract,
+          "diagnose": cmd_diagnose, "probe": cmd_probe, "intervene": cmd_intervene, "aggregate": cmd_aggregate, "sync": cmd_sync, "selftest": cmd_selftest}
 
 
 def main():
@@ -204,6 +310,11 @@ def main():
     ap.add_argument("--max-eps", type=int, default=None, help="extract: episodes per group (smoke)")
     ap.add_argument("--epoch", type=int, default=0, help="extract: checkpoint epoch (0 = latest)")
     ap.add_argument("--force", action="store_true")
+    ap.add_argument("--dists", default="", help='download: also fetch the training splits of these distributions (comma/space separated)')
+    ap.add_argument("--query-size", action="store_true", help="download (source=hf): ask the HF API for file sizes of the selected splits (best effort). source=drive: --dry-run always lists via rclone")
+    ap.add_argument("--ckpt", action="store_true", help="sync: also upload checkpoints (large, ~1.7 GB per run, estimate)")
+    ap.add_argument("--cache", action="store_true", help="sync: also upload the extraction cache (large, ~5 GB per run, estimate)")
+    ap.add_argument("--run-label", default=None, help="sync: run name used in the Drive folder name (default exp001_<models>)")
     ap.add_argument("--suffix", default="", help="appended to run names (smoke tests use _smoke so real results are never overwritten)")
     args = ap.parse_args()
     global SUFFIX

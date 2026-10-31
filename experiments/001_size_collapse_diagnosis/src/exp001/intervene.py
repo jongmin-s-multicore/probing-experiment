@@ -6,7 +6,7 @@ modified along u; then the predictor output is read out along u (pooled projecti
 Modes
   remove        z_p <- z_p - (z_p . u) u                        for every patch p (projection removed)
   set_<A>_to_<B> shift all patches by delta*u so that the pooled projection equals the mean pooled projection of group B at the
-                 same frame (episodes of group A are modified); B='ind' is the training cloth size
+                 same frame (episodes of group A are modified); B=reference group is the training cloth size
 Controls: n_random unit directions r; the same shift magnitude |delta| (or the same removed fraction for 'remove') is applied along r
 and the response is read along r (and the decoded area change is measured). Teacher-forced (one step, every input frame) and
 open-loop (only the first latent modified, rollout continues). Reported per episode; aggregation is done in aggregate.py.
@@ -74,11 +74,12 @@ def run(cfg, paths, run_name):
     gnames = np.array([e["group"] for e in keep])
     gmean = {gg: torch.tensor(proj_gt[gnames == gg].mean(0), device=dev, dtype=torch.float32) for gg in groups}
     mcfg = cfg["mask"]
+    ref = cfg["diagnose"]["reference_group"]        # the training-size group (baseline); 'set_ind_mean' moves each group to it
     modes = [("remove", None, None)]
-    if "set_ind_mean" in icfg["modes"] and "ind" in groups:
-        modes += [(f"set_{a}_to_ind", a, "ind") for a in groups if a != "ind"]
+    if "set_ind_mean" in icfg["modes"] and ref in groups:
+        modes += [(f"set_{a}_to_{ref}", a, ref) for a in groups if a != ref]
     if "set_group_swap" in icfg["modes"]:
-        modes += [(f"set_{a}_to_{b}", a, b) for a in groups for b in groups if a != b and b != "ind"]
+        modes += [(f"set_{a}_to_{b}", a, b) for a, b in icfg["swap_pairs"] if a in groups and b in groups and a != b]
     modes = [m for i, m in enumerate(modes) if m not in modes[:i]]
     out = {"run_name": run_name, "epoch_loaded": ep_loaded, "modes": [m[0] for m in modes], "groups": groups, "episodes": [], "per_mode": {}}
     n_r = rnd.shape[0]

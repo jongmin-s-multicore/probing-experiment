@@ -9,6 +9,8 @@
 # Variables: DINO_WORK (default ~/dinowm)  ACWM_PHYS_SRC (default $DINO_WORK/acwm_phys_src)  CONDA_ENV (default dino_wm)
 #            LOCAL_THREAD0 (optional path of an existing thread0 clone)
 # Status: written but NOT executed by the author (no install was run in the authoring session).
+# Note: the hanbin5/cloth-sim branch/HF dataset are reported unusable by the user (2026-10-31); the code checkout stays the acwm-phys commit (config code.commit)
+#       and the data come from Google Drive via rclone (config data.source: drive).
 set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
 DRY=0; MINIMAL=0
@@ -52,4 +54,21 @@ else
   run "conda env create -f '$ACWM_PHYS_SRC/environment.yaml' -n '$CONDA_ENV'"
 fi
 run "conda run -n '$CONDA_ENV' python -c \"import torch, hydra, decord, cv2, sklearn, yaml; print('torch', torch.__version__, 'cuda', torch.cuda.is_available())\""
+echo
+SRC="${EXP001_DATA_SOURCE:-$(sed -n 's/^  source: *"\{0,1\}\([a-z]*\)"\{0,1\}.*/\1/p' "$HERE/config.yaml" | head -1)}"
+echo "Dataset source: ${SRC:-drive}  (config.yaml data.source / env EXP001_DATA_SOURCE: drive | hf)"
+if [ "${SRC:-drive}" = "hf" ]; then
+  echo "  source=hf: Hugging Face token needed for the dataset repo hanbin5/cloth-sim (unauthenticated access returned 401):"
+  if [ -n "${HF_TOKEN:-}" ]; then echo "    HF_TOKEN is set in this shell (value not shown)"
+  elif [ -s "${HF_HOME:-$HOME/.cache/huggingface}/token" ]; then echo "    found a token stored by huggingface-cli login (value not shown)"
+  else echo "    NO token found. Create a read token at https://huggingface.co/settings/tokens, then 'export HF_TOKEN=hf_...' or 'huggingface-cli login'. Never put it in config.yaml."; fi
+else
+  echo "  source=drive: data is downloaded with rclone from the Google Drive folder (README 'Drive 에서 데이터 받기')."
+  echo "  rclone found: $(command -v rclone || echo 'no -> install from https://rclone.org/install/')"
+  if command -v rclone >/dev/null 2>&1; then echo "  rclone remotes: $(rclone listremotes 2>/dev/null | tr '\n' ' ')"; fi
+  echo "  needed: a Drive remote (rclone config; same one can be used to upload results) + its NAME in config.yaml data.drive.rclone_remote (or env EXP001_RCLONE_REMOTE)"
+  echo "          and access to the data folder: (a) default root_folder_id, or (b) shortcut/copy in your Drive + data.drive.remote_path. Both untested by the author."
+  echo "  check: python run.py download --dry-run     (lists remote files/sizes; downloads nothing)"
+fi
+echo "Google Drive upload of results (optional): see README 'Drive 동기화' (fill config.yaml sync.drive.*; shares the rclone remote)."
 echo "next: bash run_all.sh --dry-run"

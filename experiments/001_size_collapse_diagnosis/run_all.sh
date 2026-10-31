@@ -4,12 +4,18 @@
 #
 #   bash run_all.sh [--dry-run] [--force] [--from STAGE] [--only S1,S2] [--skip S1,S2]
 #
-# Stages (in order): check selftest download gen listing train extract diagnose probe intervene aggregate
+# Stages (in order): check selftest download maskcheck listing train repro_check [gate] extract diagnose probe intervene aggregate
+#   repro_check: extract only a026/ind/a248 and write results/<run>/repro_check.json (area numbers). With REPRO_GATE=1 (default) the script
+#   stops after it so that a human can look at the numbers; continue with `bash run_all.sh --from extract` (or REPRO_GATE=0).
 # Variables:
 #   CONDA_ENV  conda env name (default dino_wm)         DINO_WORK / DATASET_DIR / DINO_TRAIN / EXP001_CACHE / ACWM_PHYS_SRC  paths (config.yaml paths)
 #   MODELS     space separated "distribution:seed" to train+analyse (default "baseline_single:0")
-#              e.g. MODELS="baseline_single:0 mix_ood3:0"   (mix_ood3 needs human approval of candidate F first)
-#   GEN=1      also try the optional mid-size generator stage (needs ACWM_PHYS_GENERATOR_CMD, see README)
+#              e.g. MODELS="baseline_single:0 mix_wide:0"   (control distributions need human approval of candidate F first)
+#   EXP001_APPROVED  space separated distributions a human approved for training (train refuses others). Default: none -> set it explicitly.
+#   EXP001_DATA_SOURCE drive (default, rclone from Google Drive) | hf.  EXP001_RCLONE_REMOTE, EXP001_DATA_REMOTE_PATH, EXP001_RCLONE_FLAGS: see README.
+#   REPRO_GATE 1 (default): stop after the repro_check stage.   EXP001_DATASET  cloth_sim (default) | acwm_phys (legacy)
+#   The old mid-size generation stage (gen / GEN=1) was removed: the 9 cloth sizes now come with the dataset (see README).
+#   SYNC=1 (opt-in) upload results to Google Drive at the end; SYNC_CKPT=1 / SYNC_CACHE=1 also upload checkpoints / extraction cache.
 # Smoke tests are not part of this script (they use run names with a _smoke suffix): see README "스모크 테스트".
 set -uo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
@@ -30,8 +36,19 @@ export EXP001_CACHE="${EXP001_CACHE:-$DINO_WORK/exp001_cache}"
 export ACWM_PHYS_SRC="${ACWM_PHYS_SRC:-$DINO_WORK/acwm_phys_src}"
 export WANDB_MODE="${WANDB_MODE:-disabled}"
 export OMP_NUM_THREADS="${OMP_NUM_THREADS:-4}"
-CLOTH="$DATASET_DIR/acwm_phys/deformable/clothmove"
-mkdir -p logs
+export EXP001_DATASET="${EXP001_DATASET:-cloth_sim}"
+REPRO_GATE="${REPRO_GATE:-1}"
+# download skip marker: results/download_check.json (written after a finished download of the selected splits; per-split skipping is
+# also done inside `run.py download`). With DOWNLOAD_DISTS set (extra train splits) the stage always runs so that the new splits are fetched.
+if [ "$EXP001_DATASET" = "cloth_sim" ]; then DATA_ROOT="$DATASET_DIR/cloth_sim"; MARK_DL="$HERE/results/download_check.json"
+  [ -n "${DOWNLOAD_DISTS:-}" ] && MARK_DL=""
+else DATA_ROOT="$DATASET_DIR/acwm_phys/deformable/clothmove"; MARK_DL="$DATA_ROOT/ood_test/metadata.pt"; fi
+mkdir -p logs results
+if [ "$DRY" = 0 ]; then   # start times for results/run_meta.json (first_start is kept across resumed runs)
+  NOW="$(date +%Y-%m-%dT%H:%M:%S%z)"
+  FIRST="$NOW"; [ -f results/run_times.json ] && FIRST="$(sed -n 's/.*"first_start": *"\([^"]*\)".*/\1/p' results/run_times.json)"
+  printf '{"first_start": "%s", "last_start": "%s"}\n' "${FIRST:-$NOW}" "$NOW" > results/run_times.json
+fi
 
 if [ "$DRY" = 0 ]; then
   # shellcheck disable=SC1091
@@ -39,7 +56,7 @@ if [ "$DRY" = 0 ]; then
 fi
 PY="python"
 TS="$(date +%Y%m%d_%H%M%S)"
-STAGES="check selftest download gen listing train extract diagnose probe intervene aggregate"
+STAGES="check selftest download maskcheck listing train repro_check extract diagnose probe intervene aggregate"
 
 selected() {  # is stage $1 selected by --from/--only/--skip
   local s="$1"
@@ -66,16 +83,30 @@ F=""; [ "$FORCE" = 1 ] && F="--force"
 DRYF=""; [ "$DRY" = 1 ] && DRYF="--dry-run"
 run_stage check    check    ""                                        $PY run.py check
 run_stage selftest selftest ""                                        $PY run.py selftest
-run_stage download download "$CLOTH/ood_test/metadata.pt"             $PY run.py download
-if [ "${GEN:-0}" = 1 ]; then run_stage gen gen "" $PY run.py gen; fi
+# download: data.source (EXP001_DATA_SOURCE=drive|hf, default drive = rclone; see README). Default = ind_train + the 9 *_test splits. Training splits of control distributions: DOWNLOAD_DISTS="mix_wide" (see README)
+run_stage download download "$MARK_DL"                                $PY run.py download --dists "${DOWNLOAD_DISTS:-}"
+run_stage maskcheck maskcheck "$HERE/results/maskcheck.json"          $PY run.py maskcheck
 run_stage listing  listing  "$HERE/manifests/listing.json"            $PY run.py listing
 for m in $MODELS; do
   d="${m%%:*}"; s="${m##*:}"; name="exp001_${d}_s${s}"
   run_stage train     "train_$name"     "$DINO_TRAIN/outputs/$name/DONE"           $PY run.py train --model "$m"
+  had=0; [ -e "$HERE/results/$name/repro_check.json" ] && had=1
+  run_stage repro_check "repro_$name" "$HERE/results/$name/repro_check.json" $PY run.py repro_check --model "$m" $F
+  if [ "$REPRO_GATE" = 1 ] && [ "$had" = 0 ] && [ -e "$HERE/results/$name/repro_check.json" ] && [ "$DRY" = 0 ]; then
+    echo "[gate] repro_check written: results/$name/repro_check.json. Look at the numbers, then: bash run_all.sh --from extract  (or REPRO_GATE=0)"; exit 0
+  fi
   run_stage extract   "extract_$name"   "$EXP001_CACHE/$name/DONE"                 $PY run.py extract --model "$m" $F
   run_stage diagnose  "diagnose_$name"  "$HERE/results/$name/diagnose.json"        $PY run.py diagnose --model "$m" $F
   run_stage probe     "probe_$name"     "$HERE/results/$name/probe.json"           $PY run.py probe --model "$m" $F
   run_stage intervene "intervene_$name" "$HERE/results/$name/intervene.json"       $PY run.py intervene --model "$m" $F
 done
 run_stage aggregate aggregate "" $PY run.py aggregate
+# Optional last step: upload to Google Drive (opt-in). Never fails the run. Needs config.yaml sync.drive.* (rclone remote) -- see README.
+#   SYNC=1 bash run_all.sh ...     SYNC_CKPT=1 / SYNC_CACHE=1 add the large checkpoint / cache folders (default: excluded)
+if [ "${SYNC:-0}" = 1 ]; then
+  SF=""; [ "${SYNC_CKPT:-0}" = 1 ] && SF="$SF --ckpt"; [ "${SYNC_CACHE:-0}" = 1 ] && SF="$SF --cache"
+  echo "[run] sync -> logs/${TS}_sync.log"
+  if [ "$DRY" = 1 ]; then echo "    $PY run.py sync --dry-run$SF"
+  else $PY run.py sync $SF 2>&1 | tee "logs/${TS}_sync.log" || true; fi
+fi
 echo "done. results: $HERE/results.json"

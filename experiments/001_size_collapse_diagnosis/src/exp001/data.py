@@ -16,16 +16,12 @@ from .common import group_of, write_json, read_json
 
 
 # ----------------------------------------------------------------------------- pure manifest logic (no torch)
-def select_episodes(listing, specs, cfg, clothmove_dir):
+def select_episodes(listing, specs, cfg, data_root):
     """listing: {split: [file names in metadata order]}. Returns list of episode dicts."""
     out = []
     for spec in specs:
-        src = spec["source"]
-        is_gen = src.startswith("gen:")
-        split_key = "gen_" + src.split(":", 1)[1] if is_gen else src
-        names = list(listing[split_key])
-        if not is_gen:
-            names = [n for n in names if group_of(split_key, n, cfg) == spec["group"]]
+        split_key = spec["source"]
+        names = [n for n in listing[split_key] if group_of(split_key, n, cfg) == spec["group"]]
         if split_key == "ood_test":
             names = sorted(names)  # deterministic: sorted file names, then first/last
         if spec["take"] == "first":
@@ -37,19 +33,19 @@ def select_episodes(listing, specs, cfg, clothmove_dir):
         if len(chosen) != spec["n"]:
             raise ValueError(f"{spec}: only {len(chosen)} episodes available")
         for n in chosen:
-            out.append({"dir": str(Path(clothmove_dir) / split_key), "split": split_key, "name": n, "group": group_of(split_key, n, cfg)})
+            out.append({"dir": str(Path(data_root) / split_key), "split": split_key, "name": n, "group": group_of(split_key, n, cfg)})
     keys = [(e["split"], e["name"]) for e in out]
     if len(set(keys)) != len(keys):
         raise ValueError("duplicate episodes in manifest")
     return out
 
 
-def build_manifests(cfg, listing, clothmove_dir):
+def build_manifests(cfg, listing, data_root):
     """Returns {dist_name: manifest dict}. Checks that all distributions have the same number of episodes."""
     total = cfg["train"]["total_episodes"]
     res = {}
     for name, specs in cfg["train"]["distributions"].items():
-        eps = select_episodes(listing, specs, cfg, clothmove_dir)
+        eps = select_episodes(listing, specs, cfg, data_root)
         if len(eps) != total:
             raise ValueError(f"distribution {name}: {len(eps)} episodes != train.total_episodes {total} (data amount must match)")
         groups = {}
@@ -59,34 +55,39 @@ def build_manifests(cfg, listing, clothmove_dir):
     return res
 
 
-def eval_episode_table(listing, cfg, clothmove_dir):
-    """All episodes that may be evaluated: ind_test, ood_test, generated. Group inferred from split/file name."""
+def eval_episode_table(listing, cfg, data_root):
+    """All episodes that may be evaluated: every split that is not a *_train split (cloth_sim: the 9 *_test splits; legacy: ind_test,
+    ood_test). Group inferred from split/file name. Training splits are never evaluated, so training and evaluation episodes are disjoint;
+    the legacy mix distribution (which takes ood_test episodes) is handled by the in_train flag in extract."""
     rows = []
     for split, names in listing.items():
-        if split == "ind_train":
+        if split.endswith("_train"):
             continue
         ordered = sorted(names) if split == "ood_test" else list(names)
-        # 'common' = first half of each ood group: never used for training in the mix distributions (they take 'last')
         counters = {}
         for n in ordered:
             g = group_of(split, n, cfg)
             counters[g] = counters.get(g, 0) + 1
-            rows.append({"dir": str(Path(clothmove_dir) / split), "split": split, "name": n, "group": g, "rank_in_group": counters[g]})
+            rows.append({"dir": str(Path(data_root) / split), "split": split, "name": n, "group": g, "rank_in_group": counters[g]})
     return rows
 
 
 # ----------------------------------------------------------------------------- torch part
-def list_episodes(clothmove_dir, splits):
-    """Reads metadata.pt of each split dir (a pickle: only with weights_only=True) -> {split: [names in metadata order]}."""
+def list_episodes(data_root, splits):
+    """Reads metadata.pt of each split dir (a pickle: only with weights_only=True).
+    Returns ({split: [names in metadata order]}, {split: {name: {"dimx","dimy","seed","n_attempts","length"}}}).
+    cloth_dimx/cloth_dimy are particle counts in cloth_sim (they differ by size by design)."""
     import torch
-    out = {}
+    names, meta_out = {}, {}
     for s in splits:
-        d = Path(clothmove_dir) / s
+        d = Path(data_root) / s
         if not (d / "metadata.pt").exists():
             continue
         meta = torch.load(d / "metadata.pt", map_location="cpu", weights_only=True)
-        out[s] = [Path(e["video_path"]).name for e in meta]
-    return out
+        names[s] = [Path(e["video_path"]).name for e in meta]
+        meta_out[s] = {Path(e["video_path"]).name: {k: (int(e[k]) if k in e and e[k] is not None else None)
+                                                    for k in ("cloth_dimx", "cloth_dimy", "seed", "n_attempts", "length")} for e in meta}
+    return names, meta_out
 
 
 def _make_dataset_class():

@@ -19,7 +19,7 @@ from pathlib import Path
 
 import numpy as np
 
-from .common import log, read_json, write_json, set_seed, run_dir
+from .common import log, read_json, write_json, set_seed, run_dir, size_roles
 from .data import build_eval_dataset, eval_episode_table
 from .masks import frames_area, patch_coverage
 
@@ -167,13 +167,14 @@ def raw_pixel_grid(vis):
     return g.reshape(B, K, -1).cpu().numpy()
 
 
-def run(cfg, paths, run_name, smoke_max_eps=None, epoch=None, overwrite=False):
+def run(cfg, paths, run_name, smoke_max_eps=None, epoch=None, overwrite=False, groups=None, cache_suffix="", max_per_group=None, light=False):
+    """groups: only these size groups (repro_check uses a subset); cache_suffix: separate cache directory (e.g. "_repro")."""
     import torch
     set_seed(cfg["seed"])
     dcfg = cfg["diagnose"]
     device = torch.device(dcfg["device"])
     rdir = run_dir(paths, run_name)
-    cache = paths["cache"] / run_name
+    cache = paths["cache"] / (run_name + cache_suffix)
     if (cache / "DONE").exists() and not overwrite:
         log(f"extract: {cache}/DONE exists, skip")
         return cache
@@ -183,20 +184,27 @@ def run(cfg, paths, run_name, smoke_max_eps=None, epoch=None, overwrite=False):
     assert tcfg.num_hist == 1 and tcfg.frameskip == F, "extract assumes num_hist=1, frameskip=5 (config.train.hydra_overrides)"
 
     listing = read_json(paths["manifests"] / "listing.json")
-    table = eval_episode_table(listing, cfg, paths["clothmove"])
+    table = eval_episode_table(listing, cfg, paths["data_root"])
+    meta_p = paths["manifests"] / "episode_meta.json"
+    ep_meta = read_json(meta_p) if meta_p.exists() else {}
     train_manifest = rdir / "train_manifest.json"
     train_keys = {(e["split"], e["name"]) for e in read_json(train_manifest)["episodes"]}
-    maxn = smoke_max_eps if smoke_max_eps is not None else dcfg["max_episodes_per_group"]
+    maxn = smoke_max_eps if smoke_max_eps is not None else (max_per_group if max_per_group is not None else dcfg["max_episodes_per_group"])
+    tm = read_json(train_manifest)
+    train_groups = sorted(tm["group_counts"].keys())
+    roles = size_roles(cfg, train_groups)
     keep, cnt = [], {}
     for r in table:
-        is_gen = r["split"].startswith("gen_")
-        if (is_gen and "gen" not in dcfg["eval_sets"]) or (not is_gen and r["split"] not in dcfg["eval_sets"]):
+        if r["split"] not in dcfg["eval_sets"] or (groups and r["group"] not in groups):
             continue
         if maxn and cnt.get(r["group"], 0) >= maxn:
             continue
         cnt[r["group"]] = cnt.get(r["group"], 0) + 1
         r = dict(r)
         r["in_train"] = (r["split"], r["name"]) in train_keys
+        m_ = ep_meta.get(r["split"], {}).get(r["name"], {})
+        r["particles"] = (m_["cloth_dimx"] * m_["cloth_dimy"]) if m_.get("cloth_dimx") and m_.get("cloth_dimy") else None
+        r["role"] = roles.get(r["group"])
         keep.append(r)
     E = len(keep)
     log(f"episodes to extract: {E}  groups: {cnt}")
@@ -209,7 +217,7 @@ def run(cfg, paths, run_name, smoke_max_eps=None, epoch=None, overwrite=False):
     cap = LayerCapture(model.predictor)
 
     rvit = None
-    if dcfg["random_vit_control"]:
+    if dcfg["random_vit_control"] and not light:
         torch.manual_seed(dcfg["random_vit_seed"])
         rvit = torch.hub.load("facebookresearch/dinov2:85a24602099d397264d5b30461ad7f3bfd726ca1", "dinov2_vits14", pretrained=False).to(device).eval()
 
@@ -263,6 +271,7 @@ def run(cfg, paths, run_name, smoke_max_eps=None, epoch=None, overwrite=False):
     if sample:
         np.savez_compressed(cache / "frames_sample.npz", **sample)
     write_json({"run_name": run_name, "epoch_loaded": ep_loaded, "episodes": keep, "n_episodes": E, "K": K, "pools": pools,
-                "code_commit": cfg["code"]["commit"]}, cache / "episodes.json")
+                "code_commit": cfg["code"]["commit"], "dataset": cfg["data"]["active"], "train_groups": train_groups, "roles": roles,
+                "reference_group": cfg["diagnose"]["reference_group"], "groups_filter": groups}, cache / "episodes.json")
     (cache / "DONE").write_text("ok\n")
     return cache

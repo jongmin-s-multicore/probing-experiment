@@ -12,7 +12,7 @@ import numpy as np
 from .common import log, read_json, write_json
 from . import probes as P
 
-METRICS = ["r2_overall", "r2_within_group", "acc3", "slope", "slope_group_means"]
+METRICS = ["r2_overall", "r2_within_group", "acc_cls", "acc_cls_pm1", "slope", "slope_group_means"]
 
 
 def load_all(cache, cfg, pool):
@@ -22,9 +22,10 @@ def load_all(cache, cfg, pool):
     sc = np.load(cache / "scalars.npz")
     area = sc["area_real"]
     names = np.array([e["group"] for e in eps])
-    groups = sorted(set(names[ok]), key=lambda g: float(np.median(area[ok & (names == g)])))
+    # groups ordered by the nominal area ratio of the selected dataset (config group_order), only those present among eligible episodes
+    groups = [g for g in cfg["_ds"]["group_order"] if (names[ok] == g).any()]
     gid = {g: i for i, g in enumerate(groups)}
-    cmap = cfg["probe"]["class_groups"]
+    cmap = cfg["probe"]["class_groups"]            # class index = position in the full group_order (9 classes for cloth_sim)
     ep_ids = np.where(ok)[0]
     grp_ids = np.array([gid[names[i]] for i in ep_ids])
     cls_ids = np.array([cmap.get(names[i], -1) for i in ep_ids])
@@ -47,7 +48,7 @@ def load_all(cache, cfg, pool):
     return S, ep_ids, grp_ids, groups, ep
 
 
-def _eval(preds, S, groups, cfg, seed, bins, no_cls=False):
+def _eval(preds, S, groups, cfg, seed, bins, no_cls=False, role_gids=None):
     nb = cfg["probe"]["n_bootstrap"]
     out = {}
     gids = list(range(len(groups)))
@@ -57,6 +58,10 @@ def _eval(preds, S, groups, cfg, seed, bins, no_cls=False):
             s = P.Samples(s.x, s.ep, s.k, s.grp, np.full_like(s.cls, -1), s.y)
         base = np.isfinite(yh) & (s.k >= 1)
         out[t] = {"all": P.summarize(s, yh, ch, base, gids, nb, seed)}
+        for rn, rg in (role_gids or {}).items():            # per-role summary (heldout_size protocol)
+            m = base & np.isin(s.grp, rg)
+            if m.any():
+                out[t]["role_" + rn] = P.summarize(s, yh, ch, m, list(rg), max(nb // 2, 0), seed)
         for bn, (lo, hi) in bins.items():
             m = base & (s.k >= lo) & (s.k <= hi)
             if m.any():
@@ -88,6 +93,12 @@ def _agg(per_seed, groups):
     return res
 
 
+def logo_heldout_type(cfg, groups):
+    """For leave-one-group-out: the held-out size is 'extrap_small'/'extrap_large' if it is the smallest/largest of the 9 (training on the
+    other sizes lies entirely above/below it), otherwise 'interp'. Independent of what the world model was trained on."""
+    return {g: ("extrap_small" if i == 0 else "extrap_large" if i == len(groups) - 1 else "interp") for i, g in enumerate(groups)}
+
+
 def run(cfg, paths, run_name):
     cache = paths["cache"] / run_name
     assert (cache / "DONE").exists(), f"run extract first: {cache}"
@@ -97,12 +108,25 @@ def run(cfg, paths, run_name):
         "strat_cv": "(i) same-type latent, 5-fold GroupKFold over episodes stratified by size group",
         "logo": "(i) same-type latent, leave-one-group-out",
         "gt_transfer": "(ii) train on GT encodings only (held-out episodes), apply to predicted latents",
-        "upper": "(iii) train on GT + tf1 + ol latents of all sizes (held-out episodes), test on predicted latents"},
+        "upper": "(iii) train on GT + tf1 + ol latents of all sizes (held-out episodes), test on predicted latents",
+        "heldout_size": "(iv) train on GT encodings of the sizes the world model was trained on (held-out episodes), test on gt/tf1/ol of all sizes, summarised per role"},
+        "metrics": {"acc_cls": "exact size-class accuracy (classes = ordered sizes of the dataset; null when the class is absent from training)",
+                    "acc_cls_pm1": "accuracy within +-1 neighbouring size class", "r2_within_group": "R2 after removing per-group means of y and y_hat",
+                    "slope": "slope of predicted vs real log-area over all samples", "slope_group_means": "same over group means",
+                    "ci": "episode-level cluster bootstrap (resampling within group), 2.5/97.5 percentiles, averaged over probe seeds"},
         "label_note": "h0..h6 use the area of the input frame; gt/tf1/ol/rvit/pix use the area of the frame the latent represents",
         "thresholds_todo": cfg["diagnose"]["thresholds"], "pools": {}}
     for pool in cfg["diagnose"]["pools"]:
         S, ep_ids, grp_ids, groups, ep = load_all(cache, cfg, pool)
         ep_grp = grp_ids
+        roles = ep.get("roles") or {}
+        tgs = [g for g in ep.get("train_groups", []) if g in groups]
+        train_gids = [groups.index(g) for g in tgs]
+        role_gids = {}
+        for g in groups:
+            role_gids.setdefault(roles.get(g, "unknown"), []).append(groups.index(g))
+        out["train_groups"], out["group_roles"] = tgs, {g: roles.get(g) for g in groups}
+        out["logo_heldout_type"] = logo_heldout_type(cfg, groups)
         out["groups_order_by_median_real_area"] = groups
         out["n_eligible_episodes"] = int(len(ep_ids))
         out["group_sizes"] = {g: int((grp_ids == i).sum()) for i, g in enumerate(groups)}
@@ -116,15 +140,19 @@ def run(cfg, paths, run_name):
                 if protocol in ("strat_cv", "logo"):
                     targets = ["gt", "tf1", "ol"] + ["rvit", "pix"] * 1 + layer_types
                     targets = [t for t in targets if t in S]
-                elif protocol == "gt_transfer":
+                elif protocol in ("gt_transfer", "heldout_size"):
                     targets = ["gt", "tf1", "ol"]
+                    if protocol == "heldout_size" and not train_gids:
+                        log("probe heldout_size skipped: no training groups among eligible groups")
+                        continue
                 else:
                     targets = ["tf1", "ol"]
                 per_seed, per_seed_perm = [], []
                 for seed in pc["seeds"]:
                     log(f"probe {pool}/{kind}/{protocol} seed {seed}")
-                    pr = P.run_protocol(protocol, targets, S, ep_ids, ep_grp, pc, kind, pool, seed)
-                    per_seed.append(_eval(pr, S, groups, cfg, seed, bins, no_cls=(protocol == "logo")))
+                    pr = P.run_protocol(protocol, targets, S, ep_ids, ep_grp, pc, kind, pool, seed, train_gids=train_gids)
+                    per_seed.append(_eval(pr, S, groups, cfg, seed, bins, no_cls=(protocol in ("logo", "heldout_size")),
+                                          role_gids=role_gids if protocol == "heldout_size" else None))
                     if protocol == "strat_cv" and "label_permute" in pc["controls"]:
                         prp = P.run_protocol(protocol, [t for t in ("gt", "tf1", "ol")], S, ep_ids, ep_grp, pc, kind, pool, seed, permute=True)
                         per_seed_perm.append(_eval(prp, S, groups, cfg, seed, bins))
@@ -132,7 +160,7 @@ def run(cfg, paths, run_name):
                 if per_seed_perm:
                     kres["label_permute_" + protocol] = _agg(per_seed_perm, groups)
                     kres["selectivity_real_minus_permute"] = {
-                        t: {m: _diff(kres[protocol][t]["all"][m], kres["label_permute_" + protocol][t]["all"][m]) for m in ("r2_overall", "r2_within_group", "acc3")}
+                        t: {m: _diff(kres[protocol][t]["all"][m], kres["label_permute_" + protocol][t]["all"][m]) for m in ("r2_overall", "r2_within_group", "acc_cls", "acc_cls_pm1")}
                         for t in kres["label_permute_" + protocol]}
             if "constant_mean" in pc["controls"]:
                 per_seed = []

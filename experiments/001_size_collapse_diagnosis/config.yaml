@@ -15,9 +15,22 @@ code:
   src_env: "ACWM_PHYS_SRC"
   # 확인한 사실 (브랜치 conf/train.yaml 은 num_hist: 3 이 기본값이지만 acwm-phys 본 학습 job 은 모두 num_hist=1 로 덮어쓴다.
   #  repro/jobs/acwm_phys.txt: "train env=acwm_cloth_move frameskip=5 num_hist=1 training.epochs=15 ... predictor_lr=5e-5 batch_size=24").
-  #  README(acwm-phys 브랜치) 표도 Cloth Move 는 num_hist 1, 15 epochs. thread0 main 의 conf/train.yaml 기본값은 3 (main README 의 1 과 다름).
   recorded_num_hist_in_branch_jobs: 1
   recorded_num_hist_conf_default: 3
+  # cloth-sim 브랜치 (사용자가 기술적 문제로 당분간 쓸 수 없다고 알림 -> 코드는 이 브랜치에 의존하지 않는다). 2026-10-31 에 확인 못 함: `git ls-remote --heads upstream` 의 7개 head 에 hanbin5/cloth-sim 이 없고,
+  # `git fetch upstream hanbin5/cloth-sim` 은 "couldn't find remote ref" 로 실패했다. 사용자가 준 커밋 3e7eb8f 도 로컬 객체 DB 에 없다
+  # (fetch 후에도 `git cat-file -t 3e7eb8f` 실패). 따라서 commit hash 는 null 이다 (브랜치가 push 되면 채울 것).
+  # 재확인(2차, 같은 날): `git fetch upstream hanbin5/cloth-sim`, `git fetch origin hanbin5/cloth-sim` 모두 "couldn't find remote ref";
+  # `git ls-remote --heads upstream` 은 7개 head(211shyn/ACWM-baseline, hanbin5/{acwm-baseline,acwm-phys,local,occlusion,pusht-long-horizon}, main),
+  # origin(probing-experiment.git)은 main 하나뿐. `git cat-file -t 3e7eb8f` 여전히 실패.
+  # 그 결과 datasets/acwm_phys_dset.py(cloth-sim 판)와 conf/env/cloth_sim.yaml 은 읽지 못했다. 이 실험은 acwm-phys 의 코드/설정을 쓰고
+  # (hydra env=acwm_cloth_move, 데이터 로더는 exp001.data 가 대체), cloth-sim 쪽이 같은 인터페이스라고 가정한다 (미검증).
+  cloth_sim_branch:
+    name: "hanbin5/cloth-sim"
+    commit: null
+    status: "not found on remote upstream (checked 2026-10-31)"
+    expected_files_unverified: ["datasets/acwm_phys_dset.py", "conf/env/cloth_sim.yaml"]
+    generation_code_commit_given_by_user: "3e7eb8f (repro/cloth_sim/) - not resolvable locally"
 
 # ---------------------------------------------------------------------------------------------
 # 경로: 하드코딩하지 않고 환경변수로 받는다. 괄호는 환경변수가 없을 때의 기본값.
@@ -27,71 +40,168 @@ paths:
   dataset_env: "DATASET_DIR"       # ($DINO_WORK/data)
   train_env: "DINO_TRAIN"          # ($DINO_WORK/train_runs)  체크포인트: $DINO_TRAIN/outputs/<run_name>/
   cache_env: "EXP001_CACHE"        # ($DINO_WORK/exp001_cache) 추출한 특징 npz (대용량)
-  clothmove_subdir: "acwm_phys/deformable/clothmove"   # conf/env/acwm_cloth_move.yaml 의 data_path 와 같은 구조
 
 # ---------------------------------------------------------------------------------------------
-# 데이터. 다운로드 경로는 브랜치의 repro/setup/download_acwm_phys.py 에서 확인한 것만 적는다.
+# 데이터. data.dataset 으로 선택 (환경변수 EXP001_DATASET 이 있으면 그것이 우선). 선택된 블록의 값이 train/diagnose/probe 로 복사된다.
+#   cloth_sim  : 기본. PyFleX 로 재생성한 Cloth Move, 천 크기 9종 (사용자가 제공한 Drive 폴더 README 기준)
+#   acwm_phys  : 기존(원본 ACWM-Phys, 크기 3종). 재현/비교용으로 남겼다. 중간 크기 생성 경로는 제거됨.
 # ---------------------------------------------------------------------------------------------
 data:
-  hf_repo: "t1an/ACWM-Phys"
-  hf_revision: "4017e5f5900a7a8590d4e944b6a84f55df75a0c1"   # download_acwm_phys.py 의 REV
-  hf_subfolder: "deformable/clothmove"
-  expected_episodes: {ind_train: 2000, ind_test: 100, ood_test: 100}   # 같은 스크립트의 기대값
-  ood_group_prefix: {smaller: "smaller", larger: "larger"}            # 브랜치 eval_acwm_phys.py 가 파일 이름 접두사로 그룹을 나눈다
-  frames_per_episode: 65        # 브랜치 README: 65 frames / 64 actions
-  action_dims: [0, 1, 2, 4, 5, 6]   # conf/env/acwm_cloth_move.yaml (3, 7 은 모든 에피소드에서 1.0)
+  dataset: "cloth_sim"
+  # 데이터 받는 곳 (환경변수 EXP001_DATA_SOURCE 가 있으면 그것이 우선). 기본 drive.
+  #   drive : rclone 으로 Google Drive 폴더에서 받는다 (아래 drive 블록). 현재 기본.
+  #   hf    : huggingface_hub 로 hanbin5/cloth-sim 데이터셋에서 받는다. 사용자가 이 저장소(와 cloth-sim 브랜치)를 기술적 문제로
+  #           당분간 쓸 수 없다고 해서 기본값을 drive 로 바꿨다. 코드는 남겨 둔다. HF 토큰은 source=hf 일 때만 필요.
+  source: "drive"
+  drive:
+    # rclone remote 이름은 결과 업로드(sync.drive.rclone_remote)와 같은 것을 재사용할 수 있다: 여기가 비어 있으면
+    # EXP001_RCLONE_REMOTE -> sync.drive.rclone_remote 순으로 찾는다. 이름만 적는다(rclone 설정/토큰 내용은 이 코드가 읽지 않는다).
+    rclone_remote: ""            # TODO 사람이 채움 (예: gdrive)
+    # 데이터 루트 폴더 id. 2026-10-31 세션의 Drive 커넥터로 확인: 아래 아이디의 폴더 아래에 split 폴더 18개
+    # (ind_train, ind_test, a026_train..a248_train, a026_test..a248_test), logs/ 폴더, README.md 가 있다. 소유자는 사용자가 아닌 다른 계정.
+    root_folder_id: "1z4z6WA2G-7UXjbrJtLSWqm6KBpuHrkiI"
+    # 접근 방식 (a): remote_path 가 비어 있으면 root_folder_id 를 루트로 쓴다 -> rclone copy "<remote>,root_folder_id=<ID>:<split>" <dest>
+    #   (미검증) 이 문법이 안 되는 rclone 이면 root_folder_style: flag 로 바꾼다 -> rclone copy <remote>:<split> <dest> --drive-root-folder-id <ID>
+    root_folder_style: "connection_string"     # connection_string | flag
+    # 접근 방식 (b): Drive 웹에서 폴더를 "내 드라이브에 바로가기 추가"하거나 사본을 만든 뒤 그 경로를 적는다 (예: cloth_sim_data).
+    #   비어 있지 않으면 (b) 를 쓴다: rclone copy "<remote>:<remote_path>/<split>" <dest>.  환경변수 EXP001_DATA_REMOTE_PATH 로도 지정.
+    #   (결과 업로드의 sync.drive.remote_path 와는 별개의 값이다)
+    remote_path: ""
+    rclone_bin: "rclone"         # 환경변수 EXP001_RCLONE_BIN (셀프테스트는 가짜 실행 파일로 바꾼다)
+    # 추가 rclone 플래그는 환경변수 EXP001_RCLONE_FLAGS (예: "--transfers 2 --tpslimit 2")
+  frames_per_episode: 65        # 두 데이터셋 공통 (사용자 README / 브랜치 README)
+  action_dims: [0, 1, 2, 4, 5, 6]   # action = [dx1,dy1,dz1,1,dx2,dy2,dz2,1] (3, 7 은 상수 1.0)
   img_size: 224
   frameskip: 5
+  datasets:
+    cloth_sim:
+      kind: "cloth_sim"
+      # --- 사용자가 준 README 에 적힌 사실 (이 머신에서 데이터를 받아 확인한 것은 아니다) ---
+      source_note: "ACWM-Phys Cloth Move 를 PyFleX 로 재생성(원본 아님). 같은 action 재생 시 ACWM 천 마스크 IoU 0.68. 카메라 고정."
+      hf_repo: "hanbin5/cloth-sim"      # data.source=hf 일 때만 사용 (현재 사용 불가라고 사용자가 알림)
+      hf_repo_type: "dataset"
+      hf_revision: null          # TODO: 고정 revision 을 모른다 (HF API 는 비인증 호출에 401 이었음). 알게 되면 채울 것.
+      # 접근 토큰: 환경변수 HF_TOKEN 또는 `huggingface-cli login`. 토큰 값은 이 파일을 포함해 어떤 파일/로그에도 쓰지 않는다.
+      drive_folder_id: "1z4z6WA2G-7UXjbrJtLSWqm6KBpuHrkiI"     # = data.drive.root_folder_id (참고용 기록)
+      subdir: "cloth_sim"        # $DATASET_DIR/cloth_sim/<split>/{episode_%05d.mp4,metadata.pt}. split 폴더 이름은 Drive 에서 확인(<size>_train/test, ind_train/ind_test), 폴더 안 파일 구조는 사용자 README 서술이며 열어 확인하지 못했다(가정)
+      split_pattern: "{size}_{part}"     # part = train | test.  ind 는 ind_train, ind_test
+      expected_episodes: {train: 2000, test: 100}   # 크기마다. 총 18,900
+      video: {height: 512, width: 512, fps: 16, frames: 65, codec: "H.264"}
+      metadata_keys: [video_path, actions, length, seed, cloth_dimx, cloth_dimy, x0, n_attempts]   # actions (64,8) float32. cloth_dimx/y = 입자 수
+      seed_rule: "split 기준값 = 10_000_000 + 1_000_000*크기순번(a026=0..a248=8), 테스트는 +500_000, episode seed = 기준값 + episode 번호 (생성 쪽 규칙; 이 실험은 생성하지 않음)"
+      # area_ratio: 프레임 3 의 천 픽셀 수를 ind_train 평균과 비교한 값 (사용자 README). w,h: 천 폭x높이. particles: [폭, 높이] 입자 수
+      sizes:
+        - {name: a026, area_ratio: 0.259, w: 0.328, h: 0.314, particles: [54, 51]}    # ACWM 의 smaller(0.26) 와 같은 면적비
+        - {name: a040, area_ratio: 0.399, w: 0.402, h: 0.384, particles: [65, 62]}
+        - {name: a060, area_ratio: 0.599, w: 0.486, h: 0.464, particles: [79, 75]}
+        - {name: a080, area_ratio: 0.801, w: 0.553, h: 0.528, particles: [89, 86]}
+        - {name: ind,  area_ratio: 1.000, w: 0.609, h: 0.582, particles: [98, 94]}
+        - {name: a125, area_ratio: 1.249, w: 0.670, h: 0.641, particles: [108, 103]}
+        - {name: a160, area_ratio: 1.600, w: 0.746, h: 0.713, particles: [120, 115]}
+        - {name: a200, area_ratio: 2.000, w: 0.823, h: 0.786, particles: [133, 127]}
+        - {name: a248, area_ratio: 2.479, w: 0.905, h: 0.865, particles: [146, 139]}  # ACWM 의 larger(2.48) 와 같은 면적비
+      group_order: [a026, a040, a060, a080, ind, a125, a160, a200, a248]   # 면적비 오름차순 = probe 분류 클래스 번호 0..8
+      reference_group: "ind"      # 학습 크기(baseline). '학습 크기로 수축' 지표의 기준 군집
+      # 평가 split: 9개 크기의 *_test (각 100). 학습 split(*_train)은 평가에 쓰지 않으므로 학습/평가 에피소드는 항상 분리된다.
+      eval_sets: [a026_test, a040_test, a060_test, a080_test, ind_test, a125_test, a160_test, a200_test, a248_test]
+      train_hydra_env: "acwm_cloth_move"   # acwm-phys 의 hydra env. cloth_sim.yaml 은 읽지 못했으므로 쓰지 않는다 (데이터 로더는 exp001.data 가 대체)
+      total_episodes: 2000          # 모든 학습 분포에서 같게 (데이터량 통제)
+      # --- 학습 분포. 전부 "TODO 사람 확정 필요". 총 episode 수 2000, epoch 15, 학습 시드 0, batch 24, lr 은 분포 간 동일.
+      # source = 학습 split 이름(<size>_train), take: first|last (metadata 순서).  평가는 *_test 만 쓰므로 학습 episode 와 겹치지 않는다.
+      # held-out 규칙: 학습 manifest 에 없는 크기는 모두 held-out. 역할(role)은 면적비로 자동 분류한다:
+      #   trained / interp (학습 크기 면적비 범위 [min,max] 안쪽의 학습 안 한 크기) / extrap_small / extrap_large (범위 밖)
+      distributions:
+        baseline_single:            # ind_train 단일 크기 (원래 문제 재현). 사람 확정 필요
+          - {source: ind_train, group: ind, n: 2000, take: first}
+        mix_adjacent:               # (i) 인접 크기 혼합 a080+ind+a125 (면적비 0.801/1.0/1.249). 사람 확정 필요. 보간 대상 없음, 외삽만 남음
+          - {source: a080_train, group: a080, n: 667, take: first}
+          - {source: ind_train,  group: ind,  n: 666, take: first}
+          - {source: a125_train, group: a125, n: 667, take: first}
+        mix_wide:                   # (ii) 넓은 범위 혼합 a040+ind+a160 (0.399/1.0/1.6). 사람 확정 필요. a060,a080,a125 는 보간, a026,a200,a248 은 외삽
+          - {source: a040_train, group: a040, n: 667, take: first}
+          - {source: ind_train,  group: ind,  n: 666, take: first}
+          - {source: a160_train, group: a160, n: 667, take: first}
+      distribution_status:
+        baseline_single: "TODO 사람 확정 필요"
+        mix_adjacent: "TODO 사람 확정 필요 (후보 F 대조군 예시 i)"
+        mix_wide: "TODO 사람 확정 필요 (후보 F 대조군 예시 ii)"
+      # 받을 split (drive/hf 공통). 기본: baseline 학습용 ind_train + 평가용 9개 test. 대조군 학습 split 은 해당 분포를 쓸 때만 추가로 받는다.
+      download_default_splits: [ind_train, a026_test, a040_test, a060_test, a080_test, ind_test, a125_test, a160_test, a200_test, a248_test]
+
+    acwm_phys:                       # 기존 구현 (원본 ACWM-Phys, 크기 3종). hf revision 은 브랜치 download 스크립트에 고정된 값
+      kind: "acwm_phys"
+      hf_repo: "t1an/ACWM-Phys"
+      hf_revision: "4017e5f5900a7a8590d4e944b6a84f55df75a0c1"
+      hf_subfolder: "deformable/clothmove"
+      subdir: "acwm_phys/deformable/clothmove"
+      expected_episodes: {ind_train: 2000, ind_test: 100, ood_test: 100}
+      ood_group_prefix: {smaller: "smaller", larger: "larger"}
+      group_order: [smaller, ind, larger]
+      sizes:
+        - {name: smaller, area_ratio: 0.26}
+        - {name: ind, area_ratio: 1.0}
+        - {name: larger, area_ratio: 2.5}
+      reference_group: "ind"
+      eval_sets: [ind_test, ood_test]
+      train_hydra_env: "acwm_cloth_move"
+      total_episodes: 2000
+      distributions:
+        baseline_single:
+          - {source: ind_train, group: ind, n: 2000, take: first}
+        mix_ood3:
+          - {source: ind_train, group: ind, n: 1950, take: first}
+          - {source: ood_test, group: smaller, n: 25, take: last}
+          - {source: ood_test, group: larger, n: 25, take: last}
+      distribution_status: {baseline_single: "TODO 사람 확정 필요", mix_ood3: "TODO 사람 확정 필요"}
+      download_default_splits: [ind_train, ind_test, ood_test]
 
 # ---------------------------------------------------------------------------------------------
-# 마스크 천 면적 (픽셀 마스크로 직접 측정). 값은 브랜치 repro/eval/eval_acwm_phys_quant.py 의 Cloth Move HSV 규칙과 같다.
-# cloth_dimx/y 메타데이터는 보이는 크기와 r≈0.02 이므로 쓰지 않는다.
+# 마스크 천 면적 (픽셀 마스크로 직접 측정). 값은 acwm-phys 브랜치 repro/eval/eval_acwm_phys_quant.py 의 Cloth Move HSV 규칙과 같다.
+# 미검증 가정: 재생성본(PyFleX)의 천 색이 원본과 같아서 이 규칙이 그대로 맞는다. `python run.py maskcheck` 가 프레임 3 의 측정 면적비를
+# README 의 면적비와 비교해 기록한다. 그 결과 전에는 가정이다.
 # ---------------------------------------------------------------------------------------------
 mask:
   cloth_orange: {hue_lo: 8, hue_hi: 16, sat_min: 120, val_min: 80}
   cloth_pink:   {hue_lo: 158, hue_hi: 170, sat_min: 60, val_min: 80}
   min_px: 6
 
+# maskcheck: 모델 없이 영상만 읽는 CPU 점검 (마스크 규칙 대 README 면적비, 입자 수 대 마스크 면적 상관)
+maskcheck:
+  split_part: "test"
+  episodes_per_size: 100         # 0 = 전부. 작게 줄여 빠르게 볼 수 있다.
+  frame_for_area: 3              # 사용자 README 의 면적비 정의 프레임
+  resize_to: 224                 # 모델 입력과 같은 해상도 (cv2 INTER_AREA 근사. 모델 쪽 transform 과 픽셀 단위로 같지는 않다)
+
 # ---------------------------------------------------------------------------------------------
 # 학습 (체크포인트가 없으므로 이 실험이 학습한다). 브랜치 repro/jobs/acwm_phys.txt 의 Cloth Move 설정과 같게 둔다.
+# 미검증 가정: cloth_sim 도 같은 num_hist/frameskip/epoch (cloth_sim.yaml 을 읽지 못함).
+# 분포는 data.datasets.<선택>.distributions 에서 가져온다 (load_config 가 train.distributions 로 복사).
 # ---------------------------------------------------------------------------------------------
 train:
   seed: 0                       # training.seed (모델 초기화/슬라이스 순열). 학습 시드 3 이상은 사람 확정 사항이며 TODO.
-  seeds: [0]                    # 학습할 시드 목록. [0, 1, 2] 로 늘리면 비용이 시드 수만큼 늘어난다 (사람 승인 필요). 기본은 1개.
+  seeds: [0]                    # 학습할 시드 목록. 늘리면 비용이 시드 수만큼 늘어난다 (사람 승인 필요).
   hydra_overrides:
-    env: "acwm_cloth_move"
     frameskip: 5
     num_hist: 1
     "training.epochs": 15
     "training.save_every_x_epoch": 5
     "training.predictor_lr": 5.0e-5
     "training.batch_size": 24
-  # 학습 에피소드 총수는 모든 분포에서 같게 맞춘다 (데이터량 통제). epochs, 시드도 같다.
-  total_episodes: 2000          # ind_train 전체와 같음
-  # 분포 정의. source: ind_train | ood_test | gen:<tag>.  take: first|last (정렬된 파일 이름 기준).
-  # ood_test 는 평가 에피소드와 겹치지 않게 'last' 에서 가져온다 (평가 공통 부분집합은 first 25).
-  # 아래 mix 분포의 비율/구성은 임의의 예시이며 "사람 확정 필요" (후보 F 승인 전에는 학습하지 않는다).
-  distributions:
-    baseline_single:            # 단일 크기: ind_train 2000 (브랜치 기본 학습과 동일한 에피소드, 동일한 순서)
-      - {source: ind_train, group: ind, n: 2000, take: first}
-    mix_ood3:                   # 크기 3단계 혼합: 1x + 0.26x + 2.5x (ood_test 'last' 25개씩 사용; 브랜치 README 의 InD+OoD 실험과 같은 개수)
-      - {source: ind_train, group: ind, n: 1950, take: first}
-      - {source: ood_test, group: smaller, n: 25, take: last}
-      - {source: ood_test, group: larger, n: 25, take: last}
+    # env 는 선택된 데이터셋 블록의 train_hydra_env 로 채워진다 (load_config)
+  # 사람이 승인한 분포. 여기에 없는 분포는 `python run.py train` 이 거부한다 (환경변수 EXP001_APPROVED="baseline_single mix_wide" 로도 지정).
+  approved_distributions: []    # TODO 사람 확정 필요
   run_name_template: "exp001_{dist}_s{seed}"      # $DINO_TRAIN/outputs/<run_name>
-  models_to_diagnose: ["baseline_single:0"]   # "분포:시드". mix_ood3:0 은 사람이 승인하고 학습한 뒤 추가
+  models_to_diagnose: ["baseline_single:0"]   # "분포:시드". 대조군은 사람이 승인하고 학습한 뒤 추가
 
 # ---------------------------------------------------------------------------------------------
-# 중간 크기 에피소드 생성 (옵션, 기본 비활성). 생성기 입수 경로가 확인되지 않았다 (README 참조).
+# 재현 확인 단계 (1순위). 재생성본이므로 baseline 이 a026/a248 에서 '학습 크기로 수축'을 실제로 보이는지는 보장되지 않는다.
+# 학습 후 가장 먼저 `python run.py repro_check` 를 돌리고 results/<run>/repro_check.json 의 수치를 사람이 확인한 뒤 전체 추출로 간다.
+# 수치만 기록하고 판정하지 않는다.
 # ---------------------------------------------------------------------------------------------
-gen_midsize:
-  enabled: false
-  # 면적 배율 (dataset 의 0.26x / 2.5x 와 같은 의미의 '면적' 배율인지 선형 배율인지는 생성기 확인 후 정한다. TODO)
-  area_scales: [0.5, 1.5]
-  episodes_per_scale: 50
-  seed: 123
-  generator_cmd_env: "ACWM_PHYS_GENERATOR_CMD"   # 사용자가 가진 생성기를 부르는 명령 템플릿 ({area_scale} {n} {seed} {out_dir})
-  validate: {frames: 65, height: 512, width: 512}
+repro_check:
+  groups: [a026, ind, a248]     # 사용자가 현상을 보고한 크기 (+ 기준 크기)
+  max_episodes_per_group: 100   # 0 = 전부
+  note: "재생성본 (ACWM 과 천 마스크 IoU 0.68)"
 
 # ---------------------------------------------------------------------------------------------
 # 진단 (후보 D/E)
@@ -99,13 +209,14 @@ gen_midsize:
 diagnose:
   device: "cuda"                # 브랜치의 ViT predictor 는 attention mask 를 .to('cuda') 로 만들기 때문에 GPU 필수
   batch_episodes: 8
-  eval_sets: [ind_test, ood_test, gen]   # gen 은 생성된 중간 크기가 있을 때만
-  max_episodes_per_group: 0     # 0 = 전부. 스모크 테스트용으로 줄일 수 있다.
+  # eval_sets, reference_group 은 선택된 데이터셋 블록에서 채워진다 (load_config)
+  max_episodes_per_group: 0     # 0 = 전부 (9개 크기 x 100 = 900). 스모크 테스트용으로 줄일 수 있다.
   rollout_ks: [1, 2, 3, 4, 6, 8, 12]     # 보고할 open-loop 스텝 (매 스텝 저장하고 요약만 이 k 로)
   pools: ["mean", "grid2"]      # 패치 풀링: 전체 평균 / 2x2 격자 평균
   random_vit_control: true      # 랜덤 초기화 DINOv2 ViT-S/14 특징을 대조군으로 추출
   random_vit_seed: 0
-  save_decoded_frames: 8        # 그룹마다 눈으로 확인할 에피소드 수 (uint8 npz)
+  save_decoded_frames: 4        # 군집마다 눈으로 확인할 에피소드 수 (uint8 npz). 9개 크기라 기존 8 에서 줄임
+  bootstrap_seed: 0
   # 면적비/수축 판정 임계값 (사람 확정 필요). 비워 두면 판정하지 않고 수치만 기록한다.
   thresholds:
     shrink_ratio_tol: null      # TODO 사람 확정 필요: 에피소드를 '수축'으로 세는 면적비 기준
@@ -114,7 +225,7 @@ diagnose:
     selectivity_min: null       # TODO 사람 확정 필요 (진짜 라벨 - control)
 
 # ---------------------------------------------------------------------------------------------
-# 크기 probe: 세 프로토콜 병기
+# 크기 probe: 프로토콜 병기. 주 라벨 = 마스크 천 면적(log). cloth_dimx*cloth_dimy 는 보조 검증용 상관만 계산한다 (라벨로 쓰지 않음).
 # ---------------------------------------------------------------------------------------------
 probe:
   seeds: [0, 1, 2, 3, 4]        # probe 시드 5개 (CV 분할, MLP 초기화, permutation, bootstrap)
@@ -122,13 +233,14 @@ probe:
   models:
     ridge: {alphas: [0.1, 1.0, 10.0, 100.0, 1000.0], standardize: true}   # alpha 는 train fold 내부 GroupKFold 로 선택
     mlp:   {hidden: 128, max_iter: 200, alpha: 1.0e-3, early_stopping: true, pools: ["mean"]}   # MLP 는 mean 풀링에만 (비용)
-  protocols: ["strat_cv", "logo", "gt_transfer", "upper"]
-  # strat_cv/logo: (i) 같은 종류 latent 에 학습, 군집 층화 CV / leave-one-group-out
+  protocols: ["strat_cv", "logo", "gt_transfer", "upper", "heldout_size"]
+  # strat_cv/logo: (i) 같은 종류 latent 에 학습, 군집 층화 CV / leave-one-group-out (9 크기 중 1개 제외)
   # gt_transfer  : (ii) GT 인코딩에만 학습해 예측 latent 에 적용
   # upper        : (iii) GT + 예측 latent (모든 크기 포함) 에 학습한 상한 probe
+  # heldout_size : (iv) 월드 모델이 학습한 크기의 GT 인코딩에만 학습한 probe 를 학습 안 한 크기(보간/외삽)의 gt/tf1/ol 에 적용
   target: "log_area_real"       # 실제 프레임의 마스크 천 면적의 log (해당 시점)
-  class_groups: {smaller: 0, ind: 1, larger: 2}   # 3-way 분류 라벨 (generated 는 분류에서 제외)
-  n_bootstrap: 1000             # 에피소드 단위 cluster bootstrap
+  # 분류(9-class)/순서 정확도의 클래스 = 선택된 데이터셋의 group_order 인덱스 (load_config 가 class_groups 로 채움)
+  n_bootstrap: 1000             # 에피소드 단위 cluster bootstrap (군집 내 복원추출)
   controls: ["label_permute", "random_vit", "raw_pixel", "constant_mean"]
   layer_probe: true             # predictor 입력/블록 출력별 probe (층별 curve)
   probe_step_bins: {early: [1, 3], mid: [4, 8], late: [9, 12]}
@@ -139,11 +251,24 @@ probe:
 intervene:
   enabled: true
   n_random_directions: 20       # 같은 노름의 무작위 방향 대조군
-  modes: ["remove", "set_ind_mean", "set_group_swap"]   # 투영 제거 / 1x 평균으로 치환 / 다른 크기 군집 평균으로 치환
+  modes: ["remove", "set_ind_mean", "set_group_swap"]   # 투영 제거 / 학습 기준 크기 평균으로 치환 / 지정한 군집 쌍 치환
+  swap_pairs: [["a248", "a026"], ["a026", "a248"]]      # set_group_swap 이 쓰는 (원본, 대상) 쌍. 9개 전부 하면 72 모드라 극단 쌍만 (비용, TODO 사람 확정)
   seed: 0
-  max_episodes_per_group: 0
+  max_episodes_per_group: 25    # 0 = 전부 (9x100). 비용 때문에 25 로 둠 (임의 값, TODO 사람 확정)
 
 # ---------------------------------------------------------------------------------------------
 # 성공 기준: 사람 확정 후 채움. hypotheses.md 의 예시값(0.9, 0.1 등)은 여기에 복사하지 않았다.
 # ---------------------------------------------------------------------------------------------
 success_criteria: null          # TODO 사람 확정 필요
+
+# ---------------------------------------------------------------------------------------------
+# 결과 동기화 (python run.py sync, 또는 SYNC=1 bash run_all.sh). 사용자 GPU 머신에서 rclone 으로 Google Drive 에 올린다.
+# 값은 사람이 채운다. 비어 있으면 업로드를 건너뛰고 안내만 출력한다 (실험은 실패하지 않는다). 비밀(토큰 등)은 여기에 쓰지 않는다.
+# 환경변수로도 지정 가능: EXP001_RCLONE_REMOTE, EXP001_REMOTE_PATH, EXP001_DRIVE_MOUNT.
+# 체크포인트/추출 캐시는 기본 제외: SYNC_CKPT=1, SYNC_CACHE=1 (또는 run.py sync --ckpt/--cache).
+# ---------------------------------------------------------------------------------------------
+sync:
+  drive:
+    rclone_remote: ""      # TODO 사람이 채움: `rclone config` 에서 만든 drive remote 이름 (예: gdrive)
+    remote_path: ""        # TODO 사람이 채움: Drive 안 대상 폴더 (예: exp001_results). 아래에 <날짜-시간>_<run> 하위 폴더가 생긴다
+    local_mount: ""        # 선택(대안): Drive 데스크톱 앱이 마운트한 경로. rclone_remote 가 비어 있을 때만 사용 (예: /mnt/g/MyDrive)
