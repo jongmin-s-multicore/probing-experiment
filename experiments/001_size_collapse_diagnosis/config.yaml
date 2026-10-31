@@ -1,0 +1,149 @@
+name: "001_size_collapse_diagnosis"
+hypothesis: "D,E"      # notes/hypotheses.md 의 ID (후보, 미확정). 후보 F 는 train.distributions 의 대조군 용도로만 코드 지원.
+seed: 0                # 전역 시드 (numpy/torch/random). 아래 항목별 시드가 따로 있으면 그것이 우선.
+
+# ---------------------------------------------------------------------------------------------
+# 코드 출처. acwm-phys 브랜치의 코드를 읽기 전용 checkout 으로 쓴다 (thread0 main 작업 트리는 건드리지 않는다).
+# 확인한 사실: 로컬 ref upstream/hanbin5/acwm-phys 의 commit hash (git rev-parse 로 확인, 2026-10-31).
+# ---------------------------------------------------------------------------------------------
+code:
+  repo_url: "https://github.com/jongmin-s-multicore/thread0.git"   # thread0 의 git remote upstream 과 같다
+  branch: "hanbin5/acwm-phys"
+  commit: "5a640bed66002eca7bdb31d10b2bde59ad944551"
+  # 읽기용 checkout 위치. 환경변수 ACWM_PHYS_SRC 가 있으면 그것을 쓴다. 없으면 $DINO_WORK/acwm_phys_src.
+  # setup.sh 가 이 commit 으로 detached checkout 을 만든다 (로컬에 thread0 가 있으면 git worktree, 없으면 clone).
+  src_env: "ACWM_PHYS_SRC"
+  # 확인한 사실 (브랜치 conf/train.yaml 은 num_hist: 3 이 기본값이지만 acwm-phys 본 학습 job 은 모두 num_hist=1 로 덮어쓴다.
+  #  repro/jobs/acwm_phys.txt: "train env=acwm_cloth_move frameskip=5 num_hist=1 training.epochs=15 ... predictor_lr=5e-5 batch_size=24").
+  #  README(acwm-phys 브랜치) 표도 Cloth Move 는 num_hist 1, 15 epochs. thread0 main 의 conf/train.yaml 기본값은 3 (main README 의 1 과 다름).
+  recorded_num_hist_in_branch_jobs: 1
+  recorded_num_hist_conf_default: 3
+
+# ---------------------------------------------------------------------------------------------
+# 경로: 하드코딩하지 않고 환경변수로 받는다. 괄호는 환경변수가 없을 때의 기본값.
+# ---------------------------------------------------------------------------------------------
+paths:
+  work_env: "DINO_WORK"            # (~/dinowm)
+  dataset_env: "DATASET_DIR"       # ($DINO_WORK/data)
+  train_env: "DINO_TRAIN"          # ($DINO_WORK/train_runs)  체크포인트: $DINO_TRAIN/outputs/<run_name>/
+  cache_env: "EXP001_CACHE"        # ($DINO_WORK/exp001_cache) 추출한 특징 npz (대용량)
+  clothmove_subdir: "acwm_phys/deformable/clothmove"   # conf/env/acwm_cloth_move.yaml 의 data_path 와 같은 구조
+
+# ---------------------------------------------------------------------------------------------
+# 데이터. 다운로드 경로는 브랜치의 repro/setup/download_acwm_phys.py 에서 확인한 것만 적는다.
+# ---------------------------------------------------------------------------------------------
+data:
+  hf_repo: "t1an/ACWM-Phys"
+  hf_revision: "4017e5f5900a7a8590d4e944b6a84f55df75a0c1"   # download_acwm_phys.py 의 REV
+  hf_subfolder: "deformable/clothmove"
+  expected_episodes: {ind_train: 2000, ind_test: 100, ood_test: 100}   # 같은 스크립트의 기대값
+  ood_group_prefix: {smaller: "smaller", larger: "larger"}            # 브랜치 eval_acwm_phys.py 가 파일 이름 접두사로 그룹을 나눈다
+  frames_per_episode: 65        # 브랜치 README: 65 frames / 64 actions
+  action_dims: [0, 1, 2, 4, 5, 6]   # conf/env/acwm_cloth_move.yaml (3, 7 은 모든 에피소드에서 1.0)
+  img_size: 224
+  frameskip: 5
+
+# ---------------------------------------------------------------------------------------------
+# 마스크 천 면적 (픽셀 마스크로 직접 측정). 값은 브랜치 repro/eval/eval_acwm_phys_quant.py 의 Cloth Move HSV 규칙과 같다.
+# cloth_dimx/y 메타데이터는 보이는 크기와 r≈0.02 이므로 쓰지 않는다.
+# ---------------------------------------------------------------------------------------------
+mask:
+  cloth_orange: {hue_lo: 8, hue_hi: 16, sat_min: 120, val_min: 80}
+  cloth_pink:   {hue_lo: 158, hue_hi: 170, sat_min: 60, val_min: 80}
+  min_px: 6
+
+# ---------------------------------------------------------------------------------------------
+# 학습 (체크포인트가 없으므로 이 실험이 학습한다). 브랜치 repro/jobs/acwm_phys.txt 의 Cloth Move 설정과 같게 둔다.
+# ---------------------------------------------------------------------------------------------
+train:
+  seed: 0                       # training.seed (모델 초기화/슬라이스 순열). 학습 시드 3 이상은 사람 확정 사항이며 TODO.
+  seeds: [0]                    # 학습할 시드 목록. [0, 1, 2] 로 늘리면 비용이 시드 수만큼 늘어난다 (사람 승인 필요). 기본은 1개.
+  hydra_overrides:
+    env: "acwm_cloth_move"
+    frameskip: 5
+    num_hist: 1
+    "training.epochs": 15
+    "training.save_every_x_epoch": 5
+    "training.predictor_lr": 5.0e-5
+    "training.batch_size": 24
+  # 학습 에피소드 총수는 모든 분포에서 같게 맞춘다 (데이터량 통제). epochs, 시드도 같다.
+  total_episodes: 2000          # ind_train 전체와 같음
+  # 분포 정의. source: ind_train | ood_test | gen:<tag>.  take: first|last (정렬된 파일 이름 기준).
+  # ood_test 는 평가 에피소드와 겹치지 않게 'last' 에서 가져온다 (평가 공통 부분집합은 first 25).
+  # 아래 mix 분포의 비율/구성은 임의의 예시이며 "사람 확정 필요" (후보 F 승인 전에는 학습하지 않는다).
+  distributions:
+    baseline_single:            # 단일 크기: ind_train 2000 (브랜치 기본 학습과 동일한 에피소드, 동일한 순서)
+      - {source: ind_train, group: ind, n: 2000, take: first}
+    mix_ood3:                   # 크기 3단계 혼합: 1x + 0.26x + 2.5x (ood_test 'last' 25개씩 사용; 브랜치 README 의 InD+OoD 실험과 같은 개수)
+      - {source: ind_train, group: ind, n: 1950, take: first}
+      - {source: ood_test, group: smaller, n: 25, take: last}
+      - {source: ood_test, group: larger, n: 25, take: last}
+  run_name_template: "exp001_{dist}_s{seed}"      # $DINO_TRAIN/outputs/<run_name>
+  models_to_diagnose: ["baseline_single:0"]   # "분포:시드". mix_ood3:0 은 사람이 승인하고 학습한 뒤 추가
+
+# ---------------------------------------------------------------------------------------------
+# 중간 크기 에피소드 생성 (옵션, 기본 비활성). 생성기 입수 경로가 확인되지 않았다 (README 참조).
+# ---------------------------------------------------------------------------------------------
+gen_midsize:
+  enabled: false
+  # 면적 배율 (dataset 의 0.26x / 2.5x 와 같은 의미의 '면적' 배율인지 선형 배율인지는 생성기 확인 후 정한다. TODO)
+  area_scales: [0.5, 1.5]
+  episodes_per_scale: 50
+  seed: 123
+  generator_cmd_env: "ACWM_PHYS_GENERATOR_CMD"   # 사용자가 가진 생성기를 부르는 명령 템플릿 ({area_scale} {n} {seed} {out_dir})
+  validate: {frames: 65, height: 512, width: 512}
+
+# ---------------------------------------------------------------------------------------------
+# 진단 (후보 D/E)
+# ---------------------------------------------------------------------------------------------
+diagnose:
+  device: "cuda"                # 브랜치의 ViT predictor 는 attention mask 를 .to('cuda') 로 만들기 때문에 GPU 필수
+  batch_episodes: 8
+  eval_sets: [ind_test, ood_test, gen]   # gen 은 생성된 중간 크기가 있을 때만
+  max_episodes_per_group: 0     # 0 = 전부. 스모크 테스트용으로 줄일 수 있다.
+  rollout_ks: [1, 2, 3, 4, 6, 8, 12]     # 보고할 open-loop 스텝 (매 스텝 저장하고 요약만 이 k 로)
+  pools: ["mean", "grid2"]      # 패치 풀링: 전체 평균 / 2x2 격자 평균
+  random_vit_control: true      # 랜덤 초기화 DINOv2 ViT-S/14 특징을 대조군으로 추출
+  random_vit_seed: 0
+  save_decoded_frames: 8        # 그룹마다 눈으로 확인할 에피소드 수 (uint8 npz)
+  # 면적비/수축 판정 임계값 (사람 확정 필요). 비워 두면 판정하지 않고 수치만 기록한다.
+  thresholds:
+    shrink_ratio_tol: null      # TODO 사람 확정 필요: 에피소드를 '수축'으로 세는 면적비 기준
+    decoder_ratio_tol: null     # TODO 사람 확정 필요: decoder-on-real/real 면적비 허용값
+    slope_margin: null          # TODO 사람 확정 필요
+    selectivity_min: null       # TODO 사람 확정 필요 (진짜 라벨 - control)
+
+# ---------------------------------------------------------------------------------------------
+# 크기 probe: 세 프로토콜 병기
+# ---------------------------------------------------------------------------------------------
+probe:
+  seeds: [0, 1, 2, 3, 4]        # probe 시드 5개 (CV 분할, MLP 초기화, permutation, bootstrap)
+  n_folds: 5                    # 에피소드 단위 층화 GroupKFold
+  models:
+    ridge: {alphas: [0.1, 1.0, 10.0, 100.0, 1000.0], standardize: true}   # alpha 는 train fold 내부 GroupKFold 로 선택
+    mlp:   {hidden: 128, max_iter: 200, alpha: 1.0e-3, early_stopping: true, pools: ["mean"]}   # MLP 는 mean 풀링에만 (비용)
+  protocols: ["strat_cv", "logo", "gt_transfer", "upper"]
+  # strat_cv/logo: (i) 같은 종류 latent 에 학습, 군집 층화 CV / leave-one-group-out
+  # gt_transfer  : (ii) GT 인코딩에만 학습해 예측 latent 에 적용
+  # upper        : (iii) GT + 예측 latent (모든 크기 포함) 에 학습한 상한 probe
+  target: "log_area_real"       # 실제 프레임의 마스크 천 면적의 log (해당 시점)
+  class_groups: {smaller: 0, ind: 1, larger: 2}   # 3-way 분류 라벨 (generated 는 분류에서 제외)
+  n_bootstrap: 1000             # 에피소드 단위 cluster bootstrap
+  controls: ["label_permute", "random_vit", "raw_pixel", "constant_mean"]
+  layer_probe: true             # predictor 입력/블록 출력별 probe (층별 curve)
+  probe_step_bins: {early: [1, 3], mid: [4, 8], late: [9, 12]}
+
+# ---------------------------------------------------------------------------------------------
+# 크기 방향 개입
+# ---------------------------------------------------------------------------------------------
+intervene:
+  enabled: true
+  n_random_directions: 20       # 같은 노름의 무작위 방향 대조군
+  modes: ["remove", "set_ind_mean", "set_group_swap"]   # 투영 제거 / 1x 평균으로 치환 / 다른 크기 군집 평균으로 치환
+  seed: 0
+  max_episodes_per_group: 0
+
+# ---------------------------------------------------------------------------------------------
+# 성공 기준: 사람 확정 후 채움. hypotheses.md 의 예시값(0.9, 0.1 등)은 여기에 복사하지 않았다.
+# ---------------------------------------------------------------------------------------------
+success_criteria: null          # TODO 사람 확정 필요

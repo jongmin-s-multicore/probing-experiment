@@ -1,0 +1,5 @@
+logs/
+__pycache__/
+*.pyc
+*.tmp
+results/*/size_direction.npz
