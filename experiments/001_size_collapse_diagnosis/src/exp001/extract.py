@@ -40,7 +40,8 @@ def load_world_model(acwm_src, rdir, device, epoch=None):
     add_branch_to_path(acwm_src)
     cfg = OmegaConf.load(Path(rdir) / "hydra.yaml")
     ck = Path(rdir) / "checkpoints" / (f"model_{epoch}.pth" if epoch else "model_latest.pth")
-    payload = torch.load(ck, map_location=device)
+    # trusted: only reads checkpoints we trained ourselves (torch>=2.6 defaults to weights_only=True, which fails on pickled modules)
+    payload = torch.load(ck, map_location=device, weights_only=False)
     # the frozen DINOv2 encoder is not saved in the checkpoint (train.py saves it only if train_encoder): rebuild it like plan.load_model
     parts = {k: payload[k].to(device) for k in ["predictor", "decoder", "proprio_encoder", "action_encoder"]}
     parts["encoder"] = (payload["encoder"] if "encoder" in payload else hydra.utils.instantiate(cfg.encoder)).to(device)
