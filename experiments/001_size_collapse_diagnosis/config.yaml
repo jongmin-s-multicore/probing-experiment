@@ -223,10 +223,10 @@ diagnose:
   bootstrap_seed: 0
   # 면적비/수축 판정 임계값 (사람 확정 필요). 비워 두면 판정하지 않고 수치만 기록한다.
   thresholds:
-    shrink_ratio_tol: null      # TODO 사람 확정 필요: 에피소드를 '수축'으로 세는 면적비 기준
-    decoder_ratio_tol: null     # TODO 사람 확정 필요: decoder-on-real/real 면적비 허용값
-    slope_margin: null          # TODO 사람 확정 필요
-    selectivity_min: null       # TODO 사람 확정 필요 (진짜 라벨 - control)
+    shrink_ratio_tol: null      # 미확정(제안값 없음, 사람이 값을 주지 않음): null 이면 수축 개수를 세지 않고 수치만 기록한다. 전제 게이트도 수치 기록만
+    decoder_ratio_tol: 0.9      # 2026-11-01 사용자 승인(제안값 그대로, 근거 수치 아님): decoder-on-real/real 면적비 하한 0.9 (상한 1.1)
+    slope_margin: 0.0           # 2026-11-01 사용자 승인(제안값): 기울기 판정 = cluster bootstrap CI 가 1 을 제외하는가 (여유 0)
+    selectivity_min: 0.1        # 2026-11-01 사용자 승인(제안값, 근거 수치 아님): 진짜 라벨 - control
 
 # ---------------------------------------------------------------------------------------------
 # 크기 probe: 프로토콜 병기. 주 라벨 = 마스크 천 면적(log). cloth_dimx*cloth_dimy 는 보조 검증용 상관만 계산한다 (라벨로 쓰지 않음).
