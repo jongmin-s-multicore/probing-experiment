@@ -18,10 +18,10 @@ q() { "$PYBIN" -c "import json,sys; d=json.load(open('$1')); print(eval(sys.argv
 
 echo "== scenario 1: seed 0 external training (then DONE), seed 1 extract always fails, seed 2 probe fails twice =="
 setup s1
-mkdir -p "$W/train/outputs/exp001_baseline_single_s0"
-# fake external training: a process whose command line carries hydra.run.dir=<...>/exp001_baseline_single_s0
+mkdir -p "$W/train/outputs/exp001_cs_baseline_single_s0"
+# fake external training: a process whose command line carries hydra.run.dir=<...>/exp001_cs_baseline_single_s0
 # (python, not bash -c: bash -c would exec the last command and hide the arguments from pgrep -f)
-( "$PYBIN" -c 'import sys,time,pathlib; time.sleep(8); pathlib.Path(sys.argv[1].split("=",1)[1], "DONE").touch()' "hydra.run.dir=$W/train/outputs/exp001_baseline_single_s0" ) >/dev/null 2>&1 &
+( "$PYBIN" -c 'import sys,time,pathlib; time.sleep(8); pathlib.Path(sys.argv[1].split("=",1)[1], "DONE").touch()' "hydra.run.dir=$W/train/outputs/exp001_cs_baseline_single_s0" ) >/dev/null 2>&1 &
 sleep 0.5
 ( cd "$W" && FAIL_SPEC="1:extract:99,2:probe:2" timeout 120 bash overnight.sh > "$W/out.log" 2>&1 ); rc=$?
 [ $rc = 0 ] && ok "exit code 0" || bad "exit code $rc"
@@ -52,15 +52,15 @@ cat "$W/logs/overnight_summary.txt" | head -30
 
 echo "== scenario 2: seed 0 external training disappears without DONE -> takeover after grace =="
 setup s2
-mkdir -p "$W/train/outputs/exp001_baseline_single_s0"; touch -d '3 hours ago' "$W/train/outputs/exp001_baseline_single_s0/model_latest.pth"
+mkdir -p "$W/train/outputs/exp001_cs_baseline_single_s0"; touch -d '3 hours ago' "$W/train/outputs/exp001_cs_baseline_single_s0/model_latest.pth"
 ( cd "$W" && OVERNIGHT_SEEDS="0" timeout 120 bash overnight.sh > "$W/out.log" 2>&1 ); rc=$?
 [ $rc = 0 ] && ok "exit 0" || bad "exit $rc"
-grep -q "train seed0 start" "$W/events.log" && [ -f "$W/train/outputs/exp001_baseline_single_s0/DONE" ] && ok "stale run dir without process -> own training (resume) and pipeline" || bad "takeover"
+grep -q "train seed0 start" "$W/events.log" && [ -f "$W/train/outputs/exp001_cs_baseline_single_s0/DONE" ] && ok "stale run dir without process -> own training (resume) and pipeline" || bad "takeover"
 
 echo "== scenario 3: wait timeout leaves external training untouched =="
 setup s3
-mkdir -p "$W/train/outputs/exp001_baseline_single_s0"
-"$PYBIN" -c 'import time; time.sleep(15)' "hydra.run.dir=$W/train/outputs/exp001_baseline_single_s0" >/dev/null 2>&1 &
+mkdir -p "$W/train/outputs/exp001_cs_baseline_single_s0"
+"$PYBIN" -c 'import time; time.sleep(15)' "hydra.run.dir=$W/train/outputs/exp001_cs_baseline_single_s0" >/dev/null 2>&1 &
 EP=$!
 sleep 0.5
 ( cd "$W" && OVERNIGHT_SEEDS="0" WAIT_MAX_SEC=3 timeout 120 bash overnight.sh > "$W/out.log" 2>&1 ); rc=$?
@@ -80,7 +80,7 @@ assert t("train seed2 start") >= t("train seed1 end")
 PY
 echo "== scenario 5: an external run_all-style stage of seed 0 is still running after DONE -> pipeline waits =="
 setup s5
-mkdir -p "$W/train/outputs/exp001_baseline_single_s0"; touch "$W/train/outputs/exp001_baseline_single_s0/DONE"
+mkdir -p "$W/train/outputs/exp001_cs_baseline_single_s0"; touch "$W/train/outputs/exp001_cs_baseline_single_s0/DONE"
 "$PYBIN" -c 'import time; time.sleep(6)' run.py repro_check --model baseline_single:0 >/dev/null 2>&1 &
 T5=$(date +%s.%N); sleep 0.3
 ( cd "$W" && OVERNIGHT_SEEDS="0" timeout 120 bash overnight.sh > "$W/out.log" 2>&1 )

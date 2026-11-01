@@ -9,8 +9,11 @@ ev = root / "events.log"
 def event(msg):
     with open(ev, "a") as f:
         f.write(f"{time.time():.2f} {msg}\n")
+cs = os.environ.get("EXP001_DATASET", "cloth_sim") == "cloth_sim"
+if stage == "run_name":   # mimic run.py: cloth_sim -> exp001_cs_*, acwm_phys -> exp001_*
+    d_, s_ = model.split(":"); print(("exp001_cs_" if cs else "exp001_") + f"{d_}_s{s_}"); sys.exit(0)
 if model:
-    dist, seed = model.split(":"); name = f"exp001_{dist}_s{seed}"
+    dist, seed = model.split(":"); name = ("exp001_cs_" if cs else "exp001_") + f"{dist}_s{seed}"
     for item in filter(None, os.environ.get("FAIL_SPEC", "").split(",")):
         s, st, n = item.split(":")
         if s == seed and st == stage:

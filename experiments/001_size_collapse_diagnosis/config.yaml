@@ -76,6 +76,7 @@ data:
   datasets:
     cloth_sim:
       kind: "cloth_sim"
+      run_name_template: "exp001_cs_{dist}_s{seed}"   # acwm_phys 로 학습한 기존 exp001_{dist}_s{seed} 체크포인트와 충돌 방지
       # --- 사용자가 준 README 에 적힌 사실 (이 머신에서 데이터를 받아 확인한 것은 아니다) ---
       source_note: "ACWM-Phys Cloth Move 를 PyFleX 로 재생성(원본 아님). 같은 action 재생 시 ACWM 천 마스크 IoU 0.68. 카메라 고정."
       hf_repo: "hanbin5/cloth-sim"      # data.source=hf 일 때만 사용 (현재 사용 불가라고 사용자가 알림)
@@ -130,6 +131,7 @@ data:
 
     acwm_phys:                       # 기존 구현 (원본 ACWM-Phys, 크기 3종). hf revision 은 브랜치 download 스크립트에 고정된 값
       kind: "acwm_phys"
+      run_name_template: "exp001_{dist}_s{seed}"      # 레거시 이름 유지 (서버의 기존 체크포인트와 호환)
       hf_repo: "t1an/ACWM-Phys"
       hf_revision: "4017e5f5900a7a8590d4e944b6a84f55df75a0c1"
       hf_subfolder: "deformable/clothmove"
@@ -190,6 +192,7 @@ train:
     # env 는 선택된 데이터셋 블록의 train_hydra_env 로 채워진다 (load_config)
   # 사람이 승인한 분포. 여기에 없는 분포는 `python run.py train` 이 거부한다 (환경변수 EXP001_APPROVED="baseline_single mix_wide" 로도 지정).
   approved_distributions: []    # TODO 사람 확정 필요. 비워 두고 환경변수 EXP001_APPROVED 를 쓴다 (overnight.sh 는 "baseline_single" 만 설정; 대조군 분포는 승인되지 않음)
+  # 기본(레거시) 이름. 데이터셋 블록에 run_name_template 이 있으면 그것이 우선한다 (common.resolve_dataset). cloth_sim 은 "exp001_cs_..." 로 acwm_phys 와 이름이 겹치지 않는다.
   run_name_template: "exp001_{dist}_s{seed}"      # $DINO_TRAIN/outputs/<run_name>
   # "분포:시드". 대조군은 사람이 승인하고 학습한 뒤 추가. 시드 1, 2 는 사용자가 2026-10-31 추가 승인 (overnight.sh 의 대상)
   models_to_diagnose: ["baseline_single:0", "baseline_single:1", "baseline_single:2"]

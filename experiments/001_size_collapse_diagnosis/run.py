@@ -295,7 +295,14 @@ def cmd_selftest(cfg, paths, args):
     return 0
 
 
-STAGES = {"check": cmd_check, "download": cmd_download, "maskcheck": cmd_maskcheck, "listing": cmd_listing, "train": cmd_train,
+def cmd_run_name(cfg, paths, args):
+    """Print the run name of --model dist:seed (seed is not parsed, so a placeholder like @SEED@ works). Used by overnight.sh / run_all.sh."""
+    dist, seed = args.model.split(":")
+    print(run_name(cfg, dist, seed))
+    return 0
+
+
+STAGES = {"run_name": cmd_run_name, "check": cmd_check, "download": cmd_download, "maskcheck": cmd_maskcheck, "listing": cmd_listing, "train": cmd_train,
           "repro_check": cmd_repro_check, "extract": cmd_extract,
           "diagnose": cmd_diagnose, "probe": cmd_probe, "intervene": cmd_intervene, "aggregate": cmd_aggregate, "sync": cmd_sync, "selftest": cmd_selftest}
 
@@ -324,6 +331,10 @@ def main():
     cfg = load_config(args.config)
     if os.environ.get("EXP001_MODELS"):          # run_all.sh: space separated "dist:seed" list overrides config.train.models_to_diagnose
         cfg["train"]["models_to_diagnose"] = os.environ["EXP001_MODELS"].split()
+    if args.stage == "run_name":
+        if not args.model or ":" not in args.model:
+            ap.error("run_name needs --model distribution:seed")
+        sys.exit(cmd_run_name(cfg, None, args))
     set_seed(cfg["seed"])
     paths = resolve_paths(cfg)
     if args.stage == "train" and not args.model:

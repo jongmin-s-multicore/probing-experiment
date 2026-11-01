@@ -88,7 +88,7 @@ run_stage download download "$MARK_DL"                                $PY run.py
 run_stage maskcheck maskcheck "$HERE/results/maskcheck.json"          $PY run.py maskcheck
 run_stage listing  listing  "$HERE/manifests/listing.json"            $PY run.py listing
 for m in $MODELS; do
-  d="${m%%:*}"; s="${m##*:}"; name="exp001_${d}_s${s}"
+  d="${m%%:*}"; s="${m##*:}"; name="$($PY run.py run_name --model "${d}:${s}" | tail -n 1)"
   run_stage train     "train_$name"     "$DINO_TRAIN/outputs/$name/DONE"           $PY run.py train --model "$m"
   had=0; [ -e "$HERE/results/$name/repro_check.json" ] && had=1
   run_stage repro_check "repro_$name" "$HERE/results/$name/repro_check.json" $PY run.py repro_check --model "$m" $F

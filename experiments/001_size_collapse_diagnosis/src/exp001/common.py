@@ -30,6 +30,8 @@ def resolve_dataset(cfg):
     cfg["_ds"] = blk
     cfg["train"]["distributions"] = blk["distributions"]
     cfg["train"]["total_episodes"] = blk["total_episodes"]
+    if blk.get("run_name_template"):
+        cfg["train"]["run_name_template"] = blk["run_name_template"]
     cfg["train"]["hydra_overrides"] = {"env": blk["train_hydra_env"], **cfg["train"]["hydra_overrides"]}
     cfg["diagnose"]["eval_sets"] = blk["eval_sets"]
     cfg["diagnose"]["reference_group"] = blk["reference_group"]

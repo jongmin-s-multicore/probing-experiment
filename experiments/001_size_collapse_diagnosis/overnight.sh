@@ -83,7 +83,7 @@ check_env() {
   [ -e "$HERE/manifests/train_${DIST}.json" ] || say "manifests/train_${DIST}.json missing -> 'run.py listing' will be run before training"
   # disk: need (estimates, README) ~1.7 GB checkpoints per seed not yet trained + ~5 GB extraction cache per seed
   local ntrain=0 s
-  for s in $SEEDS; do [ -e "$DINO_TRAIN/outputs/exp001_${DIST}_s${s}/DONE" ] || ntrain=$((ntrain + 1)); done
+  for s in $SEEDS; do [ -e "$DINO_TRAIN/outputs/$(name_of "$s")/DONE" ] || ntrain=$((ntrain + 1)); done
   local nseeds; nseeds=$(echo "$SEEDS" | wc -w)
   local need_ckpt=$(( (ntrain * 17 + 9) / 10 )) need_cache=$((nseeds * 5))
   say "disk need (estimate): checkpoints ~${need_ckpt} GB (${ntrain} seed(s) not DONE x 1.7 GB), extraction cache ~${need_cache} GB (${nseeds} x 5 GB)"
@@ -117,7 +117,10 @@ print("sm_120_in_arch_list", "sm_120" in al)' 2>&1)"
 }
 
 # ---------------------------------------------------------------- helpers
-name_of() { echo "exp001_${DIST}_s$1"; }
+# run name comes from run.py (config run_name_template of the selected dataset, EXP001_DATASET) so that cloth_sim and acwm_phys never share names
+NAME_TMPL="$(cd "$HERE" && $PY run.py run_name --model "${DIST}:@SEED@" 2>/dev/null | tail -n 1)"
+case "$NAME_TMPL" in *@SEED@*) ;; *) echo "[overnight] cannot get run name from run.py run_name (got '$NAME_TMPL')" >&2; exit 2 ;; esac
+name_of() { echo "${NAME_TMPL//@SEED@/$1}"; }
 run_dir_of() { echo "$DINO_TRAIN/outputs/$(name_of "$1")"; }
 marker_of() {  # marker_of <seed> <stage>
   local n; n="$(name_of "$1")"
