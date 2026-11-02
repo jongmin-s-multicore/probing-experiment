@@ -134,7 +134,7 @@ marker_of() {  # marker_of <seed> <stage>
   esac
 }
 PIPE_STAGES="repro_check extract diagnose probe intervene"
-st() { $PY "$HERE/overnight_status.py" set --file "$STATUS" "$@" >/dev/null 2>&1 || true; }   # st SEED STAGE STATE [--retries N --error T --note T]
+st() { $PY "$HERE/overnight_status.py" set --file "$STATUS" "$@" >/dev/null 2>>"$HERE/logs/overnight_status.err" || true; }   # st SEED STAGE STATE [--retries N --error T --note T]
 ext_running() {  # a training of this seed we did not start: process (hydra.run.dir=<...>/<run name>) or recent file activity in its run directory
   local s="$1" d; d="$(run_dir_of "$s")"
   pgrep -f "hydra.run.dir=[^ ]*$(name_of "$s")([[:space:]]|\$)" >/dev/null 2>&1 && return 0

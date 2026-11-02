@@ -1,0 +1,89 @@
+{
+  "frame": 3,
+  "resize_to": 224,
+  "n_episodes": 900,
+  "reference_group": "ind",
+  "area_by_group": {
+    "a026": {
+      "n": 100,
+      "mean_area_px": 699.34,
+      "sd_area_px": 6.33911665770555,
+      "ratio_to_ref_mean": 0.2587713780369578,
+      "nominal_area_ratio": 0.259
+    },
+    "a040": {
+      "n": 100,
+      "mean_area_px": 1080.05,
+      "sd_area_px": 6.321985447626402,
+      "ratio_to_ref_mean": 0.3996425584820206,
+      "nominal_area_ratio": 0.399
+    },
+    "a060": {
+      "n": 100,
+      "mean_area_px": 1621.34,
+      "sd_area_px": 6.860349845306725,
+      "ratio_to_ref_mean": 0.5999319159013372,
+      "nominal_area_ratio": 0.599
+    },
+    "a080": {
+      "n": 100,
+      "mean_area_px": 2165.56,
+      "sd_area_px": 8.23324966219293,
+      "ratio_to_ref_mean": 0.801305438587403,
+      "nominal_area_ratio": 0.801
+    },
+    "ind": {
+      "n": 100,
+      "mean_area_px": 2702.54,
+      "sd_area_px": 9.888801747431286,
+      "ratio_to_ref_mean": 1.0,
+      "nominal_area_ratio": 1.0
+    },
+    "a125": {
+      "n": 100,
+      "mean_area_px": 3377.81,
+      "sd_area_px": 12.884638140048793,
+      "ratio_to_ref_mean": 1.2498649418695005,
+      "nominal_area_ratio": 1.249
+    },
+    "a160": {
+      "n": 100,
+      "mean_area_px": 4325.94,
+      "sd_area_px": 13.838222429199497,
+      "ratio_to_ref_mean": 1.6006941617885395,
+      "nominal_area_ratio": 1.6
+    },
+    "a200": {
+      "n": 100,
+      "mean_area_px": 5408.72,
+      "sd_area_px": 12.860077760262572,
+      "ratio_to_ref_mean": 2.0013468810822412,
+      "nominal_area_ratio": 2.0
+    },
+    "a248": {
+      "n": 100,
+      "mean_area_px": 6705.57,
+      "sd_area_px": 9.473389045109462,
+      "ratio_to_ref_mean": 2.4812102688581854,
+      "nominal_area_ratio": 2.479
+    }
+  },
+  "frac_below_min_px": 0.0,
+  "particles_vs_mask_area_overall": {
+    "pearson": 0.9998636815053088,
+    "spearman": 0.9938218340753782,
+    "n": 900
+  },
+  "particles_by_group": {
+    "a026": 2754.0,
+    "a040": 4030.0,
+    "a060": 5925.0,
+    "a080": 7654.0,
+    "ind": 9212.0,
+    "a125": 11124.0,
+    "a160": 13800.0,
+    "a200": 16891.0,
+    "a248": 20294.0
+  },
+  "note": "ratio_to_ref_mean uses the reference TEST split mean; the README ratio uses the ind_train mean. Mask = HSV rule inherited from ACWM-Phys. Thresholds for 'good enough' are not set (human decision)."
+}

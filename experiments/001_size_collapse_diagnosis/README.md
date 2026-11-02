@@ -1,6 +1,6 @@
 # 실험 설명: 001_size_collapse_diagnosis
 
-- 상태: 코드 구현 완료, **실행 전**. 학습·데이터 다운로드·GPU 작업은 하지 않았다. 문법 검사(`py_compile`), `--dry-run`, 합성 데이터 CPU 셀프테스트(`python run.py selftest`, 가짜 rclone 다운로드 시험 포함)만 했다. 데이터 출처는 Google Drive(rclone)로 바꿨다(위 "데이터" 행, 아래 다운로드 절). 이 문서에 실험 결과 수치는 없다.
+- 상태: **seed 0-2 실행 완료 (2026-11-02), 리뷰 완료**: 결과는 results.json, 보고서는 reports/001_size_collapse_diagnosis.md. (아래 "실행 전" 서술은 구현 당시 기록이다.) 구현 당시: 코드 구현 완료, **실행 전**. 학습·데이터 다운로드·GPU 작업은 하지 않았다. 문법 검사(`py_compile`), `--dry-run`, 합성 데이터 CPU 셀프테스트(`python run.py selftest`, 가짜 rclone 다운로드 시험 포함)만 했다. 데이터 출처는 Google Drive(rclone)로 바꿨다(위 "데이터" 행, 아래 다운로드 절). 이 문서에 실험 결과 수치는 없다.
 - 개정 이력: 2026-10-31 데이터셋을 원본 ACWM-Phys(크기 3종)에서 사용자가 PyFleX 로 재생성한 `cloth_sim`(크기 9종)으로 바꿨다. 이전 버전은 commit bfddd9d. 이 개정은 작업 트리에만 있고 commit 하지 않았다.
 - 검증할 가설: notes/hypotheses.md 의 후보 D (디코더 층위), 후보 E (인코더/프리딕터 정보 층위).
   - 두 후보 모두 "후보 (미확정, 사람 승인 필요)" 상태다. 이 실험은 확정이 아니라 진단용 첫 단계다.
@@ -376,5 +376,5 @@ mkdir -p logs && nohup bash overnight.sh > logs/overnight.log 2>&1 &
 - 합성 데이터에서 `within-group R²` 가 매우 낮게(음수) 나온다(군집 내 분산이 작음). 실제 데이터에서도 그럴 수 있어 R² 는 다른 지표와 함께 읽어야 한다. 합성 숫자는 결과가 아니다.
 - probe 라벨 정의: `h0..h6` 은 입력 프레임 면적, `tf1`/`ol` 은 예측 대상 프레임의 면적.
 - 기준 군집은 항상 `ind` 다. 대조군(mix)의 학습 크기가 여러 개일 때의 "가장 가까운 학습 크기로 수축" 지표는 구현하지 않았다.
-- 학습 시드는 baseline 1개다(단일 시드 한계 유지). 학습 시드 3 이상은 사람 결정.
+- 학습 시드는 baseline 1개다(단일 시드 한계 유지). 학습 시드 3 이상은 사람 결정. (갱신: 본 실행은 seed 0,1,2 로 3개 학습했다. config.yaml train.seeds.)
 - `intervene.swap_pairs`, `intervene.max_episodes_per_group=25`, `save_decoded_frames=4` 는 비용 때문에 정한 임의의 값이며 사람 확정 대상이다.

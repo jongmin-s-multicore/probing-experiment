@@ -1,0 +1,21 @@
+{
+  "status": "ok",
+  "mode": "rclone",
+  "folder": "20261102-021800_exp001_baseline_single_s0+baseline_single_s1+baseline_single_s2",
+  "time": "20261102-021800",
+  "groups": [
+    {
+      "tag": "main",
+      "dest": "exp001_results/20261102-021800_exp001_baseline_single_s0+baseline_single_s1+baseline_single_s2",
+      "n_files": 68,
+      "bytes": 81621464,
+      "verified": true,
+      "copy_rc": 0,
+      "check_rc": 0,
+      "check_not_ok": [],
+      "remote_count": 68,
+      "remote_bytes": 81621464
+    }
+  ],
+  "skipped_secret_like": {}
+}

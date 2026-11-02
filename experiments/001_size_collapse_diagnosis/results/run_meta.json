@@ -1,0 +1,26 @@
+{
+  "experiment": "001_size_collapse_diagnosis",
+  "run_label": "exp001_baseline_single_s0+baseline_single_s1+baseline_single_s2",
+  "models": [
+    "baseline_single:0",
+    "baseline_single:1",
+    "baseline_single:2"
+  ],
+  "dataset": "cloth_sim",
+  "seeds": {
+    "global": 0,
+    "train": 0
+  },
+  "exp_repo_commit": "c69d1d4b24924532c93e30acd0a8aa214330afc2",
+  "exp_repo_dirty": true,
+  "acwm_src_commit": "5a640bed66002eca7bdb31d10b2bde59ad944551",
+  "config_acwm_commit": "5a640bed66002eca7bdb31d10b2bde59ad944551",
+  "python": "3.9.19",
+  "platform": "Linux-7.0.0-38-generic-x86_64-with-glibc2.39",
+  "torch": "2.7.1+cu128",
+  "cuda": "12.8",
+  "gpu": "NVIDIA GeForce RTX 5090",
+  "start_time": null,
+  "last_start_time": null,
+  "end_time": "2026-11-02T02:18:02+0000"
+}

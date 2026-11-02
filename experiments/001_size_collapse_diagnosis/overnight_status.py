@@ -65,7 +65,7 @@ def main():
     ap.add_argument("--error")
     ap.add_argument("--note")
     ap.add_argument("rest", nargs="*")
-    a = ap.parse_args()
+    a = ap.parse_intermixed_args()   # options may come before/after the positional SEED STAGE STATE (plain parse_args rejected `set --file F 0 probe running`)
     if a.cmd == "init":
         with Locked(a.file) as d:
             d.setdefault("started", now())
