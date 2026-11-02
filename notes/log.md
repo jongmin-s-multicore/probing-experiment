@@ -40,3 +40,17 @@
 ## 2026-11-02 / 001_size_collapse_diagnosis / 리뷰 반영 (reporter)
 - 보고서 reports/001_size_collapse_diagnosis.md 작성. 위 2026-11-02 항목은 수정하지 않았고, 리뷰(prior/stats/skeptic)가 지적한 정정 사항은 보고서 6절에 따로 정리함.
 - 요약: 먼 크기의 open-loop 이동 방향은 3시드 일치. 그러나 D "사전 등록 기준 충족", "학습 크기로 수렴", "tf1 기울기 ~1", "3.99배"(평균끼리의 비 2.36), probe 수치의 정의 혼합, "선택성 키 못 읽음"은 리뷰에서 과장/부정확으로 지적됨. 게이트 shrink_ratio_tol=null 이고 승인 임계값이 코드에 연결되지 않아 사전 등록 판정은 단위 선택(사후 결정)에 달림. 분석가 의견은 합치지 않고 병기. 사람 결정 사항과 GPU 실험(대조군 시드당 약 5.5시간) 승인 필요 여부는 보고서 8절.
+
+## 2026-11-02 / 002_single_size_sweep / 코드 작성 (미실행)
+- 변경점: experiments/002_single_size_sweep/ 에 run.py(단계 CLI: check download manifest smoke cache train q1 q2 q3 aggregate selftest), src/exp002/*, config.yaml 구현 파라미터 추가(기존 사전 등록 값은 변경 없음; `prereg.thresholds_wired_in_code` 를 true 로, `prereg.holm_alpha`/`family_defs`/`q3.criterion_percentile` 를 문구에서 숫자/구조로 옮김), environment.yml, overnight.sh, overnight_status.py, README.md 작성. 001 의 drive/masks/data/extract 유틸은 파일 맨 위에 출처를 적어 복사/개작. 사전 등록 값은 PreregReader 로 aggregate.py 가 읽어 판정에 쓴다(README 3절 표). null 임계값은 not_evaluable. 재시도 상한 3회는 results/attempts.json 가드와 overnight.sh 에 반영.
+- 이 머신에서 한 것: py_compile / 파이썬 3.9 문법 검사, 모든 단계 `--dry-run`, `python run.py selftest`(합성 데이터, CPU torch 2.15) 60 통과 0 실패 0 건너뜀, torch 없는 경우 시뮬레이션에서 41 통과 0 실패 2 건너뜀(attentive probe, hook/Q3/H-c 는 'skipped(no torch)'). 셀프테스트 수치는 결과가 아니다. 개발 중 셀프테스트가 잡은 오류: 잔차 경로를 거치지 않는 개입 hook(수정함).
+- 못 돌린 검증: GPU 실행, 실제 데이터/체크포인트, 브랜치 train.py 호출, cache/q2 추출/q3 run()/smoke 의 실제 경로, rclone 다운로드, conda env create, 서버(python 3.9, 실제 torch)에서의 selftest. 12GB 메모리/시간은 미측정.
+- 결과: 없음(코드만). 해석 없음.
+- 재시도 카운트: 0 (실행 시도 없음). config 의 batch_size/num_hist/epochs/budget/torch_version 은 null 유지.
+- 다음 단계: 사용자가 서버에서 README 5절 순서(selftest -> check -> smoke -> ...)로 실행하고 로그를 붙여 준다. GPU 학습은 별도 사람 승인 필요.
+
+## 2026-11-02 / 002_single_size_sweep / 002 확정 기록 6 반영 (코드만, 미실행; 확정 기록 7 포함)
+- 변경점 (사양: notes/hypotheses.md 확정 기록 6, 7). config.yaml: 조건 3개(single_ind 900 / multi_60_ind_160 3x300 / multi_60_ind_160_small 3x100, optional, run_order 마지막), `budget_mode: steps_equalized`, `train.budget` null 유지, `q1.primary_window: late` + `report_window: early`, `q2_diag`, `diag_4c`(2.0/5.0/2.0, 시드 4242, 반복 200은 impl default), 사전 등록 후 변경 항목 옆에 원래 값 주석(300, 1.0). 코드: budget.py(신규), diag.py(신규), trainrun.py(조건별 epoch 환산, train_budget.json, expandable_segments 제거), data.py(조건별 에피소드 수, 슬라이스 수 계산), evalgrid.py(fit_apply_cells), q2.py(출력 공간 probe, 진단 4c, 재학습 rollout probe 삭제), q3.py(에피소드 평균 곡선, tier 표시), aggregate.py(H_a early 보고, H_b rollout 은 출력 공간, cond_a_vs_b 층별은 layer 0 대비 + 4c 게이트, diag_4c 행, q2_layerwise, train_budgets, 탐색 방법 값), run.py(--include-optional, torch 버전 출력), selftest.py(60 -> 98 항목), environment.yml(torch 2.0.1+cu117), README 9절.
+- 검증 (이 머신, 임시 venv: python 3.14, numpy 2.5.4, CPU torch 2.15.0): `python run.py selftest` 98 통과 0 실패 0 건너뜀(합성 데이터, 결과 아님); 모든 단계 --dry-run rc=0; py_compile 통과; python 3.9 문법(ast feature_version) 통과. 경계값(2.0/5.0 비율, 오차 2배) 테스트 포함.
+- 미검증: 서버 환경(python 3.9, torch 2.0.1+cu117), 실제 브랜치 로더로 slice 수/steps_per_epoch 계산(num_pred=1, drop_last 가정), q2 추출의 next-frame 오차 계산과 활성 모멘트(실제 모델 shape), 브랜치/DINOv2 hub 코드의 torch 2.0.1 호환, GPU 실행 전부, 데이터 다운로드(ind 900).
+- 결과: 없음. 해석 없음. 재시도 카운트 0.

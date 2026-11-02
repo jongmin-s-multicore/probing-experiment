@@ -1,0 +1,36 @@
+# conda environment for experiment 002 (written 2026-11-02, NOT executed/verified: `conda env create` was never run by the author).
+# Name: kept equal to the 001 server env so an existing env can be reused (README "환경" explains how to decide).
+#   fresh machine :  conda env create -f environment.yml && conda activate dino_wm
+#   existing env  :  conda activate dino_wm && python run.py check     (if check shows the packages below, nothing needs installing)
+# Only packages that 002 (or the branch train.py it launches) imports are listed. scipy / scikit-learn are NOT imported by 002
+# (own numpy ridge/bootstrap); run.py check / results.json only RECORD their versions if present.
+name: dino_wm
+channels:
+  - conda-forge
+dependencies:
+  - python=3.9            # 001 server: 3.9.19 (results.json environment). 3.9 is also what the branch environment.yaml pins
+  - pip
+  - numpy=1.26.4          # branch pin (environment.yaml); 002 itself runs with numpy 2.x on the authoring machine too (selftest only)
+  - pyyaml
+  - pip:
+      # ---- torch 2.0.1 + CUDA 11.7 (user decision 2026-11-02, 확정 기록 7 C; config.yaml env.torch_version "2.0.1+cu117"). `conda env create` NOT executed.
+      #      torchvision 0.15.2 is the release paired with torch 2.0.1 (from the PyTorch compatibility table, recalled not verified here).
+      - --extra-index-url https://download.pytorch.org/whl/cu117
+      - torch==2.0.1+cu117
+      - torchvision==0.15.2+cu117
+      # ---- imported by 002 directly
+      - opencv-python==4.6.0.66      # masks.py / drive.py video probe (branch pin; 4.6 with numpy 1.26 is how the branch env is pinned - UNVERIFIED together)
+      - decord==0.6.0                # mp4 decoding in data.ManifestDataset (branch dataset code)
+      - einops==0.4.1                # branch dataset code
+      - hydra-core==1.2.0            # train.py + model assembly (extract/load_world_model)
+      - omegaconf==2.3.0
+      # ---- needed by the branch's train.py (copied from 001 setup.sh --minimal; branch import list not re-checked by the author)
+      - hydra-submitit-launcher==1.2.0
+      - submitit==1.5.1
+      - accelerate==0.26.1
+      - wandb==0.13.1                # WANDB_MODE=disabled is exported by the runners
+      - tqdm
+      - imageio
+      - scikit-image==0.19.3
+      - huggingface-hub==0.23.2
+# system tools (not conda packages): rclone (data download), nvidia-smi (smoke VRAM polling), git

@@ -1,0 +1,196 @@
+name: "002_single_size_sweep"
+hypothesis: "후보 G (notes/hypotheses.md, 미확정)"   # H-a (Q1), H-b (Q2), H-c (Q3)
+seed: 0                        # 전역 시드. 학습/probe/bootstrap 시드는 아래에 따로 명시한다.
+# 출처: 사용자 설계 문서 (hypotheses.md 후보 G). 값은 모두 문서의 '제안'이며 사람이 확정하기 전까지 TODO 이다.
+
+env:
+  gpu_vram_gb: 12              # 사용자: 12GB 서버 무제한. 학습 batch/메모리는 스모크로 실측 후 확정 (TODO)
+  rerun_baseline_on_same_server: true   # 사용자 결정: baseline 도 같은 서버에서 재학습해 조건 통일
+  torch_version: "2.0.1+cu117"   # 사용자 확정 2026-11-02 (확정 기록 7)
+
+data:
+  dataset: "cloth_sim"
+  source: "drive"              # 사용자 확정 2026-11-02: Google Drive(rclone), 001 과 같은 경로. (문서는 HF 였으나 001 에서 HF 사용 불가)
+  levels: [a026, a040, a060, a080, ind, a125, a160, a200, a248]
+  train_levels_b: [a060, ind, a160]     # 조건 (b) 다중 InD (문서 제안)
+  train_levels_a: [ind]                  # 조건 (a) 단일 크기 (문서 제안)
+  train_episodes_per_level: 300          # (b) 의 값 300 유지. (a) 는 900 으로 변경: conditions.list 및 확정 기록 7 B 표. 사용자 확정 2026-11-02 (문서 제안값 채택). 001(2000 ep)과 데이터량이 달라 001 과 직접 비교는 어려움
+  eval_episodes_per_level: 100           # 전 크기 test 100 (문서)
+  roles:                                  # 문서의 역할 배정 (제안)
+    interp: [a080, a125]
+    extrap: [a026, a040, a200, a248]
+
+conditions:                    # 학습 크기 조건
+  # 동일 예산 (확정 기록 6 항목 3, 2026-11-02): 에피소드 수와 학습 step 수를 둘 다 맞춘다.
+  #   (a) single_ind = ind 900 에피소드, (b) multi_60_ind_160 = a060/ind/a160 각 300 (총 900).
+  #   보조 multi_60_ind_160_small = 각 100 (총 300), 같은 총 step 수 (탐색, optional). episodes_per_level 은 조건별 값, 없으면 data.train_episodes_per_level.
+  #   각 조건의 에피소드는 해당 *_train metadata 순서의 앞 N 개이므로 small 는 (b) 의 부분집합, (b) 의 ind 300 은 (a) 의 부분집합이다.
+  list:
+    - {name: "single_ind", levels: [ind], episodes_per_level: 900}                              # (a). 사전 등록 후 변경 (확정 기록 6, 7 B 표): 원래 300 -> 900
+    - {name: "multi_60_ind_160", levels: [a060, ind, a160], episodes_per_level: 300}            # (b)
+    - {name: "multi_60_ind_160_small", levels: [a060, ind, a160], episodes_per_level: 100}      # 보조 (탐색, optional)
+  run_order: ["multi_60_ind_160", "single_ind", "multi_60_ind_160_small"]   # 사용자 확정 2026-11-02: (b) 다중부터, (a) 다음, 보조 small 는 마지막
+  optional: ["multi_60_ind_160_small"]    # --all-conditions 에는 포함되지 않고 --include-optional 또는 --condition 으로만 실행. 탐색용
+  compare_a: "single_ind"                 # cond_a_vs_b 패밀리의 (a) (주 조건 (b) = run_order[0])
+  budget_reference: "multi_60_ind_160"    # train.epochs 는 이 조건의 epoch 수. 다른 조건의 epoch 는 같은 총 step 이 되도록 환산 (README '동일 예산')
+
+train:
+  seeds: [0, 1, 2]             # 사용자 확정 2026-11-02: 3 seed
+  budget: null                 # null 유지 (확정 기록 6). 의미: null = 기준 조건(conditions.budget_reference)의 epochs x steps_per_epoch 를 총 step 으로 쓴다. 값이 있으면 총 step 수 직접 지정. 정의/계산은 README '동일 예산'
+
+  batch_size: null             # TODO: 12GB 스모크 후 확정 (001 은 24, 5090)
+  num_hist: null               # TODO: 001 은 1. 문서는 context 길이를 줄일 수 있다고 함
+  epochs: null                 # TODO (서버 스모크 후 사람이 확정). 기준 조건 (b) 의 epoch 수; 다른 조건은 같은 총 step 이 되도록 코드가 환산
+
+probe:
+  kinds: [linear_pooled, attentive]      # 문서: 세 실험에 같은 용량
+  seeds: [0, 1, 2, 3, 4]       # TODO 확정 (001 은 5개)
+  controls: [random_init_encoder, label_shuffle, mask_area_bbox_baseline]   # 문서의 통제 3종
+  split: "episode"
+  time_axis: ["early_flat", "late_deformed"]   # 초기 프레임 학습 -> 후반 평가 포함
+  metrics: [r2, mae, pearson_r]
+
+q2:
+  layer_probe: true            # predictor 각 block 출력
+  rollout_probe: true          # t+1, t+2, ... 예측 latent
+  drop_threshold: 0.2          # 사용자 확정 2026-11-02: 파일럿 없이 실행 전 고정 (Q1 대비 R² 하락폭). 사후 조정 없음
+
+q3:
+  interventions: [steering, subspace_removal, behavior_contrast]
+  removal_methods: [INLP, LEACE]
+  n_random_directions: 100     # 사용자 확정 2026-11-02 (001 리뷰: 20 은 순위 p 최소값 0.048 로 부족)
+  criterion_percentile: 95     # criterion 문구의 '95 백분위' (코드가 읽는 숫자)
+  criterion: "크기 방향 효과가 무작위 방향 효과 분포의 95 백분위 밖이고 alpha 에 대해 단조. 집계는 중앙값/순위 (평균 이상치 방지)"
+  dose_alpha_sigma_units: [-2, -1, -0.5, 0, 0.5, 1, 2]   # 사용자 채택 2026-11-02: sigma_u 는 '학습' 에피소드에서 잰 크기 방향 투영의 표준편차 (평가 누설 방지)
+  monotonic_test: "spearman over alpha (미리 고정)"
+  layers: ["middle", "last"]   # predictor 블록 수 확인 후 구현 때 구체 인덱스로 치환(데이터를 보기 전에). 데이터 보고 고르지 않는다
+  metric: "absolute_change"    # 비율 지표 금지 (001 에서 분모 0 근처 폭주). 개입 후 예측 latent 변화 또는 Q1 probe 로 읽은 '예측된 크기'의 변화
+  random_direction: "variance_matched_in_data_subspace"   # 같은 투영 분산, 같은 이동 크기
+
+prereg:                        # 001 에서 비어 있어 문제가 된 값. 실행 전에 채운다.
+  decision_unit: "episode bootstrap 95% CI. 학습 seed 별 값을 항상 병기. 비교 패밀리는 Holm 보정"   # 사용자 확정 2026-11-02
+  ratio_definition: null       # 면적비를 쓰는 지표가 생기면 정의 후 기록 (002 의 1차 지표는 probe R²/MAE/Pearson r 이라 현재 해당 없음)
+  q1_margin: {delta_r2_vs_mask_area_baseline: 0.1, ci_lower_gt: 0}   # 사용자 확정 2026-11-02 (001 의 선택성 0.1 재사용)
+  effect_size_floor: "Q1 마진 0.1, Q2 하락 0.2 (위 q2.drop_threshold)"
+  families:                    # 사용자 채택 2026-11-02. 가설마다 별개 패밀리, 각각 alpha=0.05 Holm. 가설 간 보정 없음
+    H_a: {tests: "roles[interp,extrap] x probe[linear,attentive] = 4", each_requires: "delta_r2 vs mask_area_baseline >= 0.1 with CI lower > 0 AND beats random_init_encoder"}
+    H_b: {tests: "points[last_block, last_rollout_step] = 2", each: "drop vs Q1 >= 0.2"}
+    H_c: {tests: "interventions[steering, subspace_removal] = 2 at q3.layers (fixed)", each: "outside 95th percentile of 100 random dirs AND monotone in alpha"}
+    cond_a_vs_b: {tests: "(a) single_ind vs (b) multi comparison, declared now, run later", family: "separate"}
+    exploratory: "layer x time heatmap, per-level R2, other layers/ranks, behavior contrast: figures only, no p-values or significance claims"
+  thresholds_wired_in_code: true    # 2026-11-02 코드 작성: aggregate.py 가 PreregReader 로 아래 값을 읽어 판정에 쓴다 (README 표). 서버 실행 전이라 selftest 로만 연결을 확인함
+  no_post_hoc_change: true     # 결과를 본 뒤 위 값을 바꾸지 않는다
+  # --- 아래 3개는 위 free-text 를 코드가 읽을 수 있게 옮긴 것 (2026-11-02 코드 작성자가 옮김; 값은 위 문구와 동일) ---
+  holm_alpha: 0.05             # families 문구 'alpha=0.05'
+  family_defs:
+    H_a: {roles: [interp, extrap], probes: [linear_pooled, attentive]}
+    H_b: {points: [last_block, last_rollout_step]}
+    H_c: {interventions: [steering, subspace_removal]}
+  primary_condition_from: "conditions.run_order[0]"   # 주 검정은 (b) 조건. (a) 는 cond_a_vs_b 패밀리와 탐색 표
+
+# =============================================================================================================
+# 아래는 2026-11-02 코드 작성 시 실험자(에이전트)가 추가한 '구현 파라미터'이다. 사전 등록 값(위)이 아니며 사람 확정 대기.
+# 데이터를 보기 전에 고정한 값이고, 결과를 본 뒤 바꾸지 않는다. 값 선택 근거가 없는 것은 'impl default' 로 표시.
+# null 인 항목은 해당 단계가 명확한 에러로 멈춘다 (임의로 채우지 않음).
+# =============================================================================================================
+code:                          # 001 과 같은 브랜치/commit (train.py 와 모델 코드를 수정 없이 사용)
+  repo_url: "https://github.com/jongmin-s-multicore/thread0.git"
+  branch: "hanbin5/acwm-phys"
+  commit: "5a640bed66002eca7bdb31d10b2bde59ad944551"
+  src_env: "ACWM_PHYS_SRC"
+paths:                         # 경로는 환경변수 (하드코딩 금지). 괄호 = 기본값
+  work_env: "DINO_WORK"        # (~/dinowm)
+  dataset_env: "DATASET_DIR"   # ($DINO_WORK/data)
+  train_env: "DINO_TRAIN"      # ($DINO_WORK/train_runs)
+  cache_env: "EXP002_CACHE"    # ($DINO_WORK/exp002_cache)
+data_impl:
+  subdir: "cloth_sim"          # $DATASET_DIR/cloth_sim/<split>/ (001 과 같은 위치라 이미 받은 split 재사용)
+  split_pattern: "{size}_{part}"
+  expected_episodes: {train: 2000, test: 100}
+  area_ratio: {a026: 0.259, a040: 0.399, a060: 0.599, a080: 0.801, ind: 1.0, a125: 1.249, a160: 1.6, a200: 2.0, a248: 2.479}   # 001 config / 사용자 README
+  action_dims: [0, 1, 2, 4, 5, 6]
+  frameskip: 5
+  take: "first"                # 학습 episode = *_train 의 metadata 순서 앞 N 개
+  val_split_seed: 42           # 브랜치 로더와 같은 0.9/0.1 분할 시드 (001 과 동일)
+  drive:
+    rclone_remote: ""          # 비면 sync 값 없음 -> 환경변수 EXP002_RCLONE_REMOTE 또는 여기 (001 은 'gdrive')
+    root_folder_id: "1z4z6WA2G-7UXjbrJtLSWqm6KBpuHrkiI"
+    root_folder_style: "connection_string"
+    remote_path: ""
+    rclone_bin: "rclone"
+  video: {height: 512, width: 512, frames: 65}
+mask:                          # 001 과 같은 HSV 규칙 (브랜치 eval 코드 출처)
+  cloth_orange: {hue_lo: 8, hue_hi: 16, sat_min: 120, val_min: 80}
+  cloth_pink: {hue_lo: 158, hue_hi: 170, sat_min: 60, val_min: 80}
+  min_px: 6
+frames:                        # 매크로 프레임 인덱스 (frameskip 5, 0..12). 입력으로 쓰는 것은 0..11 (12 에는 다음 행동이 없다)
+  n_cached: 13
+  all: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+  early_flat: [0, 1, 2, 3]     # impl default. '평평함'은 인덱스로 가정한 것이며 영상으로 확인하지 않았다
+  late_deformed: [8, 9, 10, 11]   # impl default. 변형이 크다는 것도 가정
+run:
+  max_attempts: 3              # CLAUDE.md 재시도 상한. results/attempts.json 이 단계별 연속 실패를 센다
+train_impl:
+  hydra_env: "acwm_cloth_move"
+  predictor_lr: 5.0e-5         # 001 jobs 값 (브랜치 repro/jobs/acwm_phys.txt 서술)
+  save_every_x_epoch: 5
+  budget_mode: "steps_equalized"   # 확정 기록 6: 총 optimizer step 수를 조건 간 같게. 환산은 epoch 정수 (branch train.py 는 수정 없이 epochs 만 받는다)
+  steps_per_epoch_rounding: "ceil" # steps_per_epoch = ceil(학습 slice 수 / batch_size). 브랜치 DataLoader 의 drop_last 는 미확인 -> train 로그의 tqdm 총 step 과 서버에서 대조 (README)
+  num_pred: 1                      # 학습 slice 수 계산용 (nf = num_hist + num_pred). 브랜치 train.yaml 값 미확인(추정) -> 서버에서 tqdm 총 step 과 대조
+smoke:
+  batch_candidates: [24, 16, 12, 8, 4]
+  num_hist_list: [1, 3]        # 스모크에서만 시험하는 num_hist (train.num_hist 는 null 유지)
+  train_episodes: 48
+  n_extract_episodes: 1
+  q2_batch_episodes: 8
+probe_impl:
+  ridge_alphas: [0.1, 1.0, 10.0, 100.0, 1000.0, 10000.0]   # 학습 에피소드 안 GroupKFold 로만 선택
+  inner_folds: 3
+  attentive: {d_model: 128, n_heads: 4, mlp_hidden: 256, epochs: 30, lr: 1.0e-3, weight_decay: 1.0e-2, batch_size: 256, val_fraction: 0.1}
+  mlp_check: {hidden: 128, epochs: 100, lr: 1.0e-3, weight_decay: 1.0e-3, batch_size: 256}   # 제거 확인용 MLP probe
+  device: "cuda"               # 없으면 cpu
+  n_bootstrap: 1000
+  bootstrap_seed: 0
+  shuffle_seed: 0
+  random_init: {hub_repo: "facebookresearch/dinov2:85a24602099d397264d5b30461ad7f3bfd726ca1", hub_name: "dinov2_vits14", seed: 0}
+q1:
+  primary_target: "log_nominal_area_ratio"   # 에피소드 상수 (레벨의 명목 면적비 log). 사용자 승인 2026-11-02 (사전 등록 후 변경, 확정 기록 6)
+  secondary_target: "log_frame_mask_area"    # 같은 프레임 마스크 면적 log; mask 면적 baseline 이 설계상 포화 -> H_a 는 not_evaluable(baseline_saturated)
+  baseline_saturated_r2: 0.99   # 사용자 승인 2026-11-02 (사전 등록 후 변경, 확정 기록 6): mask baseline R2 >= 0.99 이면 not_evaluable
+  primary_window: "late"        # 사용자 승인 2026-11-02 (확정 기록 6): 주 판정 = late_deformed 프레임 (frames.late_deformed). evalgrid.windows 키 'late'
+  report_window: "early"        # early_flat 결과: 판정 없이 baseline R2 와 함께 별도 보고 (results.json h_a_early_flat_report). evalgrid.windows 키 'early'
+  probe_train_levels_from: "data.train_levels_b"
+  hold_out_levels_for_eval: "data.roles"
+q2_impl:
+  feature_part: "full"         # full(404 = z + action concat 전체) | z_only(앞 384). 이유는 README
+  primary_probe: "linear_pooled"
+  output_space_probe: true     # 확정 기록 6 항목 4a: Q1 에서 인코더 feature 로만 학습한 probe 를 predictor 예측 z 에 그대로 적용 (predictor 활성으로 probe 재학습 없음)
+  output_probe_train_regime: "all"   # q1 의 regime 'all' (프레임 0..11) 로 학습한 probe 와 같은 설정
+  window: "early_late_union"
+  rollout_horizon: 12
+  batch_episodes: 8
+  keep_tmp: false
+q2_diag:                       # 확정 기록 6 항목 4c, 판정 규칙 확정 기록 7 A
+  ref_level: "ind"
+  levels: ["a060", "a160"]
+  normalize_activations_per_size: false    # 확정 기록 6 항목 4d: 크기별 활성 정규화는 하지 않는다 (구현 없음)
+diag_4c:                       # 확정 기록 7 A (2026-11-02, 결과 미확인). 결과를 본 뒤 바꾸지 않는다
+  activation_small_max_ratio: 2.0    # 이동량/noise floor < 2 : 작음
+  activation_medium_max_ratio: 5.0   # 2 이상 5 미만 : 중간, 5 이상 : 큼
+  error_large_min_ratio: 2.0         # a060/a160 다음 프레임 예측 오차 / ind 오차 >= 2 : 큼
+  noise_floor_bootstrap: 200         # ind 에피소드를 겹치지 않는 두 묶음으로 나누는 반복 횟수 (impl default, 값 자체는 확정 기록에 없음)
+  bootstrap_seed: 4242               # 시드 (impl default). 층 j 마다 seed + j
+q3_impl:
+  random_direction_seed: 1000  # 학습 seed 마다 SeedSequence([이 값, train_seed, layer, 종류]) 로 독립
+  primary_steering_direction: "ridge"
+  primary_removal_method: "INLP"
+  primary_metric: "delta_predicted_size"
+  monotonic_min_spearman: 0.9   # 사전 등록 후 변경 2026-11-02 (확정 기록 6, 7 B 표). 원래 값 1.0 (에이전트 구현 기본값). 결과 본 적 없음
+  inlp_iterations: 10
+  removal_strengths: [0.0, 0.25, 0.5, 0.75, 1.0]
+  removal_check: {mlp_r2_after_max: 0.1}
+  episodes_per_level: 25
+  frames: [2, 6, 10]
+  variance_match_rel_tol: 0.05
+  batch_samples: 128
+  behavior_pairs: 200
