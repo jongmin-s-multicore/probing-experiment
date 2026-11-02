@@ -273,6 +273,6 @@ success_criteria: null          # TODO 사람 확정 필요
 # ---------------------------------------------------------------------------------------------
 sync:
   drive:
-    rclone_remote: ""      # TODO 사람이 채움: `rclone config` 에서 만든 drive remote 이름 (예: gdrive)
-    remote_path: ""        # TODO 사람이 채움: Drive 안 대상 폴더 (예: exp001_results). 아래에 <날짜-시간>_<run> 하위 폴더가 생긴다
+    rclone_remote: "gdrive"          # `rclone config` 에서 만든 drive remote 이름 (콜론 없이 이름만). 2026-11-02 사용자 지정
+    remote_path: "exp001_results"    # Drive 안 대상 폴더. 아래에 <날짜-시간>_<run> 하위 폴더가 생긴다
     local_mount: ""        # 선택(대안): Drive 데스크톱 앱이 마운트한 경로. rclone_remote 가 비어 있을 때만 사용 (예: /mnt/g/MyDrive)
