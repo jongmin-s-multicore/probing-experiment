@@ -38,9 +38,9 @@ train:
   seeds: [0, 1, 2]             # 사용자 확정 2026-11-02: 3 seed
   budget: null                 # null 유지 (확정 기록 6). 의미: null = 기준 조건(conditions.budget_reference)의 epochs x steps_per_epoch 를 총 step 으로 쓴다. 값이 있으면 총 step 수 직접 지정. 정의/계산은 README '동일 예산'
 
-  batch_size: null             # TODO: 12GB 스모크 후 확정 (001 은 24, 5090)
-  num_hist: null               # TODO: 001 은 1. 문서는 context 길이를 줄일 수 있다고 함
-  epochs: null                 # TODO (서버 스모크 후 사람이 확정). 기준 조건 (b) 의 epoch 수; 다른 조건은 같은 총 step 이 되도록 코드가 환산
+  batch_size: 24                 # 사용자 확정 2026-11-03 (확정 기록 8): smoke 에서 12GB 에 들어감(peak 9045MiB, num_hist=1), 001·브랜치 job 과 동일
+  num_hist: 1                   # 사용자 확정 2026-11-03 (확정 기록 8): num_hist=3 은 12103MiB 로 한도에 붙고 18 s/it 로 느려 제외
+  epochs: 15                  # 사용자 확정 2026-11-03 (확정 기록 8): (b) multi_60_ind_160 기준 15 epoch (브랜치 job 과 동일). 다른 조건은 총 step 이 같아지도록 자동 환산
 
 probe:
   kinds: [linear_pooled, attentive]      # 문서: 세 실험에 같은 용량

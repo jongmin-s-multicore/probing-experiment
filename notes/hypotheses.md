@@ -273,3 +273,12 @@
 
 - 사용자가 후보 H 의 판정 수치(기울기 차 0.2, 시드 3개 전부 같은 방향)와 학습 분포 4종을 제안값 그대로 채택하고 구현을 지시했다. 값은 근거 수치가 아니라 제안값이다. 결과를 본 뒤 바꾸지 않는다.
 - **GPU 학습 실행 승인은 받지 않았다.** 구현과 CPU 점검까지만 진행한다. 12GB 스모크 후 학습 설정과 실행은 별도 승인.
+
+### 확정 기록 8: 학습 설정 확정 (2026-11-03, 사용자 결정, GPU 학습 실행 승인 포함)
+
+시점: 12GB 서버 smoke 실행 후, 본 학습 결과를 보기 전. 근거: results/smoke.json (서버 산출물, 이 저장소에는 없음). 사용자가 본 smoke 수치(화면 캡처로 전달)는 아래뿐이며 가설 결과는 본 적이 없다.
+- train.batch_size = 24, train.num_hist = 1, train.epochs = 15 ((b) multi_60_ind_160 기준 epoch. 다른 조건은 총 step 이 같아지도록 환산, train.budget 은 null 유지).
+- 근거(smoke): num_hist=1 batch 24 는 OOM 없이 peak 9045MiB, 1.14 it/s. num_hist=3 batch 24 는 peak 12103MiB(한도 12287MiB 근접), 18.07 s/it 로 약 20배 느려 제외(원인은 추정). batch 24 와 num_hist=1 은 001·브랜치 학습 job(frameskip=5 num_hist=1 batch_size=24 training.epochs=15)과 같다.
+- 실행 방식: overnight.sh 로 6개 학습(조건 2 x 시드 3) 후 cache, q1, q2, q3, aggregate 를 한 번에 실행. 사전에 파이프라인 단독 검증(한 run)은 하지 않기로 했다 — cache/q1/q2/q3/aggregate 는 아직 한 번도 실행된 적이 없어 학습 후에 오류가 날 수 있음을 사용자에게 고지함.
+- 시간 추정(추정): epoch 당 약 1856 iteration(smoke 의 48 에피소드=99 iteration 을 900 에피소드로 비례 환산), 1.14 it/s 로 run 당 약 6.8시간, 6 run 약 41시간. 정확한 step 수는 train --dry-run 과 train_budget.json 으로 확인.
+- 이 값들은 결과를 보기 전에 확정했으므로 결과 확인 후 바꾸지 않는다.
