@@ -1,0 +1,44 @@
+name: "004_depth_truncation"
+hypothesis: "후보 I, H-d (notes/hypotheses.md 후보 I, 확정 기록 9). 명세: notes/specs/exp4_5_spec.md 3절"
+seed: 0                         # 전역 시드. probe 시드는 아래에 명시
+pilot: true                     # true = results.json/summary.json 의 pilot 필드. 본 실행(전체 episode, 3 학습 seed)을 한 뒤 사람이 false 로 바꾼다
+# 실험 1~3 = 002 의 Q1/Q2/Q3. 002 코드는 import 만 하고 수정하지 않는다. 002 설정 파일은 읽기만 한다.
+base:
+  config002: "../002_single_size_sweep/config.yaml"
+  condition: "multi_60_ind_160"  # 명세의 조건 (b)
+  override_probe_impl: {}        # 002 probe_impl 의 값을 바꿔야 할 때만 (기본: 002 와 동일)
+
+paths:
+  cache_env: "EXP004_CACHE"      # 4-A 절단 인코더 토큰 캐시 위치 (기본 $DINO_WORK/exp004_cache). 002 캐시는 EXP002_CACHE 를 그대로 읽는다
+
+probe:
+  kinds: [linear_pooled, attentive]
+  seeds: [0, 1, 2, 3, 4]         # 명세 0절 6: 5회 기본
+
+encoder:                         # 4-A
+  k_grid: [0, 2, 4, 6, 8, 10, 12]    # 명세 3.1 거친 격자. 하락 구간은 summary.json refine_suggestion 을 보고 사람이 촘촘히 다시 돌린다
+  source_train_seed: 0           # 동결 인코더를 꺼낼 002 run 의 학습 seed (인코더는 동결이라 seed 무관, 지문 일치를 검사)
+  random_init_control: true
+  label_shuffle_control: true
+  batch_episodes: 8
+
+predictor:                       # 4-B
+  train_seeds: [0, 1, 2]         # 002 조건 (b) 학습 seed. 파일럿은 --train-seeds 0
+  feature_part: "z_only"         # 명세 3.2(i): z 부분(앞 384)만. 002 기본 full(404)과 다름 -> CHANGES.md
+  rollout_steps: [1, 4, 8]       # 명세 3.4-3
+  random_init_control: true
+  random_init_seed: 1234         # 학습 seed 마다 + train_seed
+  label_shuffle_control: true
+  batch_episodes: 8
+  keep_tmp: false
+
+depth:                           # 소실 지점과 H-d 판정 (명세 3.4, 0.2 는 제안값: 파일럿 후 확정, 바꾸면 결과보다 먼저 기록)
+  drop_threshold: 0.2
+  primary: {probe: linear, fit: new, control: real, timepoint: late}   # 주 곡선. 사전 고정 (impl default)
+  overlap_sd_mult: 2.0           # 반증 조건 '곡선이 seed 편차 안에서 겹침': |평균 차| <= mult * max(sd) 인 깊이의 비율이 overlap_depth_fraction 이상이면 겹침. null -> not_evaluable. impl default
+  overlap_depth_fraction: 0.8    # impl default (명세에 값 없음). 모든 깊이 요구는 잡음에 너무 민감해서 비율로 둠
+  min_depths: 3                  # 모듈당 평가 깊이가 이보다 적으면 not_evaluable. impl default
+  l_best_splits: [interp, extrap]
+
+run:
+  max_attempts: 3                # CLAUDE.md 재시도 상한 (results/attempts.json)
