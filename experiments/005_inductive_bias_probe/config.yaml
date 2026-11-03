@@ -1,0 +1,75 @@
+name: "005_inductive_bias_probe"
+hypothesis: "후보 I, H-e/H-f/H-g (notes/hypotheses.md 후보 I, 확정 기록 9). 명세: notes/specs/exp4_5_spec.md 4절"
+seed: 0
+pilot: true                      # 본 실행 전까지 true. 실험 4 summary.json 의 pilot 이 true 이면 코드가 어차피 true 로 쓴다
+base:
+  config002: "../002_single_size_sweep/config.yaml"
+  condition: "multi_60_ind_160"
+
+paths:
+  cache_env: "EXP005_CACHE"      # 예측기 층 특징 캐시 (기본 $DINO_WORK/exp005_cache)
+  cache004_env: "EXP004_CACHE"   # 004 의 절단 인코더 토큰 캐시 (읽기만)
+
+exp4:
+  summary: "../004_depth_truncation/results/summary.json"   # 4.6 분기의 입력 (experiments/005 기준 상대 경로)
+  cache_suffix: ""               # 파일럿에서 부분 캐시를 쓰면 _smoke (002/004 와 같은 접미사)
+branch:
+  exp1_negative: null            # 실험 1(002 Q1) 음성 여부. 사람이 002 결과를 보고 true/false 로 채운다. null 이면 false 로 취급하고 plan.json 에 기록
+feat:
+  train_seed: 0                  # 예측기 층 특징을 꺼낼 002 조건 (b) 학습 seed
+  random_init_seed: 1234
+  batch_episodes: 8
+
+seeds:                           # 모든 시드 명시
+  head: [0, 1, 2, 3, 4]          # head 학습 seed (명세 0절 6: 5회)
+  eval: 1000                     # 평가 입력 2,000개 추출
+  tasks_a: 2000                  # 5-A 과제(레벨 라벨, D_k)
+  tasks_b: 3000                  # 5-B D_k
+  sinus: 4000                    # 5-B 사인파 파라미터
+  d: 5000                        # 5-D 라벨 부분집합
+  noninf: 6000                   # 무정보 모델 예측 (+ head seed)
+
+eval:
+  n_inputs: 2000                 # 명세 4.1: test split 전 레벨에서 2,000개, 초기/후반 반반
+ib:                              # 5-A
+  n_tasks: 100
+  n_per_task: 100
+  pool_levels: null              # null = 모든 레벨. 캐시의 train 부분에 있는 레벨만 실제로 쓰인다 (002 는 a060/ind/a160 만 캐시) -> CHANGES.md
+  ood_roles: [interp, extrap]    # 쌍 그룹의 OoD = 학습 레벨이 아닌 모든 레벨 (impl default)
+calib:                           # 5-B
+  n_tasks: 100
+  n_per_task: 100
+  n_bins: 20
+  groups: [all, ind, extrap_any]
+  extrap_roles: [extrap]
+sinusoid:                        # 사용자 결정: 주파수 제한 무작위 사인파 합. 값은 impl default
+  n_components: 3
+  freq_min: 0.3                  # 로그 면적비 1단위당 주기. 전체 범위 폭이 약 2.26 이므로 0.7~3.4 주기
+  freq_max: 1.5
+q:                               # 5-C pseudo-state
+  n_bins: 10
+law:                             # 5-D
+  label_fraction: 0.01
+  min_labels: 30
+  combos: [[a060, ind], [ind, a160], [a060, a160]]   # 학습 레벨 조합 3가지 (라벨을 뽑는 레벨을 바꿈; 해석은 CHANGES.md)
+  pysr: {enabled: true, niterations: 20, seed: 0}   # PySR 이 설치되어 있을 때만 (seed 첫 번째만)
+head:                            # 과제당 새로 초기화. 구조는 002 probe_impl.attentive, 학습 일정은 소량 데이터용 impl default
+  epochs: 100
+  lr: 1.0e-3
+  weight_decay: 1.0e-2
+  batch_size: 32
+  small: {steps: 400, lr: 0.02}  # oracle linear/MLP(hidden 5)
+normalization:                   # score = (raw - raw_ref) / (raw_oracle - raw_ref) (명세 4.2). 원문 App. B 와 대조 못 함 -> CHANGES.md
+  noninf: {R: iid, D: iid}       # iid = 입력과 무관한 i.i.d. Bernoulli(0.5) 예측 (명세 문구). const = 모든 입력에 같은 출력. 반대쪽 기준 점수는 score_alt 열에 항상 같이 저장
+  min_gap: 0.05                  # |raw_oracle - raw_ref| 가 이보다 작으면 score = NaN (분모가 잡음). impl default
+oracle:
+  primary: "mlp"                 # 정규화와 calibration x 축에 쓰는 oracle (mlp | linear). 다른 쪽도 별도 model 이름으로 저장
+verdict:                         # 명세 4.7 제안값 (파일럿에서 확정; 바꾸면 결과보다 먼저 기록)
+  sd_mult: 2.0                   # 'seed 편차 안/밖' 판단: |평균 차| 와 sd_mult * max(sd). impl default
+  baseline_saturated_score: 0.95 # area 모델 점수가 이 이상이면 not_evaluable (baseline 포화). impl default
+  h_e: {dev_max: 0.1, pair_group: ood_any, calibration_group: extrap_any}
+  h_f: {pair_group: all}
+  h_g: {slope_lo: 0.8, slope_hi: 1.2}
+
+run:
+  max_attempts: 3
