@@ -220,3 +220,8 @@ bash overnight.sh --dry-run             # 위 전체를 연속 실행하는 러�
 3. `python run.py train --dry-run --all-conditions --include-optional` : 조건별 steps_per_epoch/epochs/steps_computed 출력 확인 (이때 manifest 필요). 실제 학습 후 `train_budget.json` 의 steps_per_epoch 와 로그 tqdm 총 step 대조 (num_pred, drop_last 가정 확인).
 4. `cache`, `q1`, `q2`, `q3`, `aggregate` 후 `results.json` 에서 `h_a_early_flat_report`, `q2_layerwise`, `diag_4c:*` 행, `train_budgets` 확인.
 5. 보조 조건: `python run.py train --condition multi_60_ind_160_small` 등 (`--include-optional`). 모든 학습은 별도 승인 사항.
+
+### 정적 점검과 slice 수 (2026-11-03 추가)
+- `data.count_train_slices` 는 `load_manifest_slice_train_val(transform=None)` 의 train/valid 길이(0.9/0.1 episode 분할, seed 42)를 쓴다 (영상 디코딩 없음). 이전 판은 함수가 없어 서버 `train --dry-run` 이 AttributeError 로 실패했다. 이 머신의 dry-run 이 놓친 이유: manifest 파일이 없어 그 호출 전에 FileNotFoundError 로 빠졌고, selftest 는 이 함수를 부르지 않았다.
+- 서버 smoke 관측(num_hist=1, 48 에피소드, batch 24: train 99 / valid 12 iteration)과의 일관성은 selftest 에서 산술로만 확인한다: 가정 "에피소드당 slice = n_obs - (num_hist+num_pred)*frameskip" (관측에서 역산한 가정, 브랜치 슬라이서 코드는 읽지 않음), 65 프레임, 분할 43/5 -> 2365/275 slice -> ceil 로 99/12. 실제 값은 서버에서 `train --dry-run` 이 출력하는 n_train_slices 와 대조.
+- `static_check.py`(selftest 항목 H): 모듈 별칭 `X.attr`, `from .mod import name` 이 대상 모듈에 정의됐는지 AST 로 점검. 한계: 변수 이름과 별칭이 같으면(M, B 등) 건너뜀, 실행 없는 휴리스틱.

@@ -610,10 +610,35 @@ def t_vram_poller():
     check("VramPoller delta = peak - baseline", r["delta_mib"] == 4, str(r))
 
 
+def t_static_and_slices(base):
+    print("H  static attribute check (AST) + slice-count plausibility")
+    import tempfile as _tf
+    from . import static_check as SC, data as DA
+    root = Path(__file__).resolve().parents[1]
+    probs, n = SC.check(root, [root.parent / "run.py"])
+    check("static check: every module-alias attribute / from-import name exists (%d references)" % n, not probs, "; ".join(probs[:5]))
+    check("data.count_train_slices is defined", hasattr(DA, "count_train_slices") and hasattr(DA, "expected_slices"))
+    tmp = Path(_tf.mkdtemp())
+    try:
+        (tmp / "exp002").mkdir()
+        (tmp / "exp002" / "a.py").write_text("def f():\n    pass\n")
+        (tmp / "exp002" / "b.py").write_text("from . import a as A\nfrom .a import f, g\ndef h():\n    A.f(); A.missing()\n")
+        pr, _ = SC.check(tmp)
+        check("static check detects a missing attribute and a missing from-import name", len(pr) == 2 and any("A.missing" in x for x in pr) and any("import g" in x for x in pr), str(pr))
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+    # server smoke (num_hist=1, 48 episodes, batch 24): 99 train / 12 valid iterations. 0.9 split of 48 -> 43 / 5 (assumed int(0.9*48)); 65 frames, nf=2, frameskip 5
+    ntr, nva = DA.expected_slices([65] * 43, 2, 5), DA.expected_slices([65] * 5, 2, 5)
+    import math
+    check("observed smoke iterations (99 train, 12 valid at batch 24) consistent with the slice formula + ceil", math.ceil(ntr / 24) == 99 and math.ceil(nva / 24) == 12, "train %d valid %d" % (ntr, nva))
+
+
 def t_config(base):
     print("E  config guards")
+    nb = copy.deepcopy(base)
+    nb["train"]["batch_size"] = None                     # the real config now has a value; test the guard on a copy
     try:
-        require(base, "train.batch_size")
+        require(nb, "train.batch_size")
         check("null batch_size raises ConfigNull", False)
     except ConfigNull as e:
         check("null batch_size raises ConfigNull with a clear message", "TODO" in str(e))
@@ -639,7 +664,7 @@ def run(base_cfg=None):
         except Exception:
             traceback.print_exc()
             REC["fail"].append(name + " (exception)")
-    for name, fn in (("budget/manifest", t_budget_manifest), ("output-space probe", t_output_space), ("diag 4c", t_diag), ("q3 pure", t_q3_pure), ("vram poller", lambda b: t_vram_poller())):
+    for name, fn in (("budget/manifest", t_budget_manifest), ("output-space probe", t_output_space), ("diag 4c", t_diag), ("q3 pure", t_q3_pure), ("vram poller", lambda b: t_vram_poller()), ("static/slices", t_static_and_slices)):
         try:
             fn(base)
         except Exception:

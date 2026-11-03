@@ -168,3 +168,19 @@ def load_manifest_slice_train_val(transform, data_path, manifest, n_rollout=None
     nf = num_hist + num_pred
     datasets = {"train": LazyTrajSlicerDataset(dset_train, nf, frameskip), "valid": LazyTrajSlicerDataset(dset_val, nf, frameskip)}
     return datasets, {"train": dset_train, "valid": dset_val}
+
+
+def count_train_slices(manifest, num_hist, num_pred, frameskip, action_dims, split_ratio=0.9, val_split_seed=42):
+    """(n_train_slices, n_valid_slices) of the branch loader for a manifest. Reuses load_manifest_slice_train_val (same 0.9/0.1 episode split, seed
+    val_split_seed, same LazyTrajSlicerDataset) with transform=None, so only metadata.pt is read and no video is decoded (get_frames is never called).
+    Needs the branch checkout on sys.path. Consistency with the first server smoke (num_hist=1, 48 episodes, batch 24: 99 train / 12 valid iterations)
+    is checked arithmetically in selftest (see expected_slices); the branch slicer code itself was not read here."""
+    ds, _ = load_manifest_slice_train_val(None, None, manifest, action_dims=action_dims, split_ratio=split_ratio, num_hist=num_hist, num_pred=num_pred,
+                                          frameskip=frameskip, val_split_seed=val_split_seed)
+    return len(ds["train"]), len(ds["valid"])
+
+
+def expected_slices(n_obs_list, nf, frameskip):
+    """ASSUMPTION inferred from the server smoke observation (not from branch code): an episode with n_obs frames gives max(0, n_obs - nf*frameskip)
+    slices, nf = num_hist + num_pred. Used only for a plausibility check of count_train_slices output, never to replace it."""
+    return sum(max(0, int(n) - nf * frameskip) for n in n_obs_list)

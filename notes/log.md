@@ -55,3 +55,4 @@
 - 미검증: 서버 환경(python 3.9, torch 2.0.1+cu117), 실제 브랜치 로더로 slice 수/steps_per_epoch 계산(num_pred=1, drop_last 가정), q2 추출의 next-frame 오차 계산과 활성 모멘트(실제 모델 shape), 브랜치/DINOv2 hub 코드의 torch 2.0.1 호환, GPU 실행 전부, 데이터 다운로드(ind 900).
 - 결과: 없음. 해석 없음. 재시도 카운트 0.
 - 2026-11-02 / 002 / smoke.py VramPoller 버그 수정: `self._stop=False`(Thread._stop 덮어씀) -> `self._halt=False`, run() 의 미초기화 _halt 해결; Thread 내부 속성 덮어쓰기는 src/exp002 에서 더 없음(grep); selftest 에 VramPoller 항목 추가. 서버 smoke 재실행 필요(미검증).
+- 2026-11-03 / 002 / data.count_train_slices 누락 수정(내 이전 문자열 치환이 조용히 실패했음) + 정적 AST 점검(static_check.py)과 selftest 항목 추가: 모듈 별칭/from-import 이름 전수 점검 302건 누락 없음; selftest 104->105 통과 0 실패. 서버 재확인 필요(미검증: 브랜치 로더로 실제 slice 수).
