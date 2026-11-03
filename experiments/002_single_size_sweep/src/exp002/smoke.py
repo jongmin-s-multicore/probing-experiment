@@ -22,7 +22,7 @@ from . import trainrun as TR
 class VramPoller(threading.Thread):
     def __init__(self, period=0.5):
         super().__init__(daemon=True)
-        self.period, self.peak, self.base, self._stop = period, 0, self._read(), False
+        self.period, self.peak, self.base, self._halt = period, 0, self._read(), False
 
     @staticmethod
     def _read():

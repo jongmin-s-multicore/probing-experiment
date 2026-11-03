@@ -583,6 +583,33 @@ def t_torch_q3(base):
         shutil.rmtree(tmp, ignore_errors=True)
 
 
+def t_vram_poller():
+    print("G  smoke.VramPoller without nvidia-smi")
+    from . import smoke as SM
+    SM.VramPoller._read = staticmethod(lambda: 0)
+    p = SM.VramPoller(period=0.01)
+    p.start()
+    import time as _t
+    _t.sleep(0.05)
+    r = p.finish()
+    check("VramPoller start -> finish returns, thread ended", not p.is_alive() and set(r) == {"baseline_mib", "peak_mib", "delta_mib"} and r["delta_mib"] == 0, str(r))
+    SM.VramPoller._read = staticmethod(lambda: 7)
+    p = SM.VramPoller(period=0.01)
+    p.start()
+    _t.sleep(0.05)
+    r = p.finish()
+    check("VramPoller records peak from _read (7) with delta 0 vs baseline 7", r["peak_mib"] == 7 and r["baseline_mib"] == 7 and r["delta_mib"] == 0, str(r))
+    SM.VramPoller._read = staticmethod(lambda: 7 if _t.time() < 0 else 9)
+    p = SM.VramPoller.__new__(SM.VramPoller)
+    import threading as _th
+    _th.Thread.__init__(p, daemon=True)
+    p.period, p.peak, p.base, p._halt = 0.01, 0, 5, False
+    p.start()
+    _t.sleep(0.05)
+    r = p.finish()
+    check("VramPoller delta = peak - baseline", r["delta_mib"] == 4, str(r))
+
+
 def t_config(base):
     print("E  config guards")
     try:
@@ -612,7 +639,7 @@ def run(base_cfg=None):
         except Exception:
             traceback.print_exc()
             REC["fail"].append(name + " (exception)")
-    for name, fn in (("budget/manifest", t_budget_manifest), ("output-space probe", t_output_space), ("diag 4c", t_diag), ("q3 pure", t_q3_pure)):
+    for name, fn in (("budget/manifest", t_budget_manifest), ("output-space probe", t_output_space), ("diag 4c", t_diag), ("q3 pure", t_q3_pure), ("vram poller", lambda b: t_vram_poller())):
         try:
             fn(base)
         except Exception:
