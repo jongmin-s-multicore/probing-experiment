@@ -1,0 +1,24 @@
+# Colab pip equivalent of environment.yml (CLAUDE.md says "run in the Conda env"; Colab has no conda by default -> documented exception, 확정 기록 10).
+# Installed with uv into a Python 3.9 virtual env (/content/venv) so that python/torch/numpy match environment.yml instead of Colab's defaults.
+# Versions are copied from environment.yml (not re-verified together). Lines marked ADDED are NOT in environment.yml: the pinned train.py import chain
+# (utils.py, metrics/) needs them and the 003 --minimal list also lacks them (추정: they were present in the full 217-package branch env).
+--extra-index-url https://download.pytorch.org/whl/cu117
+numpy==1.26.4
+pyyaml
+torch==2.0.1+cu117
+torchvision==0.15.2+cu117
+opencv-python==4.6.0.66
+decord==0.6.0
+einops==0.4.1
+hydra-core==1.2.0
+omegaconf==2.3.0
+hydra-submitit-launcher==1.2.0
+submitit==1.5.1
+accelerate==0.26.1
+wandb==0.13.1
+tqdm
+imageio
+scikit-image==0.19.3
+huggingface-hub==0.23.2
+psutil==5.9.8        # ADDED (utils.py imports psutil)
+pillow==10.3.0       # ADDED (utils.py imports PIL; version from branch environment.yaml)

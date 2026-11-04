@@ -95,6 +95,16 @@ def observed_tqdm_totals(lines):
     return sorted({int(m.group(2)) for ln in lines for m in re.finditer(r"\b(\d+)/(\d+)\s*\[", ln)})
 
 
+RESUME_MARKER = "[exp002 operational]"      # written by colab/train_resume.patch into train.py
+
+
+def train_py_is_patched(acwm_src):
+    try:
+        return RESUME_MARKER in (Path(acwm_src) / "train.py").read_text()
+    except OSError:
+        return False
+
+
 def train(cfg, paths, cond, seed, force=False, dry_run=False):
     name = mk_run_name(cond, seed)
     rd = run_dir(paths, name)
@@ -121,6 +131,14 @@ def train(cfg, paths, cond, seed, force=False, dry_run=False):
     if (rd / "DONE").exists() and not force:
         log("train %s: DONE exists, skip" % name)
         return 0
+    if (rd / "checkpoints" / "model_latest.pth").exists():
+        if not train_py_is_patched(paths["acwm_src"]):
+            # The unpatched pinned train.py would load it and train `epochs` MORE epochs -> total steps != budget. Refuse; do not guess.
+            log("train %s: no DONE but checkpoints/model_latest.pth exists and %s/train.py is NOT the resume-patched file (marker %r missing). Refusing to "
+                "continue it (would exceed the equal budget). Apply colab/train_resume.patch to the "
+                "checkout (git apply) first." % (name, paths["acwm_src"], RESUME_MARKER))
+            return 1
+        log("train %s: resuming from checkpoints/model_latest.pth with the patched train.py (training.epochs = total target epoch)" % name)
     rd.mkdir(parents=True, exist_ok=True)
     write_json(read_json(man), rd / "train_manifest.json")
     write_json({**bud, "seed": int(seed), "status": "started"}, rd / "train_budget.json")

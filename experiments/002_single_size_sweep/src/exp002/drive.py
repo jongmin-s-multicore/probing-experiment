@@ -198,6 +198,128 @@ def download_split(d, split, dest):
     return rc, any(QUOTA_RX.search(x) for x in last)
 
 
+# ----------------------------------------------------------------------------- Colab path: copy from a mounted Drive (no rclone)
+# Added 2026-11-04 (확정 기록 10, 실행 환경 변경 서버 -> Colab). Used when env EXP002_DRIVE_MOUNT_SRC is set or a mounted location is found.
+# The folder data_impl.drive.root_folder_id belongs to another account, so it is NOT inside MyDrive by itself: the user must add it
+# to My Drive ("Add shortcut to Drive" or "Make a copy") before drive.mount can see it. Candidate locations are checked in order.
+# UNVERIFIED on a real Colab runtime (the authoring machine has no Drive mount); only the file-copy logic is covered by selftest.
+# Expected layout (reported by the user from Drive metadata, 2026-11-04; the mounted form is UNVERIFIED): the user's shortcut 'dino-wm-videos'
+# (id 17M0MZGSDPzu7CCT3ez3ABMyZGjavTfx3, owned by another account) contains '[data]/[cloth-sim] cloth_move', which is the folder with
+# data_impl.drive.root_folder_id. The names contain brackets and a space: only pathlib iterdir/is_dir are used here (never glob), and the notebook passes
+# the path through os.environ (never through a shell command line).
+DEFAULT_MOUNT_SRC = "MyDrive/dino-wm-videos/[data]/[cloth-sim] cloth_move"
+SEARCH_ROOT = "MyDrive/dino-wm-videos"
+
+
+def mount_src_candidates(cfg, mount="/content/drive"):
+    """Ordered candidate folders (not yet checked for existence)."""
+    rid = (cfg["data_impl"].get("drive") or {}).get("root_folder_id") or ""
+    out = []
+    if os.environ.get("EXP002_DRIVE_MOUNT_SRC"):
+        out.append(Path(os.environ["EXP002_DRIVE_MOUNT_SRC"]).expanduser())
+    out.append(Path(mount) / DEFAULT_MOUNT_SRC)
+    if rid:
+        out.append(Path(mount) / ".shortcut-targets-by-id" / rid)       # path form for a shortcut target (recalled, unverified)
+    return out
+
+
+def _subdirs(d):
+    try:
+        return sorted(p for p in Path(d).iterdir() if p.is_dir())
+    except OSError:
+        return []
+
+
+def find_mount_src(cfg, splits, mount="/content/drive", max_depth=3):
+    """Folder that contains every split directory. Order: explicit/default candidates (the folder itself, then its direct children), then a bounded
+    search (depth <= max_depth) below <mount>/MyDrive/dino-wm-videos. Returns None when nothing matches."""
+    def has_all(b):
+        return all((b / s).is_dir() for s in splits)
+    for c in mount_src_candidates(cfg, mount):
+        if c.is_dir():
+            for base in [c] + _subdirs(c):
+                if has_all(base):
+                    return base
+    root = Path(mount) / SEARCH_ROOT
+    level = [root] if root.is_dir() else []
+    for _ in range(max_depth + 1):
+        nxt = []
+        for b in level:
+            if has_all(b):
+                return b
+            nxt += _subdirs(b)
+        level = nxt
+    return None
+
+
+def _local_bytes(dest):
+    return sum(f.stat().st_size for f in Path(dest).iterdir() if f.is_file() and f.name != OK_MARK)
+
+
+def _copy_one(src, dst):
+    tmp = dst.with_name(dst.name + ".part")
+    shutil.copyfile(src, tmp)
+    os.replace(tmp, dst)
+
+
+def copy_from_mount(cfg, paths, splits, src_root, dry_run=False, force=False, meta_counter=meta_len, workers=8):
+    """Copy <src_root>/<split>/* to <data_root>/<split>/ (file copied if missing or size differs). A split is skipped when the completion
+    marker exists, mp4 count == metadata length == expected, and (marker written by this function) local total bytes == recorded bytes.
+    Returns 0 on success, 3 when a split could not be completed."""
+    from concurrent.futures import ThreadPoolExecutor
+    root, src_root = Path(paths["data_root"]), Path(src_root)
+    log(f"copy_from_mount: {src_root} -> {root} splits={splits}")
+    failed = []
+    for s in splits:
+        dest = root / s
+        ok, why = split_complete(cfg, dest, s, meta_counter)
+        if ok and not force:
+            try:
+                rec = json.loads((dest / OK_MARK).read_text() or "{}")
+            except Exception:
+                rec = {}
+            if rec.get("bytes") is None or rec["bytes"] == _local_bytes(dest):
+                log(f"  [{s}] complete ({why}, bytes {'checked' if rec.get('bytes') is not None else 'not recorded'}), skip")
+                continue
+            log(f"  [{s}] marker present but local bytes differ from the recorded value -> re-verify against the source")
+        src = src_root / s
+        files = sorted(f for f in src.iterdir() if f.is_file()) if src.is_dir() else []
+        todo = [f for f in files if not (dest / f.name).exists() or (dest / f.name).stat().st_size != f.stat().st_size]
+        log(f"  [{s}] source files={len(files)} to copy={len(todo)}" + (" (dry-run)" if dry_run else ""))
+        if dry_run:
+            continue
+        dest.mkdir(parents=True, exist_ok=True)
+        (dest / OK_MARK).unlink(missing_ok=True)
+        with ThreadPoolExecutor(max_workers=workers) as ex:
+            errs = [e for e in ex.map(lambda f: _try(lambda: _copy_one(f, dest / f.name)), todo) if e]
+        if errs:
+            log(f"  [{s}] {len(errs)} copy errors, first: {errs[0]}")
+        n_mp4 = count_mp4(dest)
+        n_meta = meta_counter(dest / "metadata.pt") if (dest / "metadata.pt").exists() else None
+        exp = expected_n(cfg, s)
+        same = all((dest / f.name).exists() and (dest / f.name).stat().st_size == f.stat().st_size for f in files) and bool(files)
+        if not errs and same and n_meta is not None and n_mp4 == n_meta and (exp is None or n_mp4 == exp):
+            (dest / OK_MARK).write_text(json.dumps({"n_mp4": n_mp4, "n_metadata": n_meta, "bytes": _local_bytes(dest), "source": "drive_mount"}) + "\n")
+            log(f"  [{s}] done: {n_mp4} episodes, {_local_bytes(dest) / 1e9:.2f} GB")
+        else:
+            failed.append(s)
+            log(f"  [{s}] INCOMPLETE mp4={n_mp4} metadata={n_meta} expected={exp} all_sizes_match={same}; no marker, next run retries")
+    if not dry_run:
+        check(cfg, paths, splits)
+    if failed:
+        log(f"copy_from_mount FAILED for {failed}; re-run (finished files are skipped)")
+        return 3
+    return 0
+
+
+def _try(fn):
+    try:
+        fn()
+        return None
+    except Exception as e:
+        return f"{type(e).__name__}: {e}"
+
+
 # ----------------------------------------------------------------------------- stage
 def download(cfg, paths, splits, dry_run=False, force=False, meta_counter=meta_len, video_prober=probe_video):
     """Download the splits (skip complete ones), then run the integrity check. Returns a process exit code."""

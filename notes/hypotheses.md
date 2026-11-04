@@ -282,3 +282,43 @@
 - 실행 방식: overnight.sh 로 6개 학습(조건 2 x 시드 3) 후 cache, q1, q2, q3, aggregate 를 한 번에 실행. 사전에 파이프라인 단독 검증(한 run)은 하지 않기로 했다 — cache/q1/q2/q3/aggregate 는 아직 한 번도 실행된 적이 없어 학습 후에 오류가 날 수 있음을 사용자에게 고지함.
 - 시간 추정(추정): epoch 당 약 1856 iteration(smoke 의 48 에피소드=99 iteration 을 900 에피소드로 비례 환산), 1.14 it/s 로 run 당 약 6.8시간, 6 run 약 41시간. 정확한 step 수는 train --dry-run 과 train_budget.json 으로 확인.
 - 이 값들은 결과를 보기 전에 확정했으므로 결과 확인 후 바꾸지 않는다.
+
+---
+
+## 후보 I: 깊이별 크기 소실 지점(실험 4)과 inductive bias probe(실험 5) (미확정, 사람 승인 대기)
+
+- 작성: 메인 세션, 2026-11-03. 출처: 사용자가 붙여 준 「실험 4·5 구현 명세」(초안; 원본은 claude.ai 「DINO-WM 천 크기 정보 흐름 실험 설계」). 명세의 "실험 1~3" = 002 의 Q1/Q2/Q3 (후보 G), predictor (b) = 002 조건 `multi_60_ind_160`.
+- 상태: **가설 문장과 수치는 명세의 제안값이며 사용자 확정 전이다.** 002 결과(Q1 probe, (b) 체크포인트)는 이 저장소에 아직 없다(2026-11-03 확인: experiments/002_single_size_sweep/results 없음). 명세 0.2절에 따라 결과가 없으면 구현 + 파일럿(`pilot: true`)까지만 한다.
+- 명세와 저장소 관례 차이: 출력 위치를 `results/exp4/` 대신 저장소 관례 `experiments/004_depth_truncation/`, `experiments/005_inductive_bias_probe/` 로 둔다(명세 0.1절 "기존 관례를 따른다"). 각 폴더에 CHANGES.md.
+- 이미 알려진 설정 차이(002 확정 기록 8): num_hist = 1, frameskip = 5. 명세 4-B 의 "마지막 context 프레임"은 유일한 context 프레임이 된다.
+
+### 가설 (명세 제안값)
+- **H-d (실험 4)**: 천 크기 R²(log 명목 면적비)는 어떤 깊이 L* 이후 급격히 줄고, OoD 크기에서 L* 가 InD 보다 앞선다. 소실 지점 = R² 가 직전 최고값보다 0.2 이상 처음 떨어지는 깊이(인코더 k*, predictor m* 따로). 주지표는 predictor 의 (i) hidden probe.
+  - 반증: 모든 깊이에서 하락 < 0.2, 또는 InD/OoD 곡선이 seed 편차 안에서 겹침.
+- **H-e (5-A/5-B)**: OoD 포함 R-IB, D-IB 가 모두 면적 휴리스틱 모델보다 높고 random-init 과 seed 편차 밖에서 다르며, 5-B calibration 곡선의 45도선 평균 이탈 ≤ 0.1(정규화 거리).
+- **H-f (5-C)**: `D-IB_area=` 와 `D-IB_area≠` 가 seed 편차 안에서 같다.
+- **H-g (5-D)**: slice 별 기울기가 모두 0.8~1.2.
+- 임계값 0.2 / 0.1 / 0.8~1.2 는 명세상 "파일럿에서 확정". 바꾸면 결과보다 먼저 기록한다.
+
+### 체크리스트
+- [x] 가설 문장과 제안 임계값 확정 (2026-11-03, 사용자: 제안값 그대로. 임계값은 파일럿 후 최종 확정, 바꾸면 결과 보기 전에 기록)
+- [x] 진행 범위: 코드 + 합성 데이터 CPU selftest + dry-run 까지 (2026-11-03, 사용자). 서버 파일럿은 002 결과 후 별도 승인
+- [x] 5-B 무작위 함수 족: 무작위 사인파 합 (2026-11-03, 사용자)
+- [x] LoRA 옵션, 4-C 깊이 재학습: 둘 다 생략, CHANGES.md 에 기록 (2026-11-03, 사용자)
+- [ ] 파일럿 GPU 실행 승인
+
+### 확정 기록 9: 후보 I 확정 (2026-11-03, 사용자)
+- 위 체크리스트 네 항목을 사용자가 선택했다. 결과(002 포함)를 본 적 없음. 확정 시점의 값은 결과 확인 후 바꾸지 않는다(파일럿 후 임계값 확정은 명세상 예정된 절차이며 변경 시 별도 기록).
+
+### 확정 기록 10 (후보 G / 실험 002): 실행 환경 변경, 서버 -> Google Colab Pro+ (2026-11-04, 사용자 지시)
+(번호 정정: 처음엔 "확정 기록 9" 로 적었으나 후보 I 의 확정 기록 9 와 겹쳐 사용자 지시로 10 으로 바꿨다.)
+- 원래 값: 학교 WSL2 GPU 서버(12GB VRAM, SSH), `overnight.sh` 연속 실행, 데이터는 rclone(Google Drive), conda 환경 `dino_wm`, `save_every_x_epoch: 5`.
+- 새 값: Google Colab Pro+ 노트북(`experiments/002_single_size_sweep/colab/exp002_colab.ipynb`). 데이터는 마운트한 Drive 에서 `/content` 로컬로 복사(rclone 미사용), 체크포인트/캐시/results/manifests/logs/attempts.json 은 Drive `WORK_ROOT` 에 직접 기록, conda 대신 uv 로 만든 Python 3.9 venv + pip(environment.yml 핀 유지; CLAUDE.md conda 규칙의 예외, 사유: Colab 에 conda 없음/세션 초기화), 재개용 train.py 패치, `save_every_x_epoch` 5 -> 1(사용자 승인, 운영 값, 사전 등록 아님).
+- **학습 재개(resume)를 쓴다 (사용자 결정; train.py 패치 승인 포함).** 경위: 2026-11-04 에 사용자가 먼저 "resume patch 를 쓰지 말자"고 지시했으나 이는 사용자의 실수였고, 같은 날 "체크포인트에서 학습을 재개할 수 있게 하라"로 정정했다(정정이 최종 결정). 고정 commit 의 `train.py` 는 `model_latest.pth` 를 읽되 encoder/optimizer 상태를 복원하지 못하고 epochs 만큼 더 학습해 총 예산(27855 step)이 깨지므로(소스 확인), `colab/train_resume.patch`(상위 11ba488 + `training.epochs` 를 총 목표 epoch 로 해석)를 pinned commit 위에 적용한다. 새 학습은 원본과 같이 epoch 1..15. 패치 없는 train.py 로는 체크포인트가 있는 run 을 재개하지 않는다(코드가 거부). 재개 전 `prepare`: 읽히는 체크포인트는 재개, 깨진 `model_latest.pth` 는 최신의 읽히는 epoch 파일로 복구, 쓸 수 있는 체크포인트가 없으면 `DINO_TRAIN/quarantine/<run>__<시각>/` 로 이동(삭제 없음)하고 처음부터. `save_every_x_epoch=1` 은 이 재개에 쓰이므로 의미가 있다.
+- 재개의 한계(추정): 재개 후 데이터 순서/난수 상태가 복원되지 않아 중단 없는 run 과 bit 단위로 같지 않을 수 있다. cloth 환경, torch 2.0.1+cu117, Colab, GPU 에서의 재개는 검증하지 못했다(CPU selftest 는 패치 적용과 epoch 범위 1..15 / 6..15 만 확인). 총 optimizer step 수는 같다.
+- 데이터 위치(사용자가 Drive 메타데이터로 확인해 전달): MyDrive 의 바로가기 `dino-wm-videos`(id 17M0MZGSDPzu7CCT3ez3ABMyZGjavTfx3, 소유 다른 계정) 안 `[data]/[cloth-sim] cloth_move` 가 config `root_folder_id` 의 폴더. 마운트 형태는 미검증.
+- 사유: 서버가 꺼졌고 SSH 사용이 금지됨(사용자 보고).
+- 불변(사전 등록 유지): seeds [0,1,2], batch_size 24, num_hist 1, epochs 15, 동일 예산(총 optimizer step 계산값 27855), 모든 사전 등록 임계값, 조건/데이터 구성. VRAM 여유가 생겨도 batch_size 는 바꾸지 않는다.
+- 이전 서버 run: 중단됐다(사용자 보고). 사용자 보고 기준으로 가설 결과(Q1/Q2/Q3 수치)를 본 적 없다(이 저장소에 서버 산출물이 없어 실험자는 확인할 수 없음; smoke 수치는 확정 기록 8 에 기록된 것뿐). **서버에서 중단된 run 의 부분 학습 출력은 재사용하지 않고, Colab 에서 처음부터 다시 시작한다**(사용자가 달리 요청하기 전까지).
+- 비교 가능성 주의: GPU 종류, 드라이버, venv 의 torch/CUDA 빌드가 서버와 다를 수 있고 재개가 일어난 run 은 중단 없는 run 과 bit 단위로 같지 않을 수 있다(추정). 결과 해석 시 환경 기록(`results.json environment`, `run_info.txt`)을 함께 본다.
+- GPU 학습 실행 승인: 확정 기록 8 의 승인은 서버 실행에 대한 것이었다. Colab 본 실행 전에 환경/비용(컴퓨트 유닛) 확인을 사람이 한다. 이 항목 작성 시점에 Colab 실행은 없다.

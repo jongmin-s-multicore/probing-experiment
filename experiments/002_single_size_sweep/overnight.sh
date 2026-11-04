@@ -57,7 +57,10 @@ retry_step() {  # retry_step ITEM STAGE MARKER|- cmd...
   for ((a = 1; a <= ATTEMPTS; a++)); do
     st "$item" "$stage" running --retries $((a - 1))
     lg="$HERE/logs/overnight_${item}_${stage}_try${a}.log"; say "$item $stage: attempt $a/$ATTEMPTS -> $lg"
-    ( "$@" ) > "$lg" 2>&1; rc=$?
+    # Resume (확정 기록 10, 사용자 정정 2026-11-04): before EVERY train attempt (also retries) `prepare` keeps a loadable checkpoint (resume), repairs a broken
+    # model_latest.pth from the newest loadable epoch file, and only when nothing loadable exists moves checkpoints to <DINO_TRAIN>/quarantine/ (fresh start).
+    # If `prepare` fails the attempt fails (rc 97). The patched train.py (colab/train_resume.patch) is required for resume; trainrun.py refuses otherwise.
+    ( if [ "$stage" = train ] && [ -f "$HERE/colab/colab_tools.py" ]; then "$PY" "$HERE/colab/colab_tools.py" prepare --train-root "$DINO_TRAIN" --run "$item" || exit 97; fi; "$@" ) > "$lg" 2>&1; rc=$?
     if [ "$rc" = 0 ]; then st "$item" "$stage" done --retries $((a - 1)); say "$item $stage: done"; return 0; fi
     err="rc=$rc: $(lastline "$lg")"; say "$item $stage: attempt $a failed ($err)"
     st "$item" "$stage" running --retries "$a" --error "$err"

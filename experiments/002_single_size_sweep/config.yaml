@@ -133,7 +133,7 @@ run:
 train_impl:
   hydra_env: "acwm_cloth_move"
   predictor_lr: 5.0e-5         # 001 jobs 값 (브랜치 repro/jobs/acwm_phys.txt 서술)
-  save_every_x_epoch: 5
+  save_every_x_epoch: 1          # OPERATIONAL value, NOT pre-registered. 원래 5 -> 1 (2026-11-04, 확정 기록 10, 사용자 승인). Colab 세션이 끊길 때 마지막 epoch 체크포인트에서 재개하는 데 쓰인다(colab/train_resume.patch). 저장 빈도만 바꾸며 학습 step/데이터/시드에는 영향 없음
   budget_mode: "steps_equalized"   # 확정 기록 6: 총 optimizer step 수를 조건 간 같게. 환산은 epoch 정수 (branch train.py 는 수정 없이 epochs 만 받는다)
   steps_per_epoch_rounding: "ceil" # steps_per_epoch = ceil(학습 slice 수 / batch_size). 브랜치 DataLoader 의 drop_last 는 미확인 -> train 로그의 tqdm 총 step 과 서버에서 대조 (README)
   num_pred: 1                      # 학습 slice 수 계산용 (nf = num_hist + num_pred). 브랜치 train.yaml 값 미확인(추정) -> 서버에서 tqdm 총 step 과 대조
@@ -194,3 +194,7 @@ q3_impl:
   variance_match_rel_tol: 0.05
   batch_samples: 128
   behavior_pairs: 200
+
+# 2026-11-04 (확정 기록 10: 실행 환경 서버 -> Colab). 아래는 운영 값이며 사전 등록 값이 아니다. 학습 결과/통계/임계값에 영향 없음.
+colab:
+  keep_ckpt_epochs: [5, 10, 15]  # 학습이 DONE 이 된 run 에서 이 epoch 의 model_<e>.pth 와 model_latest.pth 만 남기고 나머지는 삭제(Drive 용량). 원래 save_every=5 가 남기던 체크포인트와 같은 집합

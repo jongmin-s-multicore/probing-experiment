@@ -653,6 +653,187 @@ def t_config(base):
     check("config seeds present", base["seed"] is not None and base["train"]["seeds"] and base["probe"]["seeds"] and base["q3_impl"]["random_direction_seed"] is not None)
 
 
+def t_colab(base):
+    """Colab path (확정 기록 10): resolve_paths with Colab-style env vars, copy_from_mount (copy / skip / size-mismatch repair), colab_tools prepare/prune."""
+    import os, tempfile, json, importlib.util, copy, time
+    from pathlib import Path
+    from exp002 import drive
+    from exp002.common import resolve_paths
+    tmp = Path(tempfile.mkdtemp(prefix="exp002_colab_"))
+    saved = {k: os.environ.get(k) for k in ("DINO_WORK", "DATASET_DIR", "DINO_TRAIN", "EXP002_CACHE", "ACWM_PHYS_SRC")}
+    try:
+        os.environ.update({"DINO_WORK": str(tmp / "content/dinowm"), "DATASET_DIR": str(tmp / "content/dinowm/data"), "DINO_TRAIN": str(tmp / "drive/exp002_work/train_runs"),
+                           "EXP002_CACHE": str(tmp / "drive/exp002_work/exp002_cache"), "ACWM_PHYS_SRC": str(tmp / "content/dinowm/acwm_phys_src")})
+        pa = resolve_paths(base)
+        check("colab: resolve_paths follows env vars", pa["train_base"] == tmp / "drive/exp002_work/train_runs" and pa["cache"] == tmp / "drive/exp002_work/exp002_cache"
+              and pa["data_root"] == tmp / "content/dinowm/data" / base["data_impl"]["subdir"] and pa["acwm_src"] == tmp / "content/dinowm/acwm_phys_src")
+        # copy_from_mount with tiny fake splits (no torch needed: metadata length injected)
+        cfg = copy.deepcopy(base)
+        cfg["data_impl"]["expected_episodes"] = {"train": 3, "test": 3}
+        src = tmp / "mnt/shared"
+        splits = ["ind_train", "a060_test"]
+        for sp in splits:
+            (src / sp).mkdir(parents=True)
+            for i in range(3):
+                (src / sp / ("ep%d.mp4" % i)).write_bytes(b"x" * (100 + i))
+            (src / sp / "metadata.pt").write_bytes(b"meta")
+        mc = lambda p: 3
+        pa["data_root"] = tmp / "local/cloth_sim"
+        os.environ["EXP002_DRIVE_MOUNT_SRC"] = str(tmp / "mnt")
+        check("colab: find_mount_src finds a child folder containing all splits", drive.find_mount_src(cfg, splits) == src)
+        # bracket + space folder names (expected real layout): default path, fallback search, no glob/shell interpretation
+        fake_mount = tmp / "fakedrive"
+        real = fake_mount / "MyDrive/dino-wm-videos/[data]/[cloth-sim] cloth_move"
+        for sp in splits:
+            (real / sp).mkdir(parents=True)
+        os.environ.pop("EXP002_DRIVE_MOUNT_SRC", None)
+        check("colab: default path with [brackets] and space is found", drive.find_mount_src(cfg, splits, mount=str(fake_mount)) == real)
+        (fake_mount / "MyDrive/dino-wm-videos/[data]/[cloth-sim] cloth_move").rename(fake_mount / "MyDrive/dino-wm-videos/[data]/[cloth-sim] renamed [x]")
+        found = drive.find_mount_src(cfg, splits, mount=str(fake_mount))
+        check("colab: fallback search below MyDrive/dino-wm-videos finds the split folder after a rename", found is not None and found.name == "[cloth-sim] renamed [x]", str(found))
+        (fake_mount / "MyDrive/dino-wm-videos/[data]/[cloth-sim] renamed [x]/ind_train").rmdir()
+        check("colab: incomplete folder (missing split) is not accepted", drive.find_mount_src(cfg, splits, mount=str(fake_mount)) is None)
+        os.environ["EXP002_DRIVE_MOUNT_SRC"] = str(tmp / "mnt")
+        # copy from a source whose path has brackets/space (pathlib only)
+        br = tmp / "mnt2/[data]/[cloth-sim] cloth_move"
+        shutil.copytree(src, br)
+        pb = dict(pa); pb["data_root"] = tmp / "local2/cloth_sim"
+        orig_check2 = drive.check
+        drive.check = lambda *a, **k: None
+        try:
+            check("colab: copy_from_mount works from a [bracket] path", drive.copy_from_mount(cfg, pb, splits, br, meta_counter=lambda p: 3) == 0 and (pb["data_root"] / "ind_train" / "ep0.mp4").exists())
+        finally:
+            drive.check = orig_check2
+        # the notebook passes the path through os.environ: check that os.environ round trip + shell-free use keeps it intact
+        os.environ["EXP002_DRIVE_MOUNT_SRC"] = str(br)
+        check("colab: env var path with brackets/space is used first", drive.mount_src_candidates(cfg)[0] == br and drive.find_mount_src(cfg, splits) == br)
+        os.environ["EXP002_DRIVE_MOUNT_SRC"] = str(tmp / "mnt")
+        orig_check = drive.check
+        drive.check = lambda *a, **k: None
+        try:
+            rc = drive.copy_from_mount(cfg, pa, splits, src, meta_counter=mc)
+            check("colab: copy_from_mount completes", rc == 0 and all((pa["data_root"] / s / drive.OK_MARK).exists() for s in splits))
+            mark = json.loads((pa["data_root"] / "ind_train" / drive.OK_MARK).read_text())
+            check("colab: marker records bytes", mark.get("bytes") == 100 + 101 + 102 + 4, str(mark))
+            m0 = (pa["data_root"] / "ind_train" / "ep0.mp4").stat().st_mtime_ns
+            rc = drive.copy_from_mount(cfg, pa, splits, src, meta_counter=mc)
+            check("colab: second run skips complete splits (file untouched)", rc == 0 and (pa["data_root"] / "ind_train" / "ep0.mp4").stat().st_mtime_ns == m0)
+            (pa["data_root"] / "ind_train" / "ep1.mp4").write_bytes(b"y")          # truncated local file
+            rc = drive.copy_from_mount(cfg, pa, splits, src, meta_counter=mc)
+            check("colab: truncated local file is detected via recorded bytes and repaired", rc == 0 and (pa["data_root"] / "ind_train" / "ep1.mp4").stat().st_size == 101)
+            (src / "ind_train" / "ep2.mp4").unlink()
+            (pa["data_root"] / "ind_train" / "ep2.mp4").unlink()
+            rc = drive.copy_from_mount(cfg, pa, splits, src, meta_counter=mc, force=True)
+            check("colab: missing source episode -> incomplete, rc=3, no marker", rc == 3 and not (pa["data_root"] / "ind_train" / drive.OK_MARK).exists())
+        finally:
+            drive.check = orig_check
+        # colab_tools
+        ct_path = Path(__file__).resolve().parents[2] / "colab" / "colab_tools.py"
+        spec = importlib.util.spec_from_file_location("colab_tools", ct_path)
+        ct = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(ct)
+        rd = tmp / "drive/exp002_work/train_runs/outputs/exp002_x_s0/checkpoints"
+        rd.mkdir(parents=True)
+        for e in range(1, 8):
+            (rd / ("model_%d.pth" % e)).write_bytes(b"ok%d" % e)
+        (rd / "model_latest.pth").write_bytes(b"corrupt")
+        check("colab_tools: prune without DONE keeps everything", ct.prune_run(rd.parent, [5, 10, 15], require_done=True) == [])
+        (rd.parent / "DONE").write_text("ok\n")
+        rem = ct.prune_run(rd.parent, [5, 10, 15], require_done=True)
+        check("colab_tools: prune after DONE removes only non-kept epoch files", sorted(rem) == ["model_1.pth", "model_2.pth", "model_3.pth", "model_4.pth", "model_6.pth", "model_7.pth"]
+              and (rd / "model_5.pth").exists() and (rd / "model_latest.pth").exists())
+        # prepare (resume / repair / quarantine)
+        loadable = lambda p: p.read_bytes().startswith(b"ok")
+        tr = rd.parent.parent.parent
+        (rd.parent / "DONE").unlink()
+        for e_ in (6, 7):
+            (rd / ("model_%d.pth" % e_)).write_bytes(b"ok%d" % e_)
+        (rd / "model_latest.pth").write_bytes(b"ok7")
+        r = ct.prepare_run(rd.parent, tr / "quarantine", loadable=loadable)
+        check("colab_tools: valid checkpoint of an unfinished run is KEPT (resume), nothing moved", r["action"] == "resume" and (rd / "model_latest.pth").exists() and not (tr / "quarantine").exists(), str(r))
+        (rd / "model_latest.pth").write_bytes(b"corrupt")
+        r = ct.prepare_run(rd.parent, tr / "quarantine", loadable=loadable)
+        check("colab_tools: corrupt model_latest.pth is replaced by the newest loadable epoch file, then resume", r["action"] == "repaired_resume" and r.get("restored_from") == "model_7.pth"
+              and (rd / "model_latest.pth").read_bytes() == b"ok7", str(r))
+        for f in rd.glob("model_*.pth"):
+            f.write_bytes(b"corrupt")
+        (rd.parent / "epoch_logs.jsonl").write_text("{}\n")
+        r = ct.prepare_run(rd.parent, tr / "quarantine", loadable=loadable, now=time.localtime(0))
+        dst = Path(r.get("to", "/nonexistent"))
+        check("colab_tools: no loadable checkpoint -> checkpoints and epoch_logs MOVED to quarantine/<run>__<time> (fresh start), nothing deleted",
+              r["action"] == "quarantined" and dst.parent == tr / "quarantine" and dst.name.startswith("exp002_x_s0__") and (dst / "checkpoints" / "model_latest.pth").exists()
+              and (dst / "epoch_logs.jsonl").exists() and not (rd.parent / "checkpoints").exists(), str(r))
+        check("colab_tools: after quarantine the run is 'fresh' (no checkpoint)", ct.prepare_run(rd.parent, tr / "quarantine", loadable=loadable)["action"] == "fresh")
+        done_rd = tr / "outputs" / "exp002_done_s1"
+        (done_rd / "checkpoints").mkdir(parents=True)
+        (done_rd / "checkpoints" / "model_latest.pth").write_bytes(b"corrupt")
+        (done_rd / "DONE").write_text("ok\n")
+        smoke_rd = tr / "outputs" / "exp002_smoke_h1_b24"
+        (smoke_rd / "checkpoints").mkdir(parents=True)
+        (smoke_rd / "checkpoints" / "model_latest.pth").write_bytes(b"corrupt")
+        check("colab_tools: DONE run and smoke run are never touched by prepare",
+              ct.prepare_run(done_rd, tr / "quarantine", loadable=loadable)["action"] == "skip" and ct.prepare_run(smoke_rd, tr / "quarantine", loadable=loadable)["action"] == "skip"
+              and (done_rd / "checkpoints" / "model_latest.pth").exists() and (smoke_rd / "checkpoints" / "model_latest.pth").exists())
+        check("colab_tools: prune ignores the quarantine folder (not under outputs/)", all(r_.name != "quarantine" for r_ in ct._runs(tr)))
+        # resume patch: epoch range of the patched train.py (budget), evaluated from the REAL patched source when the pinned train.py is available
+        here = Path(__file__).resolve().parents[2]
+        patch_txt = (here / "colab/train_resume.patch").read_text()
+        check("resume patch text: contains the marker and the TOTAL-epoch loop, keeps optimizer state_dicts and action_encoder_optimizer",
+              "[exp002 operational]" in patch_txt and "range(init_epoch, self.total_epochs + 1)" in patch_txt and '"action_encoder_optimizer"' in patch_txt and "load_state_dict" in patch_txt)
+        from exp002 import trainrun as TRN
+        check("trainrun: patch marker constant equals the one in the patch", TRN.RESUME_MARKER in patch_txt)
+        pinned = None
+        for cand in (os.environ.get("ACWM_PHYS_SRC"), str(here.parents[1] / "thread0")):
+            if cand and (Path(cand) / ".git").exists():
+                import subprocess
+                r_ = subprocess.run(["git", "-C", cand, "show", "%s:train.py" % base["code"]["commit"]], capture_output=True, text=True)
+                if r_.returncode == 0:
+                    pinned = r_.stdout
+                    break
+        if pinned is None:
+            skip("resume patch applied to the pinned train.py (epoch ranges)", "pinned commit train.py not available on this machine")
+        else:
+            import ast, subprocess, types
+            d_ = tmp / "pin"
+            d_.mkdir()
+            (d_ / "train.py").write_text(pinned)
+            ra = subprocess.run(["patch", "-p1", "--dry-run", "-i", str(here / "colab/train_resume.patch")], cwd=d_, capture_output=True, text=True)
+            check("resume patch applies cleanly to the pinned train.py", ra.returncode == 0, ra.stdout[-200:] + ra.stderr[-200:])
+            subprocess.run(["patch", "-p1", "-i", str(here / "colab/train_resume.patch")], cwd=d_, capture_output=True, text=True)
+            tree = ast.parse((d_ / "train.py").read_text())
+            run_fn = [n for n in ast.walk(tree) if isinstance(n, ast.FunctionDef) and n.name == "run"][0]
+            loop = [n for n in ast.walk(run_fn) if isinstance(n, ast.For)][0]
+            rng_src = ast.unparse(loop.iter)
+            def epochs_for(start_epoch, total):
+                ns = {"self": types.SimpleNamespace(epoch=start_epoch, total_epochs=total), "init_epoch": start_epoch + 1}
+                return list(eval(rng_src, {"range": range}, ns))
+            fresh, res5, res15 = epochs_for(0, 15), epochs_for(5, 15), epochs_for(15, 15)
+            check("patched loop: fresh run trains epochs 1..15 (same as the original)", fresh == list(range(1, 16)), rng_src)
+            check("patched loop: resume after the epoch-5 checkpoint trains 6..15", res5 == list(range(6, 16)))
+            check("patched loop: resume at the final epoch trains nothing", res15 == [])
+            spe = 1857
+            check("budget: epochs trained before (5) + after resume (10) x steps_per_epoch == fresh total (steps_per_epoch is an example value)", (5 + len(res5)) * spe == len(fresh) * spe)
+            check("unpatched pinned loop would train epochs MORE (documents why the patch is needed)", "init_epoch + self.total_epochs" in pinned)
+        check("resume wiring: overnight.sh calls prepare before train attempts, trainrun refuses an existing checkpoint with an unpatched train.py, notebook applies the patch and calls prepare",
+              'colab_tools.py" prepare' in (here / "overnight.sh").read_text() and "Refusing" in (here / "src/exp002/trainrun.py").read_text()
+              and "train_py_is_patched" in (here / "src/exp002/trainrun.py").read_text() and "'apply', PATCH" in (here / "colab/exp002_colab.ipynb").read_text().replace('\\"', '"')
+              and "colab_tools.py prepare" in (here / "colab/exp002_colab.ipynb").read_text())
+        pd = tmp / "src_patched"
+        pd.mkdir()
+        (pd / "train.py").write_text("x = 1\n")
+        check("trainrun: unpatched train.py is detected", TRN.train_py_is_patched(pd) is False)
+        (pd / "train.py").write_text("# " + TRN.RESUME_MARKER + "\n")
+        check("trainrun: patched train.py is detected", TRN.train_py_is_patched(pd) is True)
+    finally:
+        for k, v in saved.items():
+            if v is None:
+                os.environ.pop(k, None)
+            else:
+                os.environ[k] = v
+        os.environ.pop("EXP002_DRIVE_MOUNT_SRC", None)
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
 def run(base_cfg=None):
     print("=" * 100)
     print("SELFTEST on synthetic data. The numbers below are NOT experiment results.")
@@ -664,7 +845,7 @@ def run(base_cfg=None):
         except Exception:
             traceback.print_exc()
             REC["fail"].append(name + " (exception)")
-    for name, fn in (("budget/manifest", t_budget_manifest), ("output-space probe", t_output_space), ("diag 4c", t_diag), ("q3 pure", t_q3_pure), ("vram poller", lambda b: t_vram_poller()), ("static/slices", t_static_and_slices)):
+    for name, fn in (("budget/manifest", t_budget_manifest), ("output-space probe", t_output_space), ("diag 4c", t_diag), ("q3 pure", t_q3_pure), ("vram poller", lambda b: t_vram_poller()), ("static/slices", t_static_and_slices), ("colab", t_colab)):
         try:
             fn(base)
         except Exception:
