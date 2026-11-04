@@ -16,7 +16,7 @@ hydra-submitit-launcher==1.2.0
 submitit==1.5.1
 accelerate==0.26.1
 wandb==0.13.1
-setuptools<81        # ADDED (uv venv ships no setuptools; train.py import chain needs pkg_resources, removed in newer setuptools; 추정, traceback not read)
+setuptools<81        # ADDED (train.py -> wandb 0.13.1 internal_api.py: from pkg_resources import parse_version; the uv venv had no pkg_resources. The upper bound is 추정: newer setuptools may have removed it)
 tqdm
 imageio
 scikit-image==0.19.3

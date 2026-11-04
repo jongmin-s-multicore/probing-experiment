@@ -7,6 +7,7 @@
 # Every step is tried at most 3 times (CLAUDE.md); each attempt writes logs/overnight_<item>_<stage>_try<N>.log and the last line of the
 # failure is stored in logs/overnight_status.json (stderr of the status helper goes to logs/overnight_status.err and is also echoed).
 # A step that fails 3 times stops the whole chain (later steps depend on it) and the exit code is 1. Nothing is ever forced (no --force).
+# The bound is per invocation: starting this script again (a human decision, after reading the cause) gets 3 new attempts. results/attempts.json is only a record.
 # Environment: assumes an activated conda env; if $CONDA_ENV is set and differs from CONDA_DEFAULT_ENV the script sources conda.sh and
 # activates it (`conda run` was not chosen: it buffers output, so progress would not be visible in the logs).
 # Variables: CONDA_ENV  CONDITIONS  RETRY_SLEEP(60)  DINO_WORK DATASET_DIR DINO_TRAIN EXP002_CACHE ACWM_PHYS_SRC (see README)
@@ -40,7 +41,7 @@ P
 )"
 STATUS="$HERE/logs/overnight_status.json"
 st() { $PY "$HERE/overnight_status.py" set --file "$STATUS" "$@" >/dev/null 2>>"$HERE/logs/overnight_status.err" || say "WARNING status update failed (see logs/overnight_status.err): $(tail -n 1 "$HERE/logs/overnight_status.err" 2>/dev/null)"; }
-lastline() { grep -v '^[[:space:]]*$' "$1" 2>/dev/null | tail -n 1 | cut -c1-400; }
+lastline() { grep -v -e '^[[:space:]]*$' -e '^FAILED\. Paste' "$1" 2>/dev/null | tail -n 1 | cut -c1-400; }  # run.py's generic FAILED footer would hide the exception line
 ITEMS=""; for c in $CONDITIONS; do for s in $SEEDS; do ITEMS="$ITEMS exp002_${c}_s${s}"; done; done; ITEMS="${ITEMS# } global"
 say "conditions: $CONDITIONS ; seeds: $SEEDS ; items: $ITEMS"
 if [ "$DRY" = 1 ]; then
@@ -49,6 +50,15 @@ if [ "$DRY" = 1 ]; then
   exit 0
 fi
 $PY "$HERE/overnight_status.py" init --file "$STATUS" --items "$ITEMS" --meta "conditions=$CONDITIONS" "start=$(ts)" 2>>"$HERE/logs/overnight_status.err" || say "WARNING status init failed: $(tail -n 1 "$HERE/logs/overnight_status.err")"
+# Colab venv only: this file is updated by `git pull`, the notebook copy that builds the venv may be older, so sync the pulled requirements here (a no-op when already satisfied).
+# A missing import is deterministic: stop before any train attempt instead of retrying it.
+REQ="$HERE/colab/requirements_colab.txt"
+if [ -n "${VIRTUAL_ENV:-}" ] && [ -f "$REQ" ]; then
+  if command -v uv >/dev/null 2>&1; then
+    uv pip install --python "$(command -v python)" --index-strategy unsafe-best-match -r "$REQ" || { say "STOP: uv pip install -r $REQ failed"; exit 1; }
+  else say "WARNING uv not found; requirements not synced"; fi
+  $PY -W ignore -c "import pkg_resources, wandb" || { say "STOP: environment check failed (import pkg_resources, wandb; traceback above). No train attempt was made."; exit 1; }
+fi
 
 retry_step() {  # retry_step ITEM STAGE MARKER|- cmd...
   local item="$1" stage="$2" marker="$3"; shift 3

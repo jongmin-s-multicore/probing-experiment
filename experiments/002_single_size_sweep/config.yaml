@@ -128,8 +128,6 @@ frames:                        # 매크로 프레임 인덱스 (frameskip 5, 0..
   all: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
   early_flat: [0, 1, 2, 3]     # impl default. '평평함'은 인덱스로 가정한 것이며 영상으로 확인하지 않았다
   late_deformed: [8, 9, 10, 11]   # impl default. 변형이 크다는 것도 가정
-run:
-  max_attempts: 3              # CLAUDE.md 재시도 상한. results/attempts.json 이 단계별 연속 실패를 센다
 train_impl:
   hydra_env: "acwm_cloth_move"
   predictor_lr: 5.0e-5         # 001 jobs 값 (브랜치 repro/jobs/acwm_phys.txt 서술)

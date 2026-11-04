@@ -128,7 +128,7 @@ experiments/002_single_size_sweep/
 
 ## 5. 사용자 테스트 순서와 정확한 명령 (서버에서 직접)
 
-작업 디렉터리 `experiments/002_single_size_sweep`. 아래 "정상 출력"은 **형태 예시이며 작성자가 서버에서 실행해 본 것이 아니다**(selftest 만 이 머신에서 합성 데이터로 실행). 막히면 각 단계가 `logs/` 에 남긴 파일(`logs/<단계>_<시각>.log`, 터미널 첫 줄에 경로 출력, 학습 smoke 는 `logs/smoke_train_h<H>_b<B>.log`)을 붙여 달라. 에러는 숨기지 않고 traceback 까지 같은 파일에 남는다. 3회 연속 실패하면 해당 단계는 `results/attempts.json` 때문에 실행을 거부한다(원인 보고 후 사람이 항목을 지워야 재개).
+작업 디렉터리 `experiments/002_single_size_sweep`. 아래 "정상 출력"은 **형태 예시이며 작성자가 서버에서 실행해 본 것이 아니다**(selftest 만 이 머신에서 합성 데이터로 실행). 막히면 각 단계가 `logs/` 에 남긴 파일(`logs/<단계>_<시각>.log`, 터미널 첫 줄에 경로 출력, 학습 smoke 는 `logs/smoke_train_h<H>_b<B>.log`)을 붙여 달라. 에러는 숨기지 않고 traceback 까지 같은 파일에 남는다. `overnight.sh` 는 한 단계를 실행당 최대 3회 시도하고, 3회 실패하면 멈춘다(원인을 읽은 뒤 사람이 다시 시작하면 새로 3회). `results/attempts.json` 은 연속 실패 기록일 뿐 실행을 막지 않는다(2026-11-04 변경).
 
 ```bash
 # 0. 환경 (위 4절)

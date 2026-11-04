@@ -3,8 +3,8 @@
 
 Stages: check | download | manifest | smoke | cache | train | q1 | q2 | q3 | aggregate | selftest
 Every stage supports --dry-run (prints what it would do; heavy work is not started). Seeds come from config.yaml.
-Each stage writes logs/<stage>[_<tag>]_<time>.log (stdout+stderr, tracebacks included). Failures are counted per stage in
-results/attempts.json; after run.max_attempts (3) consecutive failures the stage refuses to run (CLAUDE.md retry limit).
+Each stage writes logs/<stage>[_<tag>]_<time>.log (stdout+stderr, tracebacks included). Consecutive failures per stage are recorded in
+results/attempts.json (record only; the retry bound of an unattended run is ATTEMPTS in overnight.sh).
 Run inside the activated conda environment (see environment.yml / README)."""
 from __future__ import annotations
 
@@ -20,7 +20,7 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE / "src"))
 
 from exp002.common import (load_config, resolve_paths, run_name, run_dir, write_json, read_json, log, set_seed, start_file_log, log_exception,  # noqa: E402
-                           attempts_check, attempts_record, env_info, warn_conda, disk_free_gb, require, ConfigNull)
+                           attempts_record, env_info, warn_conda, disk_free_gb, require, ConfigNull)
 
 
 def conds(cfg, args):
@@ -145,8 +145,6 @@ def cmd_train(cfg, paths, args):
     for c in conds(cfg, args):
         for s in seeds(cfg, args):
             key = "train:%s" % run_name(c, s)
-            if not args.dry_run:
-                attempts_check(cfg, paths, key)
             try:
                 rc = trainrun.train(cfg, paths, c, s, force=args.force, dry_run=args.dry_run)
             except ConfigNull:
@@ -173,7 +171,6 @@ def _per_run(mod, cfg, paths, args, stage):
         for s in seeds(cfg, args):
             key = "%s:%s" % (stage, run_name(c, s))
             if not args.dry_run:
-                attempts_check(cfg, paths, key)
                 if not (run_dir(paths, run_name(c, s)) / "DONE").exists():
                     log("%s: run %s not trained (no DONE) - skipped" % (stage, run_name(c, s)))
                     rc = 1
@@ -252,8 +249,6 @@ def main():
     try:
         key = "stage:%s" % args.stage
         guard = args.stage not in NO_GUARD and not args.dry_run and args.stage not in ("train", "q2", "q3")
-        if guard:
-            attempts_check(cfg, paths, key)
         rc = STAGES[args.stage](cfg, paths, args) or 0
         if guard:
             attempts_record(paths, key, rc == 0)

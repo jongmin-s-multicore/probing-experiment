@@ -4,7 +4,7 @@ None of this touches pre-registered values.
 
   python colab/colab_tools.py setup-dirs --work-root /content/drive/MyDrive/exp002_work
       creates <work>/{train_runs,exp002_cache,results,manifests,logs} and makes experiments/002_single_size_sweep/{results,manifests,logs}
-      symlinks to them (existing local content is moved, never overwritten). attempts.json lives in results/, so the retry guard persists.
+      symlinks to them (existing local content is moved, never overwritten). attempts.json (failure record) lives in results/, so it persists.
   python colab/colab_tools.py prepare --train-root <work>/train_runs [--run NAME]
       RESUME from the last checkpoint (user decision 2026-11-04, corrected; needs the patched train.py, colab/train_resume.patch). For every run
       folder without DONE: no checkpoint -> nothing to do (fresh start); model_latest.pth loadable -> keep (resume); model_latest.pth broken ->

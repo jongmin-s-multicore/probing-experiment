@@ -92,3 +92,12 @@
 - 변경점: colab/requirements_colab.txt 에 `setuptools<81` 추가(원인은 추정: uv venv 에는 setuptools 가 기본 설치되지 않고, 새 setuptools 는 pkg_resources 를 제거했을 수 있음 - 후자는 미확인). 노트북 4번 셀: venv 마커를 requirements 해시로 바꿔 requirements 가 바뀌면 기존 venv 에 재설치(venv 가 없을 때만 `uv venv`), import 점검에 `pkg_resources` 추가. 사전 등록 값 변경 없음.
 - 검증: 노트북 JSON 파싱 및 4번 셀 구문 컴파일만 확인. Colab 설치/학습은 미검증.
 - 결과: 없음. 해석 없음. 재시도 카운트: 위 3회는 소진, 환경 수정 후 새 시도는 사람 승인 뒤 시작.
+
+## 2026-11-04 / 002_single_size_sweep / Colab 재실행 실패 원인 확정, attempts.json 실행 거부 제거 (코드만, 미실행)
+- 원인 1(확정, Drive 의 logs/train_multi_60_ind_160_20261104-075013.log traceback): `train.py` line 6 `import wandb` -> wandb 0.13.1 `sdk/internal/internal_api.py` line 30 `from pkg_resources import parse_version` -> ModuleNotFoundError. 앞 항목의 "어느 모듈인지 미확인"을 정정한다. setuptools 상한 `<81` 의 근거(새 setuptools 의 pkg_resources 제거)는 여전히 추정.
+- 원인 2(확정, 같은 폴더의 07:59, 08:00, 08:04 로그): 07:57 이후의 `FAILED. Paste the log file ...` 실패는 새 오류가 아니라 `attempts_check` 의 거부다. Drive 의 results/attempts.json 에 `train:exp002_multi_60_ind_160_s0: 3` 이 남아 있어 train.py 를 시작하기 전에 RuntimeError 로 끝났다. 따라서 setuptools 수정은 아직 한 번도 검증되지 않았다.
+- 원인 3(근거: 노트북 diff; 덮어쓴 경위는 추정): 저장소는 9a6733e 로 pull 됐지만 실행된 노트북의 4번 셀은 수정 전 코드였고 설치 출력도 없었다. 작업 트리의 노트북도 옛 셀로 되돌아가 있었다(열려 있던 편집기 버퍼 저장으로 추정). 이 세션의 venv 에 setuptools 가 없을 가능성이 높다.
+- 변경점: (1) `attempts_check` 와 호출부, config.yaml `run.max_attempts` 삭제. results/attempts.json 은 연속 실패 기록으로만 남고(results.json 에 그대로 포함) 실행을 막지 않는다. 사용자 허용("불필요하면 제거")에 따른 판단: 이 영속 카운터는 원인을 고친 뒤에도 항목을 손으로 지워야 풀려 이번 혼란을 만들었다. (2) overnight.sh 의 단계당 3회 상한(ATTEMPTS)은 유지: 결정적 실패가 무인으로 무한 반복되는 것을 막는다. 상한은 실행 단위이며, 사람이 원인을 본 뒤 다시 시작하면 새로 3회다. CLAUDE.md 문구는 고치지 않았다. (3) overnight.sh: Colab venv(VIRTUAL_ENV 설정 시)에서 시작할 때 pull 된 requirements 를 `uv pip install` 로 동기화하고 `import pkg_resources, wandb` 를 확인, 실패하면 학습 시도 없이 STOP. (4) overnight.sh `lastline` 이 run.py 의 일반 FAILED 줄을 건너뛰어 실제 예외 줄을 보고. (5) 노트북 4번 셀 수정을 다시 적용. README, run.py docstring, colab_tools.py 주석, requirements 주석 갱신. 사전 등록 값 변경 없음. config.yaml sha256 은 바뀐다.
+- 검증(이 PC, CPU, python 3.9.13): `python run.py selftest` passed=131 failed=0 skipped=3(건너뜀: resume 패치 epoch 범위, attentive probe, hooks/Q3; 합성 데이터이며 결과 아님), `bash -n overnight.sh`, `lastline` 을 실패 로그 형태로 확인, 동기화 블록을 stub uv/python 으로 4경우(정상, uv 실패, import 실패, venv 없음) 확인, 노트북 JSON 파싱과 4번 셀 구문 컴파일.
+- 미검증: wandb 0.13.1 + setuptools<81 의 실제 설치와 import(로컬 설치 테스트는 권한 정책으로 거부되어 하지 않음), `import wandb` 다음 단계의 train.py, 실제 uv 동기화, GPU 학습.
+- 결과: 없음. 해석 없음.

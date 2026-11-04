@@ -197,21 +197,9 @@ def log_exception(e):
     traceback.print_exc()
 
 
-# ------------------------------------------------------------------------------------------ retry guard (CLAUDE.md: max 3 attempts)
+# ------------------------------------------------------------------------------------------ failure record (the retry bound itself is ATTEMPTS in overnight.sh)
 def _attempts_path(paths):
     return paths["results_dir"] / "attempts.json"
-
-
-def attempts_check(cfg, paths, key):
-    """Returns consecutive failures recorded for key. Raises if the limit is reached (a human must look at the logs)."""
-    p = _attempts_path(paths)
-    d = read_json(p) if p.exists() else {}
-    n = int(d.get(key, 0))
-    mx = int(cfg["run"]["max_attempts"])
-    if n >= mx:
-        raise RuntimeError("%s failed %d times in a row (limit %d, CLAUDE.md). Stop and report the cause from logs/. "
-                           "A human may delete the entry in %s to allow another try." % (key, n, mx, p))
-    return n
 
 
 def attempts_record(paths, key, ok):
