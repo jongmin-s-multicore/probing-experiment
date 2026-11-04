@@ -86,3 +86,9 @@
 - 검증(이 PC, CPU, 임시 디렉터리의 가짜 데이터): `python run.py selftest` passed=158 failed=0 skipped=0(static_check 포함, 359 참조). 아카이브 항목: 생성(.tmp 없음), 추출과 검증 및 바이트 기록, 재실행 건너뜀, 아카이브 우선 사용, 아카이브 없을 때 병렬 복사 후 생성 및 다음 세션은 아카이브만 사용, `EXP002_MAKE_ARCHIVE=0`, 레이아웃 3종(tar/zip), split 없음/접두사 혼합/경로 탈출(`..`, 절대)/심볼릭 링크/잘린 아카이브/에피소드 누락/split 누락/비아카이브 파일 거부, 중단 후 재실행(`.part` 와 짧은 파일). 합성 데이터이며 결과가 아니다.
 - 미검증: 실제 Drive FUSE 에서의 속도(향상 정도는 측정하지 못함, 추정), 실제 데이터 크기와 /content 디스크 여유, 실제 아카이브 생성 시간, 마운트 형태.
 - 결과: 없음. 해석 없음. 재시도 카운트 0.
+
+## 2026-11-04 / 002_single_size_sweep / Colab 환경 수정: pkg_resources 누락 (코드만, 미실행)
+- 배경: exp002_multi_60_ind_160_s0 train 이 3회 모두 5~6초 만에 `ModuleNotFoundError: No module named 'pkg_resources'` 로 실패(07:50:17, 07:51:23, 07:52:28), STOP. 이후 같은 셀을 다시 실행한 07:57:56 시도는 다른 메시지(`FAILED. Paste the log file ...`)로 실패했고 그 로그는 아직 읽지 못했다. 로컬에는 try 로그가 없어 traceback 의 import 위치는 확인하지 못했다.
+- 변경점: colab/requirements_colab.txt 에 `setuptools<81` 추가(원인은 추정: uv venv 에는 setuptools 가 기본 설치되지 않고, 새 setuptools 는 pkg_resources 를 제거했을 수 있음 - 후자는 미확인). 노트북 4번 셀: venv 마커를 requirements 해시로 바꿔 requirements 가 바뀌면 기존 venv 에 재설치(venv 가 없을 때만 `uv venv`), import 점검에 `pkg_resources` 추가. 사전 등록 값 변경 없음.
+- 검증: 노트북 JSON 파싱 및 4번 셀 구문 컴파일만 확인. Colab 설치/학습은 미검증.
+- 결과: 없음. 해석 없음. 재시도 카운트: 위 3회는 소진, 환경 수정 후 새 시도는 사람 승인 뒤 시작.
