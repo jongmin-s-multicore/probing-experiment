@@ -79,3 +79,10 @@
 - 검증(이 PC, CPU, python 3.14, numpy 2.5.4, torch 2.15 CPU): `python run.py selftest` passed=136 failed=0 skipped=0(합성 데이터; 결과 아님; static_check 포함; 패치 적용과 patched `run()` 루프식의 epoch 범위 새 학습 1..15 / epoch 5 후 재개 6..15 포함), py_compile, `bash -n overnight.sh`.
 - 미검증: Colab/Drive 마운트 실제 동작, 공유 폴더 접근 경로, pip 환경 설치(Python 3.9 + torch 2.0.1+cu117), overnight.sh 의 `prepare` 호출을 실제 학습 루프에서 돌려 본 것, 패치된 train.py 의 실제 재개, Drive FUSE 속도와 `flock`, 체크포인트 크기, Colab 세션 시간.
 - 결과: 없음. 해석 없음. 재시도 카운트 0. 서버 부분 출력은 재사용하지 않음(처음부터).
+
+## 2026-11-04 / 002_single_size_sweep / Colab 데이터 복사 속도 개선: 아카이브 모드 (코드만, 미실행)
+- 배경: 사용자 보고 — 마운트된 Drive 에서 작은 mp4 를 하나씩 읽는 복사(`run.py download`, `EXP002_DATA_MODE=mount`)가 너무 느리다(원인은 FUSE 지연으로 추정). 압축 파일 하나를 받아 푸는 방식을 요청.
+- 변경점: src/exp002/drive.py — `prepare_data`(완료 split 은 건너뜀 -> `WORK_ROOT/cloth_sim_data.tar|.zip` 있으면 `extract_archive` -> 없으면 16 스레드 병렬 `copy_from_mount` 후 검증 통과 시 `make_archive` 로 Drive 에 한 번만 생성), 공통 검증 `_finish_split`(split 별 mp4 수 == metadata 길이 == 기대값, 총 바이트 마커 기록), 진행률 로그, `*.part` 임시 파일. 아카이브 추출은 최상위 레이아웃 변형(`cloth_sim/<split>/`, `<split>/`, `<임의>/<split>/`)을 처리하고 절대 경로/`..`/링크를 거부, 잘리거나 에피소드/split 이 빠진 아카이브는 완료 처리하지 않음(rc 3). 아카이브는 임시 이름으로 쓰고 rename. run.py `download` 가 `prepare_data` 를 호출. 노트북 6번 셀에 `EXP002_WORK_ROOT`, 7번 셀 설명 갱신. README Colab 절에 사용법과 직접 tar/zip 을 올리는 절차 추가. 사전 등록 값 변경 없음.
+- 검증(이 PC, CPU, 임시 디렉터리의 가짜 데이터): `python run.py selftest` passed=158 failed=0 skipped=0(static_check 포함, 359 참조). 아카이브 항목: 생성(.tmp 없음), 추출과 검증 및 바이트 기록, 재실행 건너뜀, 아카이브 우선 사용, 아카이브 없을 때 병렬 복사 후 생성 및 다음 세션은 아카이브만 사용, `EXP002_MAKE_ARCHIVE=0`, 레이아웃 3종(tar/zip), split 없음/접두사 혼합/경로 탈출(`..`, 절대)/심볼릭 링크/잘린 아카이브/에피소드 누락/split 누락/비아카이브 파일 거부, 중단 후 재실행(`.part` 와 짧은 파일). 합성 데이터이며 결과가 아니다.
+- 미검증: 실제 Drive FUSE 에서의 속도(향상 정도는 측정하지 못함, 추정), 실제 데이터 크기와 /content 디스크 여유, 실제 아카이브 생성 시간, 마운트 형태.
+- 결과: 없음. 해석 없음. 재시도 카운트 0.

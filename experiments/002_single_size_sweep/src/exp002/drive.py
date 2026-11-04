@@ -262,26 +262,75 @@ def _copy_one(src, dst):
     os.replace(tmp, dst)
 
 
-def copy_from_mount(cfg, paths, splits, src_root, dry_run=False, force=False, meta_counter=meta_len, workers=8):
-    """Copy <src_root>/<split>/* to <data_root>/<split>/ (file copied if missing or size differs). A split is skipped when the completion
-    marker exists, mp4 count == metadata length == expected, and (marker written by this function) local total bytes == recorded bytes.
-    Returns 0 on success, 3 when a split could not be completed."""
-    from concurrent.futures import ThreadPoolExecutor
+def _split_done(cfg, dest, split, meta_counter=meta_len, force=False):
+    """True when the split is complete: marker + mp4 count == metadata length == expected + (if recorded) total bytes."""
+    ok, why = split_complete(cfg, dest, split, meta_counter)
+    if not ok or force:
+        return False, why
+    try:
+        rec = json.loads((Path(dest) / OK_MARK).read_text() or "{}")
+    except Exception:
+        rec = {}
+    if rec.get("bytes") is not None and rec["bytes"] != _local_bytes(dest):
+        return False, "marker present but local bytes differ from the recorded value"
+    return True, f"{why}, bytes {'checked' if rec.get('bytes') is not None else 'not recorded'}"
+
+
+def _clean_parts(dest):
+    if Path(dest).is_dir():
+        for f in Path(dest).glob("*.part"):
+            f.unlink()
+
+
+def _finish_split(cfg, dest, split, source, meta_counter, extra_ok=True):
+    """Same verification for every source (mount copy, archive): mp4 count == metadata length == expected. Writes the marker with total bytes."""
+    n_mp4 = count_mp4(dest)
+    n_meta = meta_counter(Path(dest) / "metadata.pt") if (Path(dest) / "metadata.pt").exists() else None
+    exp = expected_n(cfg, split)
+    if extra_ok and n_meta is not None and n_mp4 == n_meta and (exp is None or n_mp4 == exp):
+        b = _local_bytes(dest)
+        (Path(dest) / OK_MARK).write_text(json.dumps({"n_mp4": n_mp4, "n_metadata": n_meta, "bytes": b, "source": source}) + "\n")
+        log(f"  [{split}] done: {n_mp4} episodes, {b / 1e9:.2f} GB (source: {source})")
+        return True
+    log(f"  [{split}] INCOMPLETE mp4={n_mp4} metadata={n_meta} expected={exp}; no marker, next run retries")
+    return False
+
+
+class _Progress:
+    """Prints 'label: n/total files, GB, elapsed' at most every `every` seconds (and at the end)."""
+    def __init__(self, label, total, every=10.0):
+        import time
+        self.t0 = self.last = time.time()
+        self.label, self.total, self.every, self.n, self.bytes = label, total, every, 0, 0
+
+    def report(self):
+        import time
+        log(f"    {self.label}: {self.n}/{self.total} files, {self.bytes / 1e9:.2f} GB, {time.time() - self.t0:.0f} s (finished)")
+
+    def step(self, nbytes=0, final=False):
+        import time
+        self.n += 1
+        self.bytes += nbytes
+        now = time.time()
+        if final or now - self.last >= self.every:
+            self.last = now
+            log(f"    {self.label}: {self.n}/{self.total} files, {self.bytes / 1e9:.2f} GB, {now - self.t0:.0f} s")
+
+
+def copy_from_mount(cfg, paths, splits, src_root, dry_run=False, force=False, meta_counter=meta_len, workers=None):
+    """Parallel copy <src_root>/<split>/* -> <data_root>/<split>/ (file copied if missing or size differs; temp name *.part then rename, so an interrupted
+    run leaves no half-written .mp4). Complete splits are skipped (see _split_done). Returns 0 on success, 3 when a split could not be completed."""
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+    workers = int(workers or os.environ.get("EXP002_COPY_WORKERS") or 16)
     root, src_root = Path(paths["data_root"]), Path(src_root)
-    log(f"copy_from_mount: {src_root} -> {root} splits={splits}")
+    log(f"copy_from_mount: {src_root} -> {root} splits={splits} workers={workers}")
     failed = []
     for s in splits:
         dest = root / s
-        ok, why = split_complete(cfg, dest, s, meta_counter)
-        if ok and not force:
-            try:
-                rec = json.loads((dest / OK_MARK).read_text() or "{}")
-            except Exception:
-                rec = {}
-            if rec.get("bytes") is None or rec["bytes"] == _local_bytes(dest):
-                log(f"  [{s}] complete ({why}, bytes {'checked' if rec.get('bytes') is not None else 'not recorded'}), skip")
-                continue
-            log(f"  [{s}] marker present but local bytes differ from the recorded value -> re-verify against the source")
+        done, why = _split_done(cfg, dest, s, meta_counter, force)
+        if done:
+            log(f"  [{s}] complete ({why}), skip")
+            continue
         src = src_root / s
         files = sorted(f for f in src.iterdir() if f.is_file()) if src.is_dir() else []
         todo = [f for f in files if not (dest / f.name).exists() or (dest / f.name).stat().st_size != f.stat().st_size]
@@ -290,26 +339,272 @@ def copy_from_mount(cfg, paths, splits, src_root, dry_run=False, force=False, me
             continue
         dest.mkdir(parents=True, exist_ok=True)
         (dest / OK_MARK).unlink(missing_ok=True)
+        _clean_parts(dest)
+        errs, prog = [], _Progress(s, len(todo))
         with ThreadPoolExecutor(max_workers=workers) as ex:
-            errs = [e for e in ex.map(lambda f: _try(lambda: _copy_one(f, dest / f.name)), todo) if e]
+            futs = {ex.submit(_try, (lambda f=f: _copy_one(f, dest / f.name))): f for f in todo}
+            for fu in as_completed(futs):
+                e = fu.result()
+                if e:
+                    errs.append(e)
+                prog.step(futs[fu].stat().st_size if not e else 0)
+        prog.report()
         if errs:
             log(f"  [{s}] {len(errs)} copy errors, first: {errs[0]}")
-        n_mp4 = count_mp4(dest)
-        n_meta = meta_counter(dest / "metadata.pt") if (dest / "metadata.pt").exists() else None
-        exp = expected_n(cfg, s)
-        same = all((dest / f.name).exists() and (dest / f.name).stat().st_size == f.stat().st_size for f in files) and bool(files)
-        if not errs and same and n_meta is not None and n_mp4 == n_meta and (exp is None or n_mp4 == exp):
-            (dest / OK_MARK).write_text(json.dumps({"n_mp4": n_mp4, "n_metadata": n_meta, "bytes": _local_bytes(dest), "source": "drive_mount"}) + "\n")
-            log(f"  [{s}] done: {n_mp4} episodes, {_local_bytes(dest) / 1e9:.2f} GB")
-        else:
+        same = bool(files) and all((dest / f.name).exists() and (dest / f.name).stat().st_size == f.stat().st_size for f in files)
+        if not _finish_split(cfg, dest, s, "drive_mount", meta_counter, extra_ok=(not errs and same)):
             failed.append(s)
-            log(f"  [{s}] INCOMPLETE mp4={n_mp4} metadata={n_meta} expected={exp} all_sizes_match={same}; no marker, next run retries")
     if not dry_run:
         check(cfg, paths, splits)
     if failed:
         log(f"copy_from_mount FAILED for {failed}; re-run (finished files are skipped)")
         return 3
     return 0
+
+
+# ----------------------------------------------------------------------------- archive mode (one big file instead of thousands of small FUSE reads)
+ARCHIVE_NAMES = ("cloth_sim_data.tar", "cloth_sim_data.zip")
+ARCHIVE_ROOT = "cloth_sim"          # layout written by make_archive: cloth_sim/<split>/<file>
+
+
+def all_split_names(cfg):
+    pat = cfg["data_impl"]["split_pattern"]
+    return {pat.format(size=l, part=part) for l in cfg["data"]["levels"] for part in ("train", "test")}
+
+
+def find_archive(cfg=None):
+    """EXP002_DATA_ARCHIVE (explicit file) or <EXP002_WORK_ROOT>/cloth_sim_data.{tar,zip}. None when absent."""
+    if os.environ.get("EXP002_DATA_ARCHIVE"):
+        p = Path(os.environ["EXP002_DATA_ARCHIVE"]).expanduser()
+        return p if p.is_file() else None
+    wr = os.environ.get("EXP002_WORK_ROOT")
+    if wr:
+        for n in ARCHIVE_NAMES:
+            if (Path(wr) / n).is_file():
+                return Path(wr) / n
+    return None
+
+
+def archive_target(cfg=None):
+    wr = os.environ.get("EXP002_DATA_ARCHIVE") or None
+    if wr:
+        return Path(wr).expanduser()
+    wr = os.environ.get("EXP002_WORK_ROOT")
+    return Path(wr) / ARCHIVE_NAMES[0] if wr else None
+
+
+class ArchiveError(Exception):
+    pass
+
+
+def _entries(archive):
+    """List of (name, size, kind, handle) of a tar or zip, kind in file|dir|other (links/devices = other). Raises ArchiveError for unreadable archives."""
+    import tarfile
+    import zipfile
+    a = str(archive)
+    try:
+        if a.lower().endswith(".zip"):
+            zf = zipfile.ZipFile(a)
+            out = []
+            for zi in zf.infolist():
+                mode = (zi.external_attr >> 16) & 0o170000
+                kind = "dir" if zi.is_dir() else ("file" if mode in (0, 0o100000) else "other")
+                out.append((zi.filename, zi.file_size, kind, zi))
+            return out, zf
+        tf = tarfile.open(a, "r:*")
+        return [(m.name, m.size, "file" if m.isreg() else ("dir" if m.isdir() else "other"), m) for m in tf.getmembers()], tf
+    except (tarfile.TarError, zipfile.BadZipFile, EOFError, OSError) as e:
+        raise ArchiveError(f"cannot read archive {archive}: {type(e).__name__}: {e} (truncated or not a tar/zip file?). Delete or rename it to fall back to copying from the mounted Drive.")
+
+
+def _plan_archive(cfg, entries):
+    """Map archive entries to (split, relative file name). Handles top-level variants (cloth_sim/<split>/..., <split>/..., <anything>/<split>/...).
+    Rejects absolute paths, '..', links/devices that could escape. Returns {split: [(entry, relname)]}, prefix tuple."""
+    from pathlib import PurePosixPath
+    known = all_split_names(cfg)
+    plan, prefixes, tops = {}, set(), []
+    for name, size, kind, h in entries:
+        norm = name.replace("\\", "/")
+        pp = PurePosixPath(norm)
+        if pp.is_absolute() or ".." in pp.parts or (pp.parts and ":" in pp.parts[0]):
+            raise ArchiveError(f"unsafe path in archive (absolute or '..'): {name!r}; refusing to extract anything")
+        if len(tops) < 5 and pp.parts and pp.parts[0] not in tops:
+            tops.append(pp.parts[0])
+        idx = next((i for i, part in enumerate(pp.parts) if part in known), None)
+        if idx is None:
+            continue
+        if kind == "dir":
+            continue
+        if kind != "file":
+            raise ArchiveError(f"non-regular entry (link/device) inside a split folder: {name!r}; refusing")
+        if len(pp.parts) == idx + 1:
+            raise ArchiveError(f"file named like a split directory: {name!r}")
+        prefixes.add(pp.parts[:idx])
+        plan.setdefault(pp.parts[idx], []).append(((name, size, kind, h), "/".join(pp.parts[idx + 1:])))
+    if not plan:
+        raise ArchiveError(f"no split directory ({sorted(known)[:4]} ...) found in the archive; top-level entries: {tops}. Expected cloth_sim/<split>/<file> (or <split>/<file>).")
+    if len(prefixes) > 1:
+        raise ArchiveError(f"inconsistent top-level layout in the archive: prefixes {sorted('/'.join(p) for p in prefixes)}")
+    return plan, (next(iter(prefixes)) if prefixes else ())
+
+
+def _copy_big(src, dst, label):
+    """Single large sequential copy with progress (src on Drive FUSE -> dst on local disk); *.part then rename; reused if the size matches."""
+    import time
+    src, dst = Path(src), Path(dst)
+    if dst.exists() and dst.stat().st_size == src.stat().st_size:
+        log(f"  local archive copy exists ({dst}), reuse")
+        return
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    tmp = dst.with_name(dst.name + ".part")
+    total, done, t0, last = src.stat().st_size, 0, time.time(), time.time()
+    with open(src, "rb") as fi, open(tmp, "wb") as fo:
+        while True:
+            b = fi.read(64 << 20)
+            if not b:
+                break
+            fo.write(b)
+            done += len(b)
+            if time.time() - last >= 10:
+                last = time.time()
+                log(f"    {label}: {done / 1e9:.2f}/{total / 1e9:.2f} GB, {last - t0:.0f} s")
+    os.replace(tmp, dst)
+
+
+def extract_archive(cfg, paths, splits, archive, dry_run=False, force=False, meta_counter=meta_len):
+    """Copy the archive to the local disk (one sequential read; EXP002_ARCHIVE_DIRECT=1 reads it in place), extract the needed incomplete splits into
+    <data_root>/<split>/, and verify exactly like the mount copy (mp4 count == metadata length == expected, total bytes recorded). Returns 0 / 3."""
+    import shutil as _sh
+    root = Path(paths["data_root"])
+    todo = [s for s in splits if not _split_done(cfg, root / s, s, meta_counter, force)[0]]
+    for s in splits:
+        if s not in todo:
+            log(f"  [{s}] complete, skip")
+    if not todo:
+        return 0
+    log(f"extract_archive: {archive} -> {root} splits to extract={todo}")
+    if dry_run:
+        log(f"  dry-run: would copy {Path(archive).stat().st_size / 1e9:.2f} GB archive to the local disk and extract splits {todo}")
+        return 0
+    direct = os.environ.get("EXP002_ARCHIVE_DIRECT") == "1"
+    local = Path(archive) if direct else Path(paths["dataset_dir"]) / "_archive_tmp" / Path(archive).name
+    try:
+        if not direct:
+            _copy_big(archive, local, "archive copy")
+        entries, h = _entries(local)
+        plan, _ = _plan_archive(cfg, entries)
+        missing = [s for s in todo if s not in plan]
+        if missing:
+            raise ArchiveError(f"archive has no split(s) {missing} (it contains {sorted(plan)}); it is not a complete archive. Delete or rename it to fall back to the mount copy.")
+    except (ArchiveError, OSError) as e:
+        log(f"ERROR {e}")
+        return 3
+    failed = []
+    rroot = root.resolve()
+    for s in todo:
+        dest = root / s
+        dest.mkdir(parents=True, exist_ok=True)
+        (dest / OK_MARK).unlink(missing_ok=True)
+        _clean_parts(dest)
+        items = plan[s]
+        prog, err = _Progress(s, len(items)), None
+        for (name, size, kind, handle), rel in items:
+            out = (dest / rel)
+            if not str(out.resolve()).startswith(str(rroot) + os.sep):
+                err = f"path escapes the data root: {name!r}"
+                break
+            if out.exists() and out.stat().st_size == size:
+                prog.step(size)
+                continue
+            out.parent.mkdir(parents=True, exist_ok=True)
+            tmp = out.with_name(out.name + ".part")
+            try:
+                src = h.extractfile(handle) if hasattr(h, "extractfile") else h.open(handle)
+                with src, open(tmp, "wb") as fo:
+                    _sh.copyfileobj(src, fo, 16 << 20)
+                if tmp.stat().st_size != size:
+                    raise ArchiveError(f"size mismatch for {name!r}: {tmp.stat().st_size} != {size}")
+                os.replace(tmp, out)
+            except Exception as e:
+                err = f"{type(e).__name__}: {e} while extracting {name!r}"
+                break
+            prog.step(size)
+        prog.report()
+        if err:
+            log(f"  [{s}] ERROR {err}")
+            failed.append(s)
+            continue
+        if not _finish_split(cfg, dest, s, "archive", meta_counter):
+            failed.append(s)
+    if hasattr(h, "close"):
+        h.close()
+    if not direct:
+        try:
+            local.unlink()
+        except OSError:
+            pass
+    if not failed:
+        check(cfg, paths, splits)
+    if failed:
+        log(f"extract_archive FAILED for {failed}. The archive is incomplete or damaged: delete/rename it (it is not modified by this code) and re-run to copy from the mounted Drive.")
+        return 3
+    return 0
+
+
+def make_archive(cfg, paths, splits, dest):
+    """Uncompressed tar of the verified local splits as cloth_sim/<split>/<file>. Written to <dest>.tmp and renamed only when complete, so a
+    half-written archive is never picked up. Returns True/False (failure is only a warning for the caller)."""
+    import tarfile
+    dest = Path(dest)
+    tmp = dest.with_name(dest.name + ".tmp")
+    root = Path(paths["data_root"])
+    try:
+        tmp.unlink(missing_ok=True)
+        files = [(s, f) for s in splits for f in sorted(p for p in (root / s).iterdir() if p.is_file() and p.name != OK_MARK and not p.name.endswith(".part"))]
+        log(f"make_archive: {len(files)} files -> {dest} (via {tmp.name}; one-time, later sessions use the archive)")
+        prog = _Progress("archive write", len(files))
+        with tarfile.open(tmp, "w") as tf:
+            for s, f in files:
+                tf.add(str(f), arcname=f"{ARCHIVE_ROOT}/{s}/{f.name}", recursive=False)
+                prog.step(f.stat().st_size)
+        prog.report()
+        os.replace(tmp, dest)
+        log(f"make_archive: done {dest.stat().st_size / 1e9:.2f} GB")
+        return True
+    except Exception as e:
+        log(f"WARNING make_archive failed ({type(e).__name__}: {e}); no archive written, the local data is unaffected")
+        try:
+            tmp.unlink()
+        except OSError:
+            pass
+        return False
+
+
+def prepare_data(cfg, paths, splits, dry_run=False, force=False, meta_counter=meta_len):
+    """Colab data stage: (1) all splits complete -> nothing; (2) archive present -> extract it; (3) else parallel copy from the mount and, after
+    verification, write the archive to Drive once. Returns 0 / 2 (source not found) / 3 (incomplete)."""
+    root = Path(paths["data_root"])
+    todo = [s for s in splits if not _split_done(cfg, root / s, s, meta_counter, force)[0]]
+    if not todo:
+        for s in splits:
+            log(f"  [{s}] complete, skip")
+        return 0
+    arc = find_archive(cfg)
+    if arc is not None:
+        log(f"data source: archive {arc} (one file; fast path)")
+        return extract_archive(cfg, paths, splits, arc, dry_run, force, meta_counter)
+    src = find_mount_src(cfg, splits)
+    if src is None:
+        log("data: no archive and no folder containing all splits %s found in %s. Put cloth_sim_data.tar/.zip into the work root or add the shared "
+            "folder to My Drive and set EXP002_DRIVE_MOUNT_SRC." % (splits, [str(c) for c in mount_src_candidates(cfg)]))
+        return 2
+    log(f"data source: mounted Drive folder {src} (no archive found; parallel copy)")
+    rc = copy_from_mount(cfg, paths, splits, src, dry_run=dry_run, force=force, meta_counter=meta_counter)
+    tgt = archive_target(cfg)
+    if rc == 0 and not dry_run and tgt is not None and os.environ.get("EXP002_MAKE_ARCHIVE", "1") != "0" and not tgt.exists():
+        if all(_split_done(cfg, root / s, s, meta_counter)[0] for s in splits):
+            make_archive(cfg, paths, splits, tgt)
+    return rc
 
 
 def _try(fn):

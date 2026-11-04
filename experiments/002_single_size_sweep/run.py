@@ -83,13 +83,9 @@ def cmd_check(cfg, paths, args):
 def cmd_download(cfg, paths, args):
     from exp002 import drive
     splits = drive.select_splits(cfg)
-    if os.environ.get("EXP002_DRIVE_MOUNT_SRC") or os.environ.get("EXP002_DATA_MODE", "").lower() == "mount":     # Colab path (확정 기록 10): no rclone
-        src = drive.find_mount_src(cfg, splits)
-        if src is None:
-            log("download (mount mode): no folder containing all splits %s found in %s. Add the shared folder to My Drive (shortcut or copy) and set "
-                "EXP002_DRIVE_MOUNT_SRC to the folder that contains the split directories." % (splits, [str(c) for c in drive.mount_src_candidates(cfg)]))
-            return 2
-        return drive.copy_from_mount(cfg, paths, splits, src, dry_run=args.dry_run, force=args.force)
+    if os.environ.get("EXP002_DRIVE_MOUNT_SRC") or os.environ.get("EXP002_DATA_MODE", "").lower() == "mount" or os.environ.get("EXP002_DATA_ARCHIVE"):
+        # Colab path (확정 기록 10): no rclone. Archive in the work root if present (one file), else parallel copy from the mounted Drive + one-time archive.
+        return drive.prepare_data(cfg, paths, splits, dry_run=args.dry_run, force=args.force)
     return drive.download(cfg, paths, splits, dry_run=args.dry_run, force=args.force)
 
 

@@ -834,6 +834,162 @@ def t_colab(base):
         shutil.rmtree(tmp, ignore_errors=True)
 
 
+def t_archive(base):
+    """Archive mode of the Colab data stage (확정 기록 10): create / extract / verify / layouts / path escape / truncated or incomplete archives / interrupted run."""
+    import os, tempfile, copy, tarfile, zipfile, io, json
+    from pathlib import Path
+    from exp002 import drive
+    tmp = Path(tempfile.mkdtemp(prefix="exp002_arch_"))
+    saved = {k: os.environ.get(k) for k in ("EXP002_WORK_ROOT", "EXP002_DATA_ARCHIVE", "EXP002_DRIVE_MOUNT_SRC", "EXP002_MAKE_ARCHIVE", "EXP002_ARCHIVE_DIRECT")}
+    orig_check = drive.check
+    drive.check = lambda *a, **k: None
+    try:
+        for k in saved:
+            os.environ.pop(k, None)
+        cfg = copy.deepcopy(base)
+        cfg["data_impl"]["expected_episodes"] = {"train": 3, "test": 3}
+        splits = ["ind_train", "a060_test"]
+        mc = lambda p: 3
+
+        def mkpaths(name):
+            return {"data_root": tmp / name / "cloth_sim", "dataset_dir": tmp / name}
+
+        def make_src(root):
+            for sp in splits:
+                (root / sp).mkdir(parents=True, exist_ok=True)
+                for i in range(3):
+                    (root / sp / ("ep%d.mp4" % i)).write_bytes(b"v" * (50 + i))
+                (root / sp / "metadata.pt").write_bytes(b"meta")
+
+        def mk_tar(path, entries, mode="w"):
+            with tarfile.open(path, mode) as tf:
+                for name, data in entries:
+                    ti = tarfile.TarInfo(name)
+                    ti.size = len(data)
+                    tf.addfile(ti, io.BytesIO(data))
+
+        def all_files(prefix):
+            out = []
+            for sp in splits:
+                for i in range(3):
+                    out.append(("%s%s/ep%d.mp4" % (prefix, sp, i), b"v" * (50 + i)))
+                out.append(("%s%s/metadata.pt" % (prefix, sp), b"meta"))
+            return out
+        # 1. make_archive from verified local data, atomic rename
+        pa = mkpaths("local1")
+        make_src(pa["data_root"])
+        for sp in splits:
+            drive._finish_split(cfg, pa["data_root"] / sp, sp, "test", mc)
+        wr = tmp / "workroot"
+        wr.mkdir()
+        arc = wr / "cloth_sim_data.tar"
+        ok = drive.make_archive(cfg, pa, splits, arc)
+        names = tarfile.open(arc).getnames()
+        check("archive: make_archive writes cloth_sim/<split>/<file> and leaves no .tmp", ok and "cloth_sim/ind_train/ep0.mp4" in names and not (wr / "cloth_sim_data.tar.tmp").exists()
+              and not any(n.endswith(drive.OK_MARK) for n in names), str(names[:3]))
+        # 2. extract into a fresh root, verification + recorded bytes
+        pb = mkpaths("local2")
+        os.environ["EXP002_WORK_ROOT"] = str(wr)
+        check("archive: find_archive finds cloth_sim_data.tar in the work root", drive.find_archive(cfg) == arc)
+        rc = drive.extract_archive(cfg, pb, splits, arc, meta_counter=mc)
+        rec = json.loads((pb["data_root"] / "ind_train" / drive.OK_MARK).read_text())
+        check("archive: extract + verify (mp4 == metadata == expected, bytes recorded)", rc == 0 and rec.get("source") == "archive" and rec.get("bytes") == 50 + 51 + 52 + 4 and (pb["data_root"] / "a060_test" / "ep2.mp4").exists(), str(rec))
+        check("archive: local temporary archive copy removed after extraction", not (tmp / "local2" / "_archive_tmp" / "cloth_sim_data.tar").exists())
+        m0 = (pb["data_root"] / "ind_train" / "ep0.mp4").stat().st_mtime_ns
+        check("archive: second run skips complete splits", drive.extract_archive(cfg, pb, splits, arc, meta_counter=mc) == 0 and (pb["data_root"] / "ind_train" / "ep0.mp4").stat().st_mtime_ns == m0)
+        # 3. prepare_data prefers the archive over the mount; with no archive it copies in parallel and then writes the archive once
+        pc = mkpaths("local3")
+        os.environ["EXP002_DRIVE_MOUNT_SRC"] = str(tmp / "nowhere")
+        rc = drive.prepare_data(cfg, pc, splits, meta_counter=mc)
+        check("archive: prepare_data uses the archive when present (mount not needed)", rc == 0 and json.loads((pc["data_root"] / "a060_test" / drive.OK_MARK).read_text())["source"] == "archive")
+        wr2 = tmp / "workroot2"
+        wr2.mkdir()
+        os.environ["EXP002_WORK_ROOT"] = str(wr2)
+        src = tmp / "mount_src"
+        make_src(src)
+        os.environ["EXP002_DRIVE_MOUNT_SRC"] = str(src)
+        pd = mkpaths("local4")
+        rc = drive.prepare_data(cfg, pd, splits, meta_counter=mc)
+        check("archive: no archive -> parallel mount copy, verified, then archive created once", rc == 0 and (wr2 / "cloth_sim_data.tar").exists() and not (wr2 / "cloth_sim_data.tar.tmp").exists()
+              and json.loads((pd["data_root"] / "ind_train" / drive.OK_MARK).read_text())["source"] == "drive_mount")
+        pe = mkpaths("local5")
+        os.environ["EXP002_DRIVE_MOUNT_SRC"] = str(tmp / "nowhere")
+        check("archive: next session uses only the archive", drive.prepare_data(cfg, pe, splits, meta_counter=mc) == 0 and (pe["data_root"] / "ind_train" / "ep1.mp4").exists())
+        os.environ["EXP002_MAKE_ARCHIVE"] = "0"
+        wr3 = tmp / "workroot3"
+        wr3.mkdir()
+        os.environ["EXP002_WORK_ROOT"] = str(wr3)
+        os.environ["EXP002_DRIVE_MOUNT_SRC"] = str(src)
+        drive.prepare_data(cfg, mkpaths("local6"), splits, meta_counter=mc)
+        check("archive: EXP002_MAKE_ARCHIVE=0 writes no archive", not (wr3 / "cloth_sim_data.tar").exists())
+        os.environ.pop("EXP002_MAKE_ARCHIVE")
+        os.environ.pop("EXP002_DRIVE_MOUNT_SRC")
+        # 4. layout variants
+        for label, prefix, kind in (("<split>/ at top level (tar)", "", "tar"), ("other/<split>/ (tar)", "data_dump/", "tar"), ("cloth_sim/<split>/ (zip)", "cloth_sim/", "zip")):
+            a2 = tmp / ("variant_%s.%s" % (abs(hash(label)) % 10000, kind))
+            if kind == "tar":
+                mk_tar(a2, all_files(prefix))
+            else:
+                with zipfile.ZipFile(a2, "w") as zf:
+                    for n, d in all_files(prefix):
+                        zf.writestr(n, d)
+            pv = mkpaths("lv_%s" % abs(hash(label)))
+            check("archive: layout %s extracts and verifies" % label, drive.extract_archive(cfg, pv, splits, a2, meta_counter=mc) == 0 and (pv["data_root"] / "ind_train" / drive.OK_MARK).exists())
+        a3 = tmp / "nosplit.tar"
+        mk_tar(a3, [("readme/x.txt", b"hi"), ("foo/bar.mp4", b"x")])
+        pn = mkpaths("lnosplit")
+        check("archive: no split directories -> clear error, nothing written", drive.extract_archive(cfg, pn, splits, a3, meta_counter=mc) == 3 and not (pn["data_root"] / "ind_train" / drive.OK_MARK).exists())
+        a4 = tmp / "mixed.tar"
+        mk_tar(a4, all_files("cloth_sim/")[:4] + all_files("other/")[4:])
+        check("archive: inconsistent top-level layout is rejected", drive.extract_archive(cfg, mkpaths("lmixed"), splits, a4, meta_counter=mc) == 3)
+        # 5. path escape
+        outside = tmp / "evil.txt"
+        for label, name in (("../ in the path", "cloth_sim/ind_train/../../../evil.txt"), ("absolute path", str(outside))):
+            a5 = tmp / ("escape_%d.tar" % abs(hash(label)))
+            mk_tar(a5, all_files("cloth_sim/") + [(name, b"owned")])
+            pf = mkpaths("lesc_%d" % abs(hash(label)))
+            rc = drive.extract_archive(cfg, pf, splits, a5, meta_counter=mc)
+            check("archive: %s is refused, no file written outside / no marker" % label, rc == 3 and not outside.exists() and not (pf["data_root"] / "ind_train" / drive.OK_MARK).exists())
+        a6 = tmp / "symlink.tar"
+        with tarfile.open(a6, "w") as tf:
+            for n, d in all_files("cloth_sim/"):
+                ti = tarfile.TarInfo(n); ti.size = len(d); tf.addfile(ti, io.BytesIO(d))
+            li = tarfile.TarInfo("cloth_sim/ind_train/link.mp4"); li.type = tarfile.SYMTYPE; li.linkname = "/etc/passwd"; tf.addfile(li)
+        check("archive: symlink member inside a split is refused", drive.extract_archive(cfg, mkpaths("lsym"), splits, a6, meta_counter=mc) == 3)
+        # 6. partial archives
+        data = arc.read_bytes()
+        a7 = tmp / "truncated.tar"
+        a7.write_bytes(data[: len(data) // 2])
+        p7 = mkpaths("ltrunc")
+        check("archive: truncated archive is rejected (rc 3); the split cut off by the truncation gets no completion marker", drive.extract_archive(cfg, p7, splits, a7, meta_counter=mc) == 3 and not (p7["data_root"] / "a060_test" / drive.OK_MARK).exists())
+        a8 = tmp / "missing_episode.tar"
+        mk_tar(a8, [e for e in all_files("cloth_sim/") if not e[0].endswith("ind_train/ep2.mp4")])
+        p8 = mkpaths("lmiss")
+        check("archive: archive with a missing episode (mp4 count != metadata) is rejected, no marker", drive.extract_archive(cfg, p8, splits, a8, meta_counter=mc) == 3 and not (p8["data_root"] / "ind_train" / drive.OK_MARK).exists())
+        a9 = tmp / "missing_split.tar"
+        mk_tar(a9, [e for e in all_files("cloth_sim/") if "a060_test" not in e[0]])
+        check("archive: archive without a needed split is rejected", drive.extract_archive(cfg, mkpaths("lmsplit"), splits, a9, meta_counter=mc) == 3)
+        a10 = tmp / "garbage.tar"
+        a10.write_bytes(b"not a tar" * 100)
+        check("archive: non-archive file gives a clear error (rc 3)", drive.extract_archive(cfg, mkpaths("lgarb"), splits, a10, meta_counter=mc) == 3)
+        # 7. interrupted extraction is safe to re-run (leftover .part + a stale short file)
+        pg = mkpaths("linterrupt")
+        (pg["data_root"] / "ind_train").mkdir(parents=True)
+        (pg["data_root"] / "ind_train" / "ep0.mp4.part").write_bytes(b"half")
+        (pg["data_root"] / "ind_train" / "ep1.mp4").write_bytes(b"short")
+        rc = drive.extract_archive(cfg, pg, splits, arc, meta_counter=mc)
+        check("archive: re-run after an interruption repairs short files and removes .part leftovers", rc == 0 and (pg["data_root"] / "ind_train" / "ep1.mp4").stat().st_size == 51
+              and not list((pg["data_root"] / "ind_train").glob("*.part")))
+    finally:
+        drive.check = orig_check
+        for k, v in saved.items():
+            if v is None:
+                os.environ.pop(k, None)
+            else:
+                os.environ[k] = v
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
 def run(base_cfg=None):
     print("=" * 100)
     print("SELFTEST on synthetic data. The numbers below are NOT experiment results.")
@@ -845,7 +1001,7 @@ def run(base_cfg=None):
         except Exception:
             traceback.print_exc()
             REC["fail"].append(name + " (exception)")
-    for name, fn in (("budget/manifest", t_budget_manifest), ("output-space probe", t_output_space), ("diag 4c", t_diag), ("q3 pure", t_q3_pure), ("vram poller", lambda b: t_vram_poller()), ("static/slices", t_static_and_slices), ("colab", t_colab)):
+    for name, fn in (("budget/manifest", t_budget_manifest), ("output-space probe", t_output_space), ("diag 4c", t_diag), ("q3 pure", t_q3_pure), ("vram poller", lambda b: t_vram_poller()), ("static/slices", t_static_and_slices), ("colab", t_colab), ("archive", t_archive)):
         try:
             fn(base)
         except Exception:
