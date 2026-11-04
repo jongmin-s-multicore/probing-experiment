@@ -73,8 +73,21 @@ def _epoch_files(ck):
 
 def _default_loadable(p):
     import torch
+    src = os.environ.get("ACWM_PHYS_SRC")                           # checkpoints pickle whole modules: unpickling imports `models` from the ACWM checkout
+    if src and src not in sys.path:
+        sys.path.insert(0, src)
     torch.load(str(p), map_location="cpu", weights_only=False)      # our own checkpoints (trusted)
     return True
+
+
+def _is_loadable(p, loadable):
+    try:
+        return bool(loadable(p))
+    except ImportError:                                             # environment problem, says nothing about the file: must never lead to quarantine
+        raise
+    except Exception as e:
+        print("cannot load %s: %s: %s" % (p, type(e).__name__, e), file=sys.stderr)
+        return False
 
 
 def repair_latest(run_dir, loadable=None):
@@ -85,15 +98,10 @@ def repair_latest(run_dir, loadable=None):
     if not latest.exists():
         return {"run": Path(run_dir).name, "state": "no model_latest.pth"}
 
-    def ok(p):
-        try:
-            return bool(loadable(p))
-        except Exception:
-            return False
-    if ok(latest):
+    if _is_loadable(latest, loadable):
         return {"run": Path(run_dir).name, "state": "ok"}
     for e, f in _epoch_files(ck):
-        if ok(f):
+        if _is_loadable(f, loadable):
             tmp = ck / "model_latest.pth.tmp"
             shutil.copyfile(f, tmp)
             os.replace(tmp, latest)
@@ -134,11 +142,7 @@ def prepare_run(run_dir, backup_root, loadable=None, now=None):
         return {"run": name, "action": "fresh"}
     if not (ck / "model_latest.pth").exists():                      # epoch files only: rebuild latest from the newest loadable one
         for e, f in _epoch_files(ck):
-            try:
-                ok = bool((loadable or _default_loadable)(f))
-            except Exception:
-                ok = False
-            if ok:
+            if _is_loadable(f, loadable or _default_loadable):
                 shutil.copyfile(f, ck / "model_latest.pth.tmp")
                 os.replace(ck / "model_latest.pth.tmp", ck / "model_latest.pth")
                 return {"run": name, "action": "repaired_resume", "restored_from": f.name}

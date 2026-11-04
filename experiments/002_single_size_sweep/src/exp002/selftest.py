@@ -775,6 +775,47 @@ def t_colab(base):
               ct.prepare_run(done_rd, tr / "quarantine", loadable=loadable)["action"] == "skip" and ct.prepare_run(smoke_rd, tr / "quarantine", loadable=loadable)["action"] == "skip"
               and (done_rd / "checkpoints" / "model_latest.pth").exists() and (smoke_rd / "checkpoints" / "model_latest.pth").exists())
         check("colab_tools: prune ignores the quarantine folder (not under outputs/)", all(r_.name != "quarantine" for r_ in ct._runs(tr)))
+        # checkpoints pickle whole modules: a load test without the ACWM checkout on sys.path failed with ModuleNotFoundError and quarantined a good checkpoint (2026-11-04)
+        import os as _os, sys as _sys, types as _types
+        imp_rd = tr / "outputs" / "exp002_imp_s0"
+        (imp_rd / "checkpoints").mkdir(parents=True)
+        (imp_rd / "checkpoints" / "model_latest.pth").write_bytes(b"ok")
+        def _no_module(p):
+            raise ModuleNotFoundError("No module named 'models'")
+        try:
+            ct.prepare_run(imp_rd, tr / "quarantine2", loadable=_no_module)
+            imp_raised = False
+        except ImportError:
+            imp_raised = True
+        check("colab_tools: an import error during the load test raises and never quarantines", imp_raised and (imp_rd / "checkpoints" / "model_latest.pth").exists() and not (tr / "quarantine2").exists())
+        fake_src = tr / "fake_acwm"
+        fake_src.mkdir()
+        (fake_src / "exp002_fake_models.py").write_text("X = 1\n")
+        def _fake_load(*a, **k):
+            __import__("exp002_fake_models")      # like unpickling a module saved by train.py
+        saved_torch, saved_src, saved_path = _sys.modules.get("torch"), _os.environ.get("ACWM_PHYS_SRC"), list(_sys.path)
+        _sys.modules["torch"] = _types.SimpleNamespace(load=_fake_load)
+        try:
+            _os.environ.pop("ACWM_PHYS_SRC", None)
+            try:
+                ct._default_loadable(imp_rd / "checkpoints" / "model_latest.pth")
+                no_path_fails = False
+            except ImportError:
+                no_path_fails = True
+            _os.environ["ACWM_PHYS_SRC"] = str(fake_src)
+            r_default = ct.prepare_run(imp_rd, tr / "quarantine2")
+        finally:
+            _sys.modules.pop("exp002_fake_models", None)
+            _sys.path[:] = saved_path
+            if saved_torch is None:
+                _sys.modules.pop("torch", None)
+            else:
+                _sys.modules["torch"] = saved_torch
+            if saved_src is None:
+                _os.environ.pop("ACWM_PHYS_SRC", None)
+            else:
+                _os.environ["ACWM_PHYS_SRC"] = saved_src
+        check("colab_tools: default load test uses ACWM_PHYS_SRC, so a good checkpoint resumes", no_path_fails and r_default["action"] == "resume" and not (tr / "quarantine2").exists(), str(r_default))
         # resume patch: epoch range of the patched train.py (budget), evaluated from the REAL patched source when the pinned train.py is available
         here = Path(__file__).resolve().parents[2]
         patch_txt = (here / "colab/train_resume.patch").read_text()

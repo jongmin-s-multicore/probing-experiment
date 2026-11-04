@@ -109,3 +109,11 @@
 - 진행 중인 실행은 이미 시작된 옛 overnight.sh(3회 상한)로 돈다. 새 규칙은 다음 시작부터 적용.
 - 검증(이 PC, CPU, python 3.9.13): `python run.py selftest` passed=131 failed=0 skipped=3(건너뜀: resume 패치 epoch 범위, attentive probe, hooks/Q3; 합성 데이터이며 결과 아님), `bash -n overnight.sh`, `retry_step` 추출 실행(4회 실패 후 5번째 성공, 마커 있으면 건너뜀), 노트북 `log_tail` 실행(이전 실행 줄 제외), 노트북 4, 9번 셀 구문 컴파일.
 - 결과: 없음. 해석 없음.
+
+## 2026-11-04 / 002_single_size_sweep / Drive 끊김으로 학습 중단, 재개 판정 버그 수정 (코드 수정, 재시작된 run 은 이전 코드로 진행 중)
+- 경과(UTC): 08:12 run s0 시작, 08:21 epoch 1 저장. 노트북 셀 10 `drive.flush_and_unmount()` 가 실행되어(경로는 "모두 실행" 중 셀 9 중단으로 추정) Drive 가 끊겼고, 08:29:06 train.py rc=1, 시도 2, 3 은 logs/ 를 찾지 못해 실패, 08:31:06 STOP. 로컬 폴더로 변한 /content/drive 를 옮기고 다시 마운트.
+- 08:39:40 `prepare` 가 `quarantined` 를 반환해 epoch 1 체크포인트와 epoch_logs.jsonl 이 Drive train_runs/quarantine/exp002_multi_60_ind_160_s0__20261104-083940/ 로 이동(삭제 없음). 08:39:42 s0 가 epoch 0 부터 새로 시작(재개 아님). 따라서 현재 s0 는 재개가 섞이지 않은 run 이다.
+- 원인(확정, Colab 에서 실제 체크포인트로 확인): `_default_loadable` 이 ACWM 경로 없이 torch.load -> `ModuleNotFoundError: No module named 'models'`, 경로를 넣으면 같은 파일이 정상 로드. 예외를 삼켜 "읽을 수 없음"으로 처리했다. selftest 는 가짜 loadable 만 써서 잡지 못했다. 앞선 "재개 구현" 항목의 재개 경로는 이 버그 때문에 실제로 동작할 수 없었다.
+- 변경점: colab_tools.py `_default_loadable` 이 ACWM_PHYS_SRC 를 sys.path 에 추가. `_is_loadable` 추가: ImportError 는 환경 문제이므로 그대로 올려 격리하지 않고(overnight.sh 에서 rc 97), 그 외 로드 실패는 이유를 stderr 에 출력. selftest 항목 2개 추가. 사전 등록 값 변경 없음.
+- 알려진 문제: 셀 10 주석과 안전장치는 아직 고치지 않았고, 편집기 저장으로 작업 트리 노트북의 셀 9 수정(`log_tail`)이 되돌아가 있어 이번 커밋에서 노트북은 제외한다. 재개 자체(패치된 train.py 가 체크포인트에서 이어 학습)는 아직 실제로 실행된 적이 없다.
+- 결과: 없음. 해석 없음.
