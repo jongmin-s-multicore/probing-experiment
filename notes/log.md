@@ -101,3 +101,11 @@
 - 검증(이 PC, CPU, python 3.9.13): `python run.py selftest` passed=131 failed=0 skipped=3(건너뜀: resume 패치 epoch 범위, attentive probe, hooks/Q3; 합성 데이터이며 결과 아님), `bash -n overnight.sh`, `lastline` 을 실패 로그 형태로 확인, 동기화 블록을 stub uv/python 으로 4경우(정상, uv 실패, import 실패, venv 없음) 확인, 노트북 JSON 파싱과 4번 셀 구문 컴파일.
 - 미검증: wandb 0.13.1 + setuptools<81 의 실제 설치와 import(로컬 설치 테스트는 권한 정책으로 거부되어 하지 않음), `import wandb` 다음 단계의 train.py, 실제 uv 동기화, GPU 학습.
 - 결과: 없음. 해석 없음.
+
+## 2026-11-04 / 002_single_size_sweep / 재시도 횟수 제한 제거(사용자 지시), 셀 9 로그 표시 수정 (코드만, 미실행)
+- 사용자 결정: "이 retry limit 을 없애줘". overnight.sh 의 단계당 3회 상한(ATTEMPTS, STOP, `fail`)을 제거하고 실패한 단계를 `RETRY_SLEEP` 간격으로 무제한 재시도한다. 앞 항목의 "3회 상한 유지"를 대체한다. 결정적 실패는 저절로 멈추지 않으므로 사람이 `pkill -f "bash overnight.sh"` 로 멈춰야 한다. CLAUDE.md 의 "재시도 최대 3회, 3회 실패하면 멈추고 보고"는 고치지 않았고, 이 실험 002 의 overnight.sh 만 사용자 결정에 따른 예외다. 환경 점검 실패의 즉시 STOP(uv 동기화, import 확인)은 재시도 상한이 아니라서 유지.
+- 사용자가 "같은 오류"로 보고한 출력의 판독: 셀 9 출력의 `attempt 3 failed`, `STOP` 줄의 시각은 08:05:08 로, pid 10066 실행(08:12:27 시작)보다 앞선 이전 실행의 기록이다. overnight.log 가 누적 기록(append)이고 셀이 시작 직후 `tail` 을 찍어서 생긴 표시다. 수정: 노트북 9번 셀이 시작 시점의 로그 크기를 기억하고 그 뒤의 줄만 출력(`log_tail`).
+- 08:12 실행에서 Drive 로 확인한 것: `import pkg_resources, wandb` 점검 통과(STOP 없음), `train: attempt 1` 시작, try1 로그에 traceback 없음, run 폴더에 `.hydra/` 와 `train/train_e00001_b0.png`(08:12:52) 생성. 노트북 4번 셀 출력에 `- setuptools==82.0.1`, `+ setuptools==80.10.2`, 그리고 pin to Setuptools<81 을 권하는 경고. 조회 시점까지 실패 기록은 없음. 학습이 지금도 진행 중인지, epoch 1 을 완료했는지는 확인하지 못했다(체크포인트 없음, Drive 는 스냅샷). `uv` 동기화 때마다 `~ decord==0.6.0` 재설치가 찍히며 원인은 미확인.
+- 진행 중인 실행은 이미 시작된 옛 overnight.sh(3회 상한)로 돈다. 새 규칙은 다음 시작부터 적용.
+- 검증(이 PC, CPU, python 3.9.13): `python run.py selftest` passed=131 failed=0 skipped=3(건너뜀: resume 패치 epoch 범위, attentive probe, hooks/Q3; 합성 데이터이며 결과 아님), `bash -n overnight.sh`, `retry_step` 추출 실행(4회 실패 후 5번째 성공, 마커 있으면 건너뜀), 노트북 `log_tail` 실행(이전 실행 줄 제외), 노트북 4, 9번 셀 구문 컴파일.
+- 결과: 없음. 해석 없음.
