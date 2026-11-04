@@ -27,7 +27,7 @@ export ACWM_PHYS_SRC="${ACWM_PHYS_SRC:-$DINO_WORK/acwm_phys_src}"
 export WANDB_MODE="${WANDB_MODE:-disabled}"
 export OMP_NUM_THREADS="${OMP_NUM_THREADS:-4}"
 mkdir -p logs results
-if [ "$DRY" = 0 ]; then
+if [ "$DRY" = 0 ] && [ "$CONDA_ENV" != "none" ]; then   # CONDA_ENV=none: no conda (Colab); the caller already has the right python first in PATH
   # shellcheck disable=SC1091
   source "$(conda info --base)/etc/profile.d/conda.sh" && conda activate "$CONDA_ENV" || { echo "cannot activate conda env $CONDA_ENV (run setup.sh)"; exit 1; }
 fi

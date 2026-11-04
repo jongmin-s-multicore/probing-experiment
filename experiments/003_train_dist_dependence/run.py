@@ -136,8 +136,21 @@ def _train_cmd(cfg, paths, dist, seed, name, smoke=False):
             "ckpt_base_path=%s" % paths["train_base"], "hydra.run.dir=%s" % rd]
     env = dict(os.environ)
     env.update({"DATASET_DIR": str(paths["dataset_dir"]), "WANDB_MODE": env.get("WANDB_MODE", "disabled"), "HYDRA_FULL_ERROR": "1",
-                "PYTORCH_CUDA_ALLOC_CONF": "expandable_segments:True", "PYTHONPATH": str(HERE / "src") + os.pathsep + env.get("PYTHONPATH", "")})
+                "PYTHONPATH": str(HERE / "src") + os.pathsep + env.get("PYTHONPATH", "")})
+    if "PYTORCH_CUDA_ALLOC_CONF" not in os.environ and _torch_at_least((2, 1)):
+        # expandable_segments is unknown to the torch 2.0.x allocator (RuntimeError: Unrecognized CachingAllocator option). Respect a user-set value.
+        env["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
     return cmd, env, rd, man
+
+
+def _torch_at_least(ver):
+    """True only if torch is installed with version >= ver (no import of torch; unknown/missing -> False)."""
+    try:
+        from importlib.metadata import version
+        parts = version("torch").split("+")[0].split(".")
+        return tuple(int(x) for x in parts[:2]) >= tuple(ver)
+    except Exception:
+        return False
 
 
 def _train_one(cfg, paths, dist, seed, args, smoke=False, suffix=""):

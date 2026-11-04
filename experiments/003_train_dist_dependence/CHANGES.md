@@ -21,3 +21,15 @@
 - 수정 1 (`drive.py`, 최소): `prepare_data(..., mount="/content/drive")` 인자 추가, `find_mount_src`/`mount_src_candidates` 에 전달. 기본값이 같아 실제 다운로드 동작은 불변.
 - 수정 2 (`selftest.py`): rc 2 케이스에 빈 임시 마운트 `td/"empty_mount"` 전달(실제 /content/drive 를 보지 않음). 또한 `mc` 가 텍스트 파싱 실패 시 `drive.meta_len`(torch)으로 폴백하도록 함.
 - 검증: py_compile 통과, numpy 스텁 하네스(`_selftest_drive`+`_selftest_mount`) 통과. 서버(py3.9/torch)에서 `python run.py selftest` 재실행은 **미검증**.
+
+## 2026-11-04 PYTORCH_CUDA_ALLOC_CONF=expandable_segments 조건부로 변경 (smoke 사망 수정)
+- 증상(실제 Colab 서버 로그, torch 2.0.1+cu117): smoke 가 모델을 GPU 로 옮기는 단계에서 `RuntimeError: Unrecognized CachingAllocator option: expandable_segments`.
+- 원인: `run.py` `_train_cmd` 가 자식 프로세스 env 에 `PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True` 를 무조건 넣었다. 이 옵션은 torch >= 2.1 에서만 인식된다.
+- 수정(`run.py`): (1) 부모 env 에 `PYTORCH_CUDA_ALLOC_CONF` 가 이미 있으면 그 값을 그대로 상속(건드리지 않음), (2) 없으면 설치된 torch 버전(`importlib.metadata`, torch import 안 함)이 >= 2.1 일 때만 넣음. torch 없음/버전 판독 실패 -> 넣지 않음.
+- grep 확인: `expandable_segments` / `PYTORCH_CUDA_ALLOC_CONF` 는 run.py:139 한 곳뿐이었다(smoke.py, run_all.sh, setup.sh, src/, README 에 없음). smoke 는 `_train_one` -> `_train_cmd` 를 공유하므로 같은 수정이 적용된다.
+- 같은 날 추가(`run_all.sh`): `CONDA_ENV=none` 이면 conda activate 를 건너뜀(Colab 은 conda 없음; PATH 앞쪽에 venv python). 기본값 dino_wm 동작은 불변.
+- 검증: `py_compile`, `bash -n` 통과; 이 머신에는 torch 가 없어 `_torch_at_least((2,1))` 이 False 를 반환하는 것만 확인. torch 2.0.1 서버에서 smoke 재실행은 미검증(사람 승인 필요).
+
+## 2026-11-04 Colab 노트북 추가
+- 추가: `colab/exp003_colab.ipynb`, `colab/build_notebook.py`(노트북 재생성; 003 코드 스냅샷을 tar+gzip+base64 로 내장), `colab/requirements_colab.txt`(002 의 파일 복사본). 002 파일은 읽기만 했다.
+- resume 패치(002 train_resume.patch)는 의도적으로 넣지 않음: 세션이 끊기면 진행 중이던 run 은 처음부터 다시 학습된다.
