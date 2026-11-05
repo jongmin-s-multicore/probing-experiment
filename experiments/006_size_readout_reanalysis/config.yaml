@@ -1,0 +1,86 @@
+name: "006_size_readout_reanalysis"
+hypothesis: "후보 J (notes/hypotheses.md 후보 J / 실험 006). 탐색 재분석. 가설 판정, 임계값, pass/fail, p 값 기반 유의성 주장 없음"
+seed: 0                          # 전역 시드 (numpy/random/torch 기본값). 아래 시드를 따로 명시한다
+status: "exploratory_post_hoc"   # 002 결과와 리뷰를 본 뒤 세운 계획이다 (확증 근거로 쓰지 않는다)
+
+seeds:
+  global: 0
+  probe: [0, 1, 2, 3, 4]         # 002 probe.seeds 와 같다. 002 와 같은 코드 경로(ridge 의 GroupKFold 분할 시드)를 재현하는 데 필요하다
+  untrained_predictor: [0, 1, 2] # 학습 안 한 predictor 의 가중치 초기화 시드 (torch.manual_seed 후 hydra instantiate)
+  bootstrap: 0                   # episode cluster bootstrap (002 stats.Bootstrap 과 같은 방식, 레벨 안 재표집)
+  retrain_probe: [0, 1, 2, 3, 4] # C 재학습 probe 의 GroupKFold 분할 시드 (probe 시드와 같은 값을 쓴다)
+
+base:
+  config002: "../002_single_size_sweep/config.yaml"      # 읽기만 한다
+  config002_sha256: "4d5261d68a5d7270d845bab6ef30f924bad31fd46f0b252b802303a3823fd1ce"
+  results002: "../002_single_size_sweep/results.json"    # 읽기만 한다 (없으면 INPUT_ROOT/results/results.json)
+  results002_sha256: "079ff4c1efefdd1d65ce1f2bc00b8713d190c78195a680e2f464aa5e48d6eae2"
+  requirements002: "../002_single_size_sweep/colab/requirements_colab.txt"
+  requirements002_sha256: "72ffaae853bd7f04c605a44d4b8d9cd67f4fdca63689392b4bab604422b8486d"
+  acwm_commit: "5a640bed66002eca7bdb31d10b2bde59ad944551"
+  train_resume_patch_sha256_prefix: "52eb0052"           # 002 체크포인트를 저장한 패치(colab/train_resume.patch). model_io 로드에는 필요 없다 (README 4절)
+  train_resume_patch_sha256: "52eb005288c935eddf322fda06ca06a68f165b7b2244a1548570e72614cd6a3c"
+
+paths:                           # 환경변수 (하드코딩 금지). 괄호는 기본값
+  input_root_env: "EXP006_INPUT_ROOT"      # 읽기 전용 (~/dinowm_exp002_work). Colab: /content/drive/MyDrive/exp002_work
+  work_root_env: "EXP006_WORK_ROOT"        # 출력 (~/dinowm_exp006_work). Colab: /content/drive/MyDrive/exp006_work
+  acwm_src_env: "ACWM_PHYS_SRC"            # 고정 commit 체크아웃
+  dataset_env: "DATASET_DIR"               # metadata.pt 만 필요하다 (data_meta 단계)
+  exp002_dir_env: "EXP006_EXP002_DIR"      # 002 폴더(src, config.yaml). 기본: ../002_single_size_sweep
+  train_outputs_subdir: "train_runs/outputs"
+  cache_subdir: "exp002_cache/q1_tokens"
+  results_subdir: "results"
+  archive_name: "cloth_sim_data.tar"
+
+inputs:                          # 입력 파일 기대값. null 이면 check 가 관측값을 input_manifest.json 에 기록만 한다. 값이 있으면 불일치 시 check 실패
+  expect: {}                     # 예: "train_runs/outputs/exp002_single_ind_s0/checkpoints/model_latest.pth": {bytes: 123, sha256: "..."}  (check --hash 의 출력으로 채운다)
+  hash_big_files: false          # true 면 check 가 체크포인트/캐시 npy 의 sha256 도 계산 (느림). check --hash 로도 켠다
+
+runs:
+  conditions: ["multi_60_ind_160", "single_ind"]   # (b), (a)
+  train_seeds: [0, 1, 2]
+  run_name_pattern: "exp002_{cond}_s{seed}"
+
+task:
+  primary_target: "log_nominal_area_ratio"
+  rollout_horizon: 12
+  num_hist_expected: 1           # 체크포인트 num_hist 와 대조 (assert)
+  context_frame_t: 0             # t = num_hist - 1
+  probe_kind: "linear_pooled"    # A-E 모두 002 Q1 linear probe 경로 (probes.linear_fit_predict). attentive 는 쓰지 않는다
+  probe_train_levels: ["a060", "ind", "a160"]  # 002 Q1 과 같은 판독기 학습 크기 (캐시의 part=train 행)
+  probe_train_regime: "all"      # 프레임 0..11 (002 q2_impl.output_probe_train_regime)
+
+extract:
+  batch_episodes: 8              # 002 q2_impl.batch_episodes 와 같다
+  untrained:
+    variants: ["pred_only", "pred_and_action_proprio"]   # README 3절: 입력 인코더(DINOv2)는 항상 동결 원본, 행동/proprio 인코더 처리만 다르다
+    seeds_from: "seeds.untrained_predictor"
+  smoke:
+    n_train_batches: 2
+    n_test_batches: 2
+    run: "multi_60_ind_160_s0"
+  save_dtype: "float32"          # 풀링된 (패치 평균) latent 만 저장한다. 패치 단위 latent 는 저장하지 않는다 (용량: README 5절)
+
+analysis:
+  a_sources: ["stored", "reproduced"]   # stored = 002 q2_cells.npz 의 predmean, reproduced = 이 실험의 추출 + 같은 probe 재학습
+  roles: ["unseen", "trained", "all"]
+  steps: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+  ci_level: 0.95
+  ci_t_df_note: "시드 단위 CI 는 t 분포(자유도 n-1, n=3 이면 2). 시드 3개라 폭이 넓다"
+  report_decimals: null          # null = 반올림 없음
+  repro_reference_cells: ["unseen", "trained"]
+
+d_properties:                    # 크기와 무관한 대조 속성 (README 6절). 실제 데이터에서 얻을 수 있는 것만
+  mask_centroid: true            # 천 마스크 중심 (x, y) 픽셀 /224. 002 마스크 규칙(HSV) 사용. 빈 마스크 프레임은 제외
+  mask_bbox_center: true         # 마스크 bbox 중심 (x, y)
+  cumulative_action: true        # 행동의 누적합 (그리퍼 1, 2 의 dx dy dz). proprio 필드가 없어 대체: 명령 이동량 누적이며 측정된 그리퍼 위치가 아니다
+  gripper_pixel_position: false  # 그리퍼 공(빨강/파랑) 색 마스크: 규칙이 코드/데이터에 없다 -> 쓰지 않는다
+  proprio_field: false           # ManifestDataset 의 proprio 는 0 으로 채운 자리표시자 (data.py get_frames) -> 쓰지 않는다
+
+outputs:
+  results_json_exp: "results.json"                 # 실험 폴더
+  results_json_work: "results/results.json"        # WORK_ROOT 아래
+  figure_dir: "analysis"
+
+run:
+  max_attempts: 3                # CLAUDE.md: 재시도 최대 3회, 3회 실패하면 멈춘다
