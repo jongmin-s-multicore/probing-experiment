@@ -111,6 +111,21 @@ def size_roles(cfg, train_groups):
     return roles
 
 
+CODE_FILES = ["run.py", "config.yaml", "run_all.sh", "setup.sh", "colab/train_resume.patch", "colab/requirements_colab.txt"]
+
+
+def code_snapshot_sha256(exp_dir=None):
+    """sha256 over the code files (relative name + bytes), same set in the repo and in the Colab snapshot. Recorded because the snapshot is not a git checkout."""
+    import hashlib
+    exp_dir = Path(exp_dir or EXP_DIR)
+    files = sorted(str(p.relative_to(exp_dir)) for p in (exp_dir / "src").rglob("*.py") if "__pycache__" not in p.parts)
+    files += [f for f in CODE_FILES if (exp_dir / f).is_file()]
+    h = hashlib.sha256()
+    for f in sorted(files):
+        h.update(f.encode() + b"\0" + (exp_dir / f).read_bytes() + b"\0")
+    return h.hexdigest()
+
+
 def approved_distributions(cfg):
     env = os.environ.get("EXP003_APPROVED", "").split()
     return set(cfg["train"].get("approved_distributions") or []) | set(env)

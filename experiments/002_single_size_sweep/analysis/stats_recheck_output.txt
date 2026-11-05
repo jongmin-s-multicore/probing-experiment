@@ -1,0 +1,117 @@
+=== Holm recompute
+H_a H_a:interp:linear_pooled p=0.000999 holm_recomputed=0.003996 stored=0.003996003996003996 match=True
+H_a H_a:interp:attentive p=0.014985 holm_recomputed=0.029970 stored=0.029970029970029972 match=True
+H_a H_a:extrap:linear_pooled p=0.006993 holm_recomputed=0.020979 stored=0.02097902097902098 match=True
+H_a H_a:extrap:attentive p=1.000000 holm_recomputed=1.000000 stored=1.0 match=True
+H_b H_b:last_block p=0.000999 holm_recomputed=0.001998 stored=0.001998001998001998 match=True
+H_b H_b:last_rollout_step p=1.000000 holm_recomputed=1.000000 stored=1.0 match=True
+H_c H_c:steering p=0.009901 holm_recomputed=0.019802 stored=0.019801980198019802 match=True
+H_c H_c:subspace_removal p=1.000000 holm_recomputed=1.000000 stored=1.0 match=True
+cond cond_a_vs_b:last_block p=0.001998 holm_recomputed=0.003996 stored=0.003996003996003996 match=True
+cond cond_a_vs_b:last_rollout_step p=0.001998 holm_recomputed=0.003996 stored=0.003996003996003996 match=True
+H_c steering if m=1 (not_evaluable dropped): 0.009900990099009901
+
+=== H_a recompute of status
+H_a:interp:linear_pooled dmask=0.5560 CI=[0.3517, 0.7777]  drand=0.3399 CI=[0.206, 0.4886]  crit=True  stored=pass  mean(per_probe_seed)=0.513667 vs point 0.513667  probe-seed SD real=0.0000 rand=0.0000 mask=0.0018  margin-0.1 gap: CI_lo-0.1=0.2517
+   CI half-width=0.2130  point in CI=True ; mean-of-delta check delta=real-mask: 0.555968
+H_a:interp:attentive dmask=0.2246 CI=[0.0153, 0.4545]  drand=0.1999 CI=[0.065, 0.3441]  crit=True  stored=pass  mean(per_probe_seed)=0.182345 vs point 0.182345  probe-seed SD real=0.0697 rand=0.0501 mask=0.0018  margin-0.1 gap: CI_lo-0.1=-0.0847
+   CI half-width=0.2196  point in CI=True ; mean-of-delta check delta=real-mask: 0.224646
+H_a:extrap:linear_pooled dmask=0.0339 CI=[0.0073, 0.0672]  drand=0.0697 CI=[0.0528, 0.0866]  crit=False  stored=fail  mean(per_probe_seed)=0.858847 vs point 0.858847  probe-seed SD real=0.0000 rand=0.0000 mask=0.0004  margin-0.1 gap: CI_lo-0.1=-0.0927
+   CI half-width=0.0299  point in CI=True ; mean-of-delta check delta=real-mask: 0.033897
+H_a:extrap:attentive dmask=-0.1245 CI=[-0.1512, -0.0901]  drand=0.0801 CI=[0.0701, 0.0907]  crit=False  stored=fail  mean(per_probe_seed)=0.700448 vs point 0.700448  probe-seed SD real=0.0104 rand=0.0094 mask=0.0004  margin-0.1 gap: CI_lo-0.1=-0.2512
+   CI half-width=0.0306  point in CI=True ; mean-of-delta check delta=real-mask: -0.124502
+p-values bootstrap floor 1/1001 = 0.000999000999000999  rank floor 1/101 = 0.009900990099009901
+
+=== Q1 late-window table (point, CI) incl. MAE, Pearson, pair-order
+interp linear_pooled dino R2 0.5137 [0.422, 0.595] | MAE 0.1180 [0.1084, 0.1286] | r 0.7616
+interp linear_pooled rand R2 0.1737 [-0.027, 0.343] | MAE 0.1521 [0.1379, 0.1671] | r 0.6846
+interp linear_pooled shuffle R2 -0.0268 [-0.043, -0.009] | MAE 0.2205 [0.2185, 0.2223] | r 0.0322
+interp attentive dino R2 0.1823 [0.097, 0.255] | MAE 0.1776 [0.1707, 0.1848] | r 0.7066
+interp attentive rand R2 -0.0176 [-0.195, 0.125] | MAE 0.1789 [0.1664, 0.1924] | r 0.6466
+interp attentive shuffle R2 0.0030 [-0.004, 0.01] | MAE 0.2195 [0.2186, 0.2204] | r 0.1175
+interp mask R2 -0.0423 | MAE 0.1666 | r 0.606492355690982
+extrap linear_pooled dino R2 0.8588 [0.848, 0.869] | MAE 0.2806 [0.2703, 0.2918] | r 0.9730
+extrap linear_pooled rand R2 0.7892 [0.775, 0.802] | MAE 0.3769 [0.3643, 0.3889] | r 0.9469
+extrap linear_pooled shuffle R2 -0.0117 [-0.014, -0.009] | MAE 0.9588 [0.9573, 0.9602] | r 0.1280
+extrap attentive dino R2 0.7004 [0.697, 0.703] | MAE 0.4824 [0.4798, 0.4854] | r 0.9840
+extrap attentive rand R2 0.6203 [0.61, 0.63] | MAE 0.5347 [0.527, 0.5421] | r 0.9625
+extrap attentive shuffle R2 -0.0225 [-0.024, -0.021] | MAE 0.9602 [0.9596, 0.9608] | r 0.1931
+extrap mask R2 0.8250 | MAE 0.3185 | r 0.9137333818283689
+unseen linear_pooled dino R2 0.8516 [0.84, 0.861] | MAE 0.2264 [0.2186, 0.2343] | r 0.9537
+unseen linear_pooled rand R2 0.7760 [0.762, 0.789] | MAE 0.3020 [0.2922, 0.3118] | r 0.9110
+unseen linear_pooled shuffle R2 -0.0026 [-0.005, -0.0] | MAE 0.7127 [0.7115, 0.7139] | r 0.1092
+unseen attentive dino R2 0.6905 [0.687, 0.694] | MAE 0.3808 [0.378, 0.384] | r 0.9376
+unseen attentive rand R2 0.6081 [0.598, 0.618] | MAE 0.4161 [0.4098, 0.4227] | r 0.8924
+unseen attentive shuffle R2 -0.0123 [-0.013, -0.011] | MAE 0.7133 [0.7128, 0.7138] | r 0.1689
+unseen mask R2 0.8052 | MAE 0.2679 | r 0.9001784100163526
+trained linear_pooled dino R2 0.8412 [0.818, 0.862] | MAE 0.1236 [0.1157, 0.1324] | r 0.9183
+trained linear_pooled rand R2 0.6645 [0.606, 0.717] | MAE 0.1747 [0.1613, 0.1888] | r 0.8224
+trained linear_pooled shuffle R2 0.0033 [-0.003, 0.01] | MAE 0.3367 [0.3354, 0.3379] | r 0.0561
+trained attentive dino R2 0.8784 [0.848, 0.905] | MAE 0.0711 [0.0621, 0.081] | r 0.9388
+trained attentive rand R2 0.6425 [0.582, 0.692] | MAE 0.1692 [0.1555, 0.185] | r 0.8054
+trained attentive shuffle R2 0.0061 [0.003, 0.009] | MAE 0.3326 [0.3319, 0.3332] | r 0.1401
+trained mask R2 0.5808 | MAE 0.1987 | r 0.7836125589332891
+--- early window (report only)
+interp linear_pooled dino R2 0.8690 MAE 0.0629
+interp linear_pooled rand R2 0.7485 MAE 0.0876
+interp linear_pooled shuffle R2 -0.0305 MAE 0.2234
+interp attentive dino R2 0.3115 MAE 0.1674
+interp attentive rand R2 0.5858 MAE 0.1166
+interp attentive shuffle R2 -0.0022 MAE 0.2207
+interp mask R2 0.7724 MAE 0.0855
+extrap linear_pooled dino R2 0.9005 MAE 0.2423
+extrap linear_pooled rand R2 0.8174 MAE 0.3378
+extrap linear_pooled shuffle R2 -0.0209 MAE 0.9654
+extrap attentive dino R2 0.7120 MAE 0.4741
+extrap attentive rand R2 0.6725 MAE 0.4967
+extrap attentive shuffle R2 -0.0227 MAE 0.9608
+extrap mask R2 0.9033 MAE 0.2795
+--- target SD implied: SST scale. levels log area:
+interp SD of log area (equal weights, 100 eps/level) = 0.2221
+extrap SD of log area (equal weights, 100 eps/level) = 0.9826
+
+=== H_b recompute
+H_b:last_block drops [-0.0035, -0.0137, -0.0083] mean -0.00851 (stored -0.00851) SD 0.00513  t-CI95 over 3 seeds [-0.0212, 0.0042]  min/max vs 0.2: -0.0137/-0.0035  episode-boot CI [-0.0106, -0.0062]  q2 R2 SD over seeds 0.0051
+   one-sample t vs 0.2 across seeds: t=-70.40 df=2 two-sided p=0.0002 one-sided p=0.0001
+H_b:last_rollout_step drops [0.2913, 0.2953, 0.3205] mean 0.30238 (stored 0.30238) SD 0.01585  t-CI95 over 3 seeds [0.2630, 0.3418]  min/max vs 0.2: 0.2913/0.3205  episode-boot CI [0.2822, 0.324]  q2 R2 SD over seeds 0.0158
+   one-sample t vs 0.2 across seeds: t=11.19 df=2 two-sided p=0.0079 one-sided p=0.0039
+
+=== cond (a) vs (b)
+rollout drops a [0.7385, 0.7059, 0.7289] b [0.2913, 0.2953, 0.3205] diff 0.4221 (stored 0.4221) welch t=31.68 df=3.99 p=0.00001 se=0.0133
+   Welch CI95 for diff: [0.385, 0.459] (t_crit 2.780) vs episode-boot CI [0.399, 0.446]
+   complete separation: min(a)=0.706 > max(b)=0.321 ; exact permutation two-sided p (3 vs 3) = 0.100
+last_block change_vs_layer0 a [0.00625, -0.00586, -0.00183] b [0.00263, 0.01293, 0.00752] diff -0.00817 (stored -0.00817) welch t=-1.76 df=3.88 p=0.1551 ; Welch CI [-0.0212, 0.0049] vs episode-boot [-0.0103, -0.0061]
+   SD a 0.00617, SD b 0.00515; seed ranges overlap: a[-0.0059,0.0062] b[0.0026,0.0129]
+   unadjusted_two_sided_p stored 0.001998001998001998
+
+=== q2 layerwise (b): R2 trajectories 'unseen' per seed, SD over seeds by layer
+layer 0 R2 unseen [0.8728, 0.8728, 0.8727] SD 0.0000  change [0.0, 0.0, 0.0]
+layer 1 R2 unseen [0.8724, 0.8669, 0.8718] SD 0.0030  change [-0.0003, -0.0058, -0.0009]
+layer 2 R2 unseen [0.8661, 0.8656, 0.8706] SD 0.0027  change [-0.0066, -0.0071, -0.0022]
+layer 3 R2 unseen [0.8649, 0.867, 0.8704] SD 0.0028  change [-0.0079, -0.0057, -0.0023]
+layer 4 R2 unseen [0.8697, 0.8727, 0.8719] SD 0.0015  change [-0.0031, -0.0, -0.0009]
+layer 5 R2 unseen [0.8737, 0.8748, 0.8755] SD 0.0009  change [0.0009, 0.0021, 0.0028]
+layer 6 R2 unseen [0.8754, 0.8857, 0.8803] SD 0.0051  change [0.0026, 0.0129, 0.0075]
+(a) layer 0 unseen change [0.0, 0.0, 0.0] mean 0.0000  trained [0.0, 0.0, 0.0]
+(a) layer 1 unseen change [0.0004, -0.004, -0.0005] mean -0.0014  trained [0.0005, -0.0003, 0.0033]
+(a) layer 2 unseen change [-0.0005, -0.0057, 0.0029] mean -0.0011  trained [0.0037, -0.0004, 0.0014]
+(a) layer 3 unseen change [-0.0002, -0.009, 0.0016] mean -0.0025  trained [0.001, -0.0002, -0.0011]
+(a) layer 4 unseen change [0.0079, -0.0057, -0.004] mean -0.0006  trained [0.0024, 0.0004, -0.0053]
+(a) layer 5 unseen change [0.0071, -0.0087, 0.0018] mean 0.0001  trained [0.0013, -0.0017, -0.008]
+(a) layer 6 unseen change [0.0062, -0.0059, -0.0018] mean -0.0005  trained [-0.0091, -0.004, -0.0124]
+
+=== H_c
+H_c:steering seed0/middle T=0.0869 p95rand=0.0123 ratio=7.1 spearman=1.0000 p_rank=0.0099
+H_c:steering seed0/last T=0.0644 p95rand=0.0104 ratio=6.2 spearman=1.0000 p_rank=0.0099
+H_c:steering seed1/middle T=0.0875 p95rand=0.0111 ratio=7.9 spearman=1.0000 p_rank=0.0099
+H_c:steering seed1/last T=0.0541 p95rand=0.0094 ratio=5.8 spearman=1.0000 p_rank=0.0099
+H_c:steering seed2/middle T=0.0806 p95rand=0.0124 ratio=6.5 spearman=1.0000 p_rank=0.0099
+H_c:steering seed2/last T=0.0645 p95rand=0.0104 ratio=6.2 spearman=1.0000 p_rank=0.0099
+  T mean 0.073 SD 0.014 ; CV across 6 cells 0.19
+H_c:subspace_removal seed0/middle T=0.4381 p95rand=0.2045 ratio=2.1 spearman=1.0000 p_rank=0.0099
+H_c:subspace_removal seed0/last T=0.5647 p95rand=0.1574 ratio=3.6 spearman=1.0000 p_rank=0.0099
+H_c:subspace_removal seed1/middle T=0.3971 p95rand=0.1962 ratio=2.0 spearman=1.0000 p_rank=0.0099
+H_c:subspace_removal seed1/last T=0.3804 p95rand=0.1784 ratio=2.1 spearman=1.0000 p_rank=0.0099
+H_c:subspace_removal seed2/middle T=0.4140 p95rand=0.1945 ratio=2.1 spearman=1.0000 p_rank=0.0099
+H_c:subspace_removal seed2/last T=0.6969 p95rand=0.1779 ratio=3.9 spearman=1.0000 p_rank=0.0099
+  T mean 0.482 SD 0.124 ; CV across 6 cells 0.26

@@ -117,3 +117,27 @@
 - 변경점: colab_tools.py `_default_loadable` 이 ACWM_PHYS_SRC 를 sys.path 에 추가. `_is_loadable` 추가: ImportError 는 환경 문제이므로 그대로 올려 격리하지 않고(overnight.sh 에서 rc 97), 그 외 로드 실패는 이유를 stderr 에 출력. selftest 항목 2개 추가. 사전 등록 값 변경 없음.
 - 알려진 문제: 셀 10 주석과 안전장치는 아직 고치지 않았고, 편집기 저장으로 작업 트리 노트북의 셀 9 수정(`log_tail`)이 되돌아가 있어 이번 커밋에서 노트북은 제외한다. 재개 자체(패치된 train.py 가 체크포인트에서 이어 학습)는 아직 실제로 실행된 적이 없다.
 - 결과: 없음. 해석 없음.
+
+## 2026-11-04 / 002_single_size_sweep / run s0 세션 끊김 후 첫 실제 재개 (운영 기록, 결과 아님)
+- 경과(UTC): 08:39 시작한 s0 가 epoch 5 저장(09:23:38) 뒤 멈춤. Drive 의 마지막 기록은 09:26:06 이고 overnight.log 에 실패 줄이 없어 세션/런타임 종료로 추정(원인 미확인). 10:55 셀을 다시 실행, `colab_tools.py prepare` -> `"action": "resume"`, trainrun `resuming from checkpoints/model_latest.pth`, 10:56:08 `train_e00006_b0.png` 다시 기록. d8206d6 수정 후 처음 동작한 재개다.
+- 주의: s0 는 epoch 5 와 6 사이에 재개가 한 번 들어간 run 이다. 데이터 순서와 난수 상태는 복원되지 않아 중단 없는 run 과 bit 단위로 같지 않을 수 있다(추정). 리뷰와 결과 해석 때 이 사실을 고려해야 한다.
+- 미확인: 재개 후 첫 epoch 완료와 그 손실이 이어지는지(조회 시점 11:02 UTC 에 아직 없음). 값은 운영 점검용이며 결과가 아니다.
+- 추가 확인(11:09 UTC, epoch_logs.jsonl): 재개 후 epoch 6 완료(11:04:38), train_loss 0.7685, val_loss 0.6784. epoch 1~5 의 train 2.19, 1.78, 1.46, 1.19, 0.96 / val 1.94, 1.60, 1.31, 1.06, 0.85 에서 끊기지 않고 이어져 위의 "재개 후 첫 epoch" 미확인 항목을 해소한다. 옵티마이저 3종 상태 로드도 train.log 에 기록됨. 운영 점검용 값이며 결과가 아니다.
+
+## 2026-11-05 / 002_single_size_sweep / Q3 제거 검정 not_removed 처리 결정 (운영 기록, 결과 아님)
+- 관찰: multi_60_ind_160 s0, s1 의 Q3 로그와 q3.json 에서 INLP, LEACE 가 middle, last 층 모두 `removed=False`. s2 와 single_ind 는 이 기록 시점에 미완료. 수치는 Drive `exp002_work/results/<run>/q3.json` 참고(results.json 미생성이라 여기에 옮기지 않음).
+- 영향: 주 방법 INLP 가 s0, s1 에서 실패했으므로 aggregate.py 규칙상 H_c:subspace_removal 은 s2 결과와 무관하게 not_evaluable. steering 검정은 이 플래그와 별개.
+- 원인 해석(추정, 미검증): INLP 10회로는 선형 정보도 다 지우지 못했고, LEACE 는 선형 정보만 지워 MLP 로 읽히는 비선형 정보가 남은 것으로 보인다. 코드 오류 근거는 찾지 못했다.
+- 사용자 결정: `not_evaluable` 그대로 보고하고 후속 분석 여부는 /review-experiment 에서 논의. `q3_impl.removal_check.mlp_r2_after_max`, `inlp_iterations` 는 변경하지 않으며 진행 중인 실행도 건드리지 않는다. 제거 효과값은 H-c 근거로 쓰지 않는다.
+- 리뷰 때 함께 볼 것: multi s0 는 epoch 5, s1 은 epoch 9 에서 체크포인트 재개(train.log 확인). optimizer 상태는 복원됐으나 중단 없는 run 과 동일하다는 보장은 없다.
+
+## 2026-11-05 / 002_single_size_sweep / Colab 실행 완료, results.json 확보 (결과 기록, 해석 전)
+- 변경점: 학습 6개(multi_60_ind_160, single_ind x 시드 0,1,2), cache, Q1, Q2, Q3, aggregate 완료(overnight 05:49 UTC). 보조 조건 multi_60_ind_160_small 은 실행 안 함. 런타임 해제로 로컬 파일이 사라져 06:04 UTC 에 Drive 입력으로 aggregate 재실행, 판정 행 수는 첫 실행과 같다(14행: pass 6, fail 3, not_evaluable 2, decided 2, exploratory 1). Drive `exp002_work/results/results.json` 을 experiments/002_single_size_sweep/results.json 으로 복사(sha256 079ff4c1...).
+- 결과(results.json decision_table): H-a 보간 linear pass, 보간 attentive pass, 외삽 linear fail, 외삽 attentive fail. H-b last_block pass, last_rollout_step fail. H-c steering pass, subspace_removal not_evaluable(not_removed, 6셀 모두). 조건 (a) 대 (b) 패밀리 2개 pass(차이 검출, 방향 주장 아님). 4c: single_ind medium, multi_60_ind_160 large. 수치는 results.json 참고.
+- 해석: 하지 않음. /review-experiment 대기.
+- 리뷰 때 볼 것: (1) multi s0, s1 재개 run. (2) 002 학습 6개 모두 패치로 `val()` 의 `@torch.no_grad()` 줄이 빠진 train.py 사용(가중치 영향 없음은 추정, 미검증). (3) results.json 의 environment, git dirty 는 학습 런타임이 아니라 aggregate 재실행 런타임 값. (4) 4c large 규칙 문구는 (a) 층별 결과에 관한 것인데 large 는 (b) 행에서 나왔다.
+
+## 2026-11-05 / 002_single_size_sweep / 리뷰 3건 완료, 보고서 작성 (reporter)
+- 변경점: notes/reviews/002_prior.md, 002_stats.md, 002_skeptic.md 완료. reports/002_single_size_sweep.md 작성(코드와 실험 파일 수정 없음).
+- 결과(results.json 값): 세 분석가 모두 판정 14행의 status 와 Holm 계산이 규칙대로임을 확인. H_b:last_rollout_step 시드별 drop 0.2913/0.2953/0.3205(평균 0.3024, 임계 0.2 초과), (a) 대 (b) rollout drop 차이 0.4221, 조건 (a) drop 0.7385/0.7059/0.7289. H_c:steering 6칸 모두 무작위 100방향 95 백분위 밖(p_rank 0.0099 = 하한). cond_a_vs_b:last_block 차이 -0.00817. 4c: single_ind medium(a060 최대 이동비 4.912/4.662/4.657), multi large(a060 5.037/5.054/5.301).
+- 해석(보고서 5, 6절, 추정 포함): 분석가가 갈린 곳은 H-a 보간 pass 의 의미(stats 강한 지지, skeptic 근거 아님, prior 부분), steering/last_block 을 무효로 볼지 약한 증거로 볼지. rollout 하락이 정보 소실인지 판독기 전이 실패인지는 세 명 모두 구분 불가. H_c:subspace_removal 은 사용자 결정대로 not_evaluable, 제거 효과값은 근거로 쓰지 않음. Drive 전용 파일(q3.json, cells.npz 등)로 재계산하지 못한 항목이 있음(보고서 7절). 사람 결정 5건은 보고서 10절.

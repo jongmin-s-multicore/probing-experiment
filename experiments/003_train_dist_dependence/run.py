@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """Experiment 003 entry point.   python run.py <stage> [options]      (see README.md)
 
-Stages: run_name | check | download | maskcheck | listing | smoke | train | extract | metrics | aggregate | sync | selftest
+Stages: run_name | check | download | maskcheck | listing | smoke | train | extract | metrics | baseline | aggregate | sync | selftest
 Every stage supports --dry-run (prints what it would do; no heavy work). Seeds come from config.yaml (train.seeds, seed).
 Run inside the activated conda environment. Each stage logs to logs/<stage>_<time>.log. After run.max_attempts (3) consecutive failures
 a stage/run refuses to run (CLAUDE.md retry limit) until a human removes the entry in results/attempts.json.
@@ -13,6 +13,7 @@ import json
 import os
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -37,6 +38,9 @@ def models(cfg, args):
     return [parse_model(cfg, args.model)] if args.model else [parse_model(cfg, s) for s in all_models(cfg)]
 
 
+REFUSED = 3          # a refusal (unpatched train.py, retrain of a DONE run) is a setup problem, not a failed attempt: it is not counted in attempts.json
+
+
 def guarded(cfg, paths, key, fn, dry_run):
     """Run fn() with the 3-attempt guard."""
     if not dry_run:
@@ -47,7 +51,7 @@ def guarded(cfg, paths, key, fn, dry_run):
         if not dry_run:
             attempts_record(paths, key, False)
         raise
-    if not dry_run:
+    if not dry_run and rc != REFUSED:
         attempts_record(paths, key, rc == 0)
     return rc
 
@@ -154,6 +158,7 @@ def _torch_at_least(ver):
 
 
 def _train_one(cfg, paths, dist, seed, args, smoke=False, suffix=""):
+    from exp003 import resume as R
     name = run_name(cfg, dist, seed, suffix)
     cmd, env, rd, man = _train_cmd(cfg, paths, dist, seed, name, smoke)
     if dist not in approved_distributions(cfg) and not (args.dry_run or smoke):
@@ -165,16 +170,53 @@ def _train_one(cfg, paths, dist, seed, args, smoke=False, suffix=""):
     if not man.exists():
         log("missing %s; run: python run.py listing" % man)
         return 1
-    if (rd / "DONE").exists() and not args.force:
-        log("train %s: DONE exists, skip" % name)
-        return 0
+    if (rd / "DONE").exists():
+        if not args.force:
+            log("train %s: DONE exists, skip" % name)
+            return 0
+        if not smoke and os.environ.get("EXP003_ALLOW_RETRAIN") != "1":
+            log("train %s: DONE exists and --force was given. Refusing to retrain a finished run (protects the finished mix_wide runs). "
+                "Set EXP003_ALLOW_RETRAIN=1 only if a human decided to retrain it." % name)
+            return REFUSED
+    rec = None
+    if not smoke:
+        # Resume guard (user decision 2026-11-05). The pinned train.py would load model_latest.pth and train `epochs` MORE epochs; only the patched
+        # train.py (colab/train_resume.patch) treats training.epochs as the total target. The 9 runs of this stage are trained with the patched file.
+        patched = R.train_py_is_patched(paths["acwm_src"])
+        have_ck = R.has_checkpoint(rd)
+        if not patched:
+            log("train %s: %s/train.py is NOT the resume-patched file (marker %r / loop %r missing)%s. Refusing to train. Apply colab/train_resume.patch to the "
+                "checkout (git apply) first." % (name, paths["acwm_src"], R.RESUME_MARKER, R.LOOP_EXPR,
+                                                 ": an unfinished checkpoint exists and the unpatched file would train 15 MORE epochs" if have_ck else ""))
+            return REFUSED
+        prep = R.prepare_run(rd, paths["train_base"] / "quarantine", loadable=lambda p: R.default_loadable(p, paths["acwm_src"]))
+        log("train %s: prepare -> %s" % (name, json.dumps(prep)))
+        ck = rd / "checkpoints"
+        efs = R.epoch_files(ck)
+        rec = {"start_time": time.strftime("%F %T"), "action": prep["action"], "restored_from": prep.get("restored_from"), "quarantined_to": prep.get("to"),
+               "epoch_checkpoint_at_start": efs[0][0] if efs and prep["action"] in ("resume", "repaired_resume") else 0,
+               "target_total_epochs": int(cfg["train"]["epochs"]), "save_every_x_epoch": int(cfg["train"]["hydra_overrides"]["training.save_every_x_epoch"]),
+               "patched_train_py": True, "train_py_sha256": R.sha256_file(Path(paths["acwm_src"]) / "train.py"),
+               "patch_sha256": R.sha256_file(HERE / "colab" / "train_resume.patch"), **R.gpu_info()}
+        if prep["action"] in ("resume", "repaired_resume"):
+            log("train %s: RESUMING from checkpoint epoch %s with the patched train.py (training.epochs = total target %d)" % (name, rec["epoch_checkpoint_at_start"], rec["target_total_epochs"]))
     rd.mkdir(parents=True, exist_ok=True)
     write_json(read_json(man), rd / "train_manifest.json")
     with open(rd / "run_info.txt", "a") as f:
         f.write("START exp003 commit=%s dist=%s seed=%s args=%s\n" % (cfg["code"]["commit"], dist, seed, " ".join(cmd)))
+    idx = R.record_attempt(rd, rec) if rec else None
+    log("train %s: started. After the first epoch check the time per epoch and GPU memory (nvidia-smi); not measured on this GPU before." % name)
     rc = subprocess.run(cmd, cwd=paths["acwm_src"], env=env).returncode
+    if idx is not None:
+        R.finish_attempt(rd, idx, rc)
     if rc == 0:
         (rd / "DONE").write_text("ok\n")
+        if not smoke:
+            keep = (cfg.get("colab") or {}).get("keep_ckpt_epochs")
+            if keep is not None:
+                removed = R.prune_run(rd, keep)
+                if removed:
+                    log("train %s: pruned %s (kept %s + model_latest.pth)" % (name, removed, keep))
     return rc
 
 
@@ -237,13 +279,36 @@ def cmd_metrics(cfg, paths, args):
     return rc
 
 
+def cmd_baseline(cfg, paths, args):
+    """Install/verify the 001 results.json that the H-H2 verdict reads (Colab snapshot has no experiments/001). rc 1 if it cannot be found/read."""
+    from exp003 import baseline
+    if args.dry_run:
+        log("baseline: would look for a %d-byte results.json under %s and copy it to %s" % (
+            int(cfg["colab"]["baseline_001_bytes"]), baseline.default_roots(), baseline.target_path(cfg)))
+        return 0
+    ok, info = baseline.run(cfg)
+    write_json(info, paths["results_dir"] / "baseline_001_install.json")
+    return 0 if ok else 1
+
+
 def cmd_aggregate(cfg, paths, args):
     from exp003 import aggregate
     if args.dry_run:
-        log("aggregate: would read results/<run>/metrics.json and write results.json")
+        log("aggregate: would read results/<run>/metrics.json, write results.json and copy it to $EXP003_WORK_ROOT/results/results.json when that variable is set")
         return 0
-    aggregate.run(cfg, paths)
-    log("wrote %s" % (HERE / "results.json"))
+    res = aggregate.run(cfg, paths)
+    out = HERE / "results.json"
+    log("wrote %s" % out)
+    b = res["verdict"]["H-H2"]["baseline"]
+    log("aggregate: baseline.found=%s file=%s" % (b.get("found"), b.get("file")))
+    dst = aggregate.persist(out, os.environ.get("EXP003_WORK_ROOT"))     # Colab: HERE is on the local disk and disappears with the runtime; results/ is the Drive link
+    if dst:
+        log("aggregate: copied results.json to %s (Drive, survives the runtime)" % dst)
+    else:
+        log("aggregate: EXP003_WORK_ROOT not set, results.json stays only at %s" % out)
+    if not b.get("found") or b.get("missing_run_or_path"):
+        log("aggregate: FAILED CHECK - the 001 baseline results.json was not found/readable, so H-H2 is not_evaluable. Run `python run.py baseline`, then aggregate again.")
+        return 1
     return 0
 
 
@@ -261,7 +326,7 @@ def cmd_selftest(cfg, paths, args):
 
 
 STAGES = {"run_name": cmd_run_name, "check": cmd_check, "download": cmd_download, "maskcheck": cmd_maskcheck, "listing": cmd_listing, "smoke": cmd_smoke,
-          "train": cmd_train, "extract": cmd_extract, "metrics": cmd_metrics, "aggregate": cmd_aggregate, "sync": cmd_sync, "selftest": cmd_selftest}
+          "train": cmd_train, "extract": cmd_extract, "metrics": cmd_metrics, "baseline": cmd_baseline, "aggregate": cmd_aggregate, "sync": cmd_sync, "selftest": cmd_selftest}
 
 
 def main():

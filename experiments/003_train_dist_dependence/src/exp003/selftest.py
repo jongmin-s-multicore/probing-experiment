@@ -165,6 +165,8 @@ def run(cfg):
     _selftest_sync_hf(cfg)
     _selftest_drive(cfg)
     _selftest_mount(cfg)
+    res = _selftest_resume(cfg)
+    log("selftest: resume/guard/baseline group: %s (synthetic data, not results)" % res)
     return {"ok": True}
 
 
@@ -456,3 +458,270 @@ def _selftest_mount(cfg):
         assert drive.prepare_data(c, pathsF, two, meta_counter=mc, mount=str(td / "empty_mount")) == 2     # never look at a real /content/drive
         os.environ.pop("EXP003_WORK_ROOT")
     log("selftest: mount-copy mode (fake mounted Drive: candidate paths incl. brackets, find_mount_src, parallel copy, marker/bytes, skip/resume, tar/zip archive, archive creation, unsafe path, rc 2/3) OK")
+
+
+# ------------------------------------------------------------------------------------------------ resume / guard / baseline (2026-11-05)
+def _tree(root):
+    import hashlib
+    root = Path(root)
+    return {str(p.relative_to(root)): hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(root.rglob("*")) if p.is_file()}
+
+
+FAKE_TRAIN = '''import os, sys
+# [exp002 operational] range(init_epoch, self.total_epochs + 1)
+a = dict(x.split("=", 1) for x in sys.argv[1:] if "=" in x)
+rd, total, save = a["hydra.run.dir"], int(a["training.epochs"]), int(a["training.save_every_x_epoch"])
+ck = os.path.join(rd, "checkpoints"); os.makedirs(ck, exist_ok=True)
+lat = os.path.join(ck, "model_latest.pth")
+ep = int(open(lat).read().split()[1]) if os.path.exists(lat) else 0
+stop = int(os.environ.get("FAKE_STOP_AFTER", "0"))
+for e in range(ep + 1, total + 1):
+    open(os.path.join(rd, "fake_trained.txt"), "a").write("%d\\n" % e)
+    if e % save == 0:
+        for n in ("model_%d.pth" % e, "model_latest.pth"):
+            open(os.path.join(ck, n), "w").write("epoch %d" % e)
+    if stop and e == stop:
+        sys.exit(1)
+'''
+
+
+def _selftest_resume(cfg):
+    import ast
+    import re
+    import importlib.util
+    import os
+    import subprocess
+    import types
+    from . import resume as R, baseline as B
+    from .common import EXP_DIR, code_snapshot_sha256
+    n = {"ok": 0, "skip": 0}
+
+    # --- Python 3.9 syntax of every source file
+    for p in list((EXP_DIR / "src").rglob("*.py")) + [EXP_DIR / "run.py"]:
+        ast.parse(p.read_text(), feature_version=(3, 9))
+    n["ok"] += 1
+
+    # --- the patch on the pinned train.py: clean apply, epoch ranges
+    pinned = None
+    for src in (os.environ.get("ACWM_PHYS_SRC"), str(EXP_DIR.parents[1] / "thread0")):
+        if not src:
+            continue
+        r = subprocess.run(["git", "-C", src, "show", "%s:train.py" % cfg["code"]["commit"]], capture_output=True, text=True)
+        if r.returncode == 0 and r.stdout:
+            pinned = r.stdout
+            break
+        r = subprocess.run(["git", "-C", src, "show", "HEAD:train.py"], capture_output=True, text=True)      # Colab checkout is at the pinned commit
+        if r.returncode == 0 and r.stdout and cfg["code"]["commit"] == subprocess.run(["git", "-C", src, "rev-parse", "HEAD"], capture_output=True, text=True).stdout.strip():
+            pinned = r.stdout
+            break
+    patch = EXP_DIR / "colab" / "train_resume.patch"
+    if pinned is None or not patch.exists():
+        log("selftest: patch-on-pinned-train.py SKIPPED (pinned train.py or patch file not available here)")
+        n["skip"] += 1
+    else:
+        td = Path(tempfile.mkdtemp(prefix="exp003_patch_"))
+        (td / "train.py").write_text(pinned)
+        assert not R.train_py_is_patched(td)
+        chk = subprocess.run(["git", "apply", "--check", str(patch)], cwd=td, capture_output=True, text=True)
+        assert chk.returncode == 0, chk.stderr
+        assert subprocess.run(["git", "apply", str(patch)], cwd=td, capture_output=True).returncode == 0
+        assert R.train_py_is_patched(td)
+        assert subprocess.run(["git", "apply", "--reverse", "--check", str(patch)], cwd=td, capture_output=True).returncode == 0
+
+        def epochs(text, init):
+            tree = ast.parse(text)
+            for node in ast.walk(tree):
+                if isinstance(node, ast.For) and isinstance(node.iter, ast.Call) and getattr(node.iter.func, "id", "") == "range" and "init_epoch" in ast.dump(node.iter):
+                    ex = ast.Expression(ast.Call(ast.Name("list", ast.Load()), [node.iter], []))
+                    ast.fix_missing_locations(ex)
+                    return eval(compile(ex, "<loop>", "eval"), {"list": list, "range": range, "init_epoch": init, "self": types.SimpleNamespace(total_epochs=15)})
+            raise AssertionError("loop not found")
+        patched = (td / "train.py").read_text()
+        assert epochs(patched, 1) == list(range(1, 16)) and epochs(patched, 6) == list(range(6, 16)) and epochs(patched, 16) == []
+        assert re.search(r"@torch\.no_grad\(\)[^\n]*\n\s*def val\(self\)", patched), "@torch.no_grad() above val() must remain after the patch"
+        assert re.search(r"@torch\.no_grad\(\)[^\n]*\n\s*def val\(self\)", pinned)
+        assert epochs(pinned, 6) == list(range(6, 21))       # the original problem: 15 MORE epochs after a restart at epoch 5
+        log("selftest: patch applies cleanly to the pinned train.py; epochs fresh 1..15, resume after 5 -> 6..15, after 15 -> none; unpatched restart after 5 -> 6..20 (15 more). "
+            "'@torch.no_grad()' above val() is kept")
+        n["ok"] += 1
+
+    # --- prepare_run branches (text checkpoints; 'BROKEN' content is unreadable)
+    def loadable(p):
+        t = Path(p).read_text()
+        if t.startswith("BROKEN"):
+            raise ValueError("corrupt")
+        return True
+
+    def ckdir(root, name, files):
+        ck = Path(root) / name / "checkpoints"
+        ck.mkdir(parents=True)
+        for fn, txt in files.items():
+            (ck / fn).write_text(txt)
+        return Path(root) / name
+    td = Path(tempfile.mkdtemp(prefix="exp003_prep_"))
+    q = td / "quarantine"
+    assert R.prepare_run(td / "none", q, loadable)["action"] == "fresh"
+    d = ckdir(td, "r_ok", {"model_latest.pth": "epoch 6", "model_6.pth": "epoch 6"})
+    assert R.prepare_run(d, q, loadable)["action"] == "resume"
+    d = ckdir(td, "r_broken", {"model_latest.pth": "BROKEN", "model_5.pth": "epoch 5", "model_6.pth": "BROKEN", "model_4.pth": "epoch 4"})
+    r = R.prepare_run(d, q, loadable)
+    assert r["action"] == "repaired_resume" and r["restored_from"] == "model_5.pth" and (d / "checkpoints" / "model_latest.pth").read_text() == "epoch 5", r
+    d = ckdir(td, "r_none", {"model_latest.pth": "BROKEN", "model_5.pth": "BROKEN"})
+    (d / "epoch_logs.jsonl").write_text("{}\n")
+    r = R.prepare_run(d, q, loadable)
+    assert r["action"] == "quarantined" and not (d / "checkpoints").exists() and not (d / "epoch_logs.jsonl").exists()
+    moved = list(q.glob("r_none__*"))
+    assert len(moved) == 1 and (moved[0] / "checkpoints" / "model_5.pth").exists(), "quarantine moves, never deletes"
+    d = ckdir(td, "r_imp", {"model_latest.pth": "epoch 6", "model_6.pth": "epoch 6"})
+    def imp(p):
+        raise ImportError("No module named models")
+    try:
+        R.prepare_run(d, q, imp)
+        raise AssertionError("ImportError must propagate")
+    except ImportError:
+        pass
+    assert (d / "checkpoints" / "model_latest.pth").exists() and not list(q.glob("r_imp__*")), "ImportError must not quarantine"
+    d = ckdir(td, "r_done", {"model_latest.pth": "BROKEN"})
+    (d / "DONE").write_text("ok\n")
+    assert R.prepare_run(d, q, loadable)["action"] == "skip" and (d / "checkpoints" / "model_latest.pth").read_text() == "BROKEN"
+    d = ckdir(td, "x_smoke", {"model_latest.pth": "BROKEN"})
+    assert R.prepare_run(d, q, loadable)["action"] == "skip" and R.prune_run(d, [15]) == []
+    log("selftest: prepare_run (fresh, resume, broken latest repaired from newest readable epoch, quarantine by move, ImportError not quarantined, DONE and smoke untouched) OK")
+    n["ok"] += 1
+
+    # --- _train_one end to end with a fake train.py
+    spec = importlib.util.spec_from_file_location("exp003_run_selftest", str(EXP_DIR / "run.py"))
+    runmod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(runmod)
+    c = copy.deepcopy(cfg)
+    c["colab"] = {"keep_ckpt_epochs": [5, 10, 15], "baseline_001_bytes": 12237220}
+    tt = Path(tempfile.mkdtemp(prefix="exp003_train_"))
+    paths = {"train_base": tt / "tr", "manifests": tt / "man", "acwm_src": tt / "src", "dataset_dir": tt / "data", "results_dir": tt / "res", "cache": tt / "cache"}
+    for k in ("manifests", "acwm_src", "results_dir"):
+        paths[k].mkdir(parents=True)
+    for dist in c["train"]["distributions"]:
+        write_json({"n_episodes": 1, "group_counts": {}, "episodes": []}, paths["manifests"] / ("train_%s.json" % dist))
+    old_env = {k: os.environ.get(k) for k in ("EXP003_APPROVED", "FAKE_STOP_AFTER", "EXP003_ALLOW_RETRAIN")}
+    os.environ["EXP003_APPROVED"] = "single_a026 mix_wide mix_adjacent single_a248"
+    os.environ.pop("FAKE_STOP_AFTER", None)
+    os.environ.pop("EXP003_ALLOW_RETRAIN", None)
+    old_load, old_gpu = R.default_loadable, R.gpu_info
+    R.default_loadable = lambda p, src=None: loadable(p)
+    R.gpu_info = lambda: {"gpu": "SYNTHETIC GPU", "memory_total_mib": 1}
+    args = types.SimpleNamespace(dry_run=False, force=False)
+    try:
+        # mix_wide: finished before this code existed (DONE + metrics + save_every=5 checkpoints); must stay byte-identical
+        mw = paths["train_base"] / "outputs" / "exp003_mix_wide_s0"
+        (mw / "checkpoints").mkdir(parents=True)
+        for fn in ("model_5.pth", "model_10.pth", "model_15.pth", "model_latest.pth"):
+            (mw / "checkpoints" / fn).write_text("epoch " + fn)
+        (mw / "DONE").write_text("ok\n")
+        (paths["results_dir"] / "exp003_mix_wide_s0").mkdir()
+        (paths["results_dir"] / "exp003_mix_wide_s0" / "metrics.json").write_text("{}")
+        sm = paths["train_base"] / "outputs" / "exp003_mix_wide_s0_smoke"
+        (sm / "checkpoints").mkdir(parents=True)
+        (sm / "checkpoints" / "model_latest.pth").write_text("epoch 1")
+        (sm / "DONE").write_text("ok\n")
+        before = _tree(paths["train_base"]), _tree(paths["results_dir"])
+        # unpatched train.py: refuse (fresh and with checkpoint), rc 3, nothing changes, not counted as an attempt
+        (paths["acwm_src"] / "train.py").write_text(FAKE_TRAIN.replace("# [exp002 operational]", "#").replace("total + 1", "total + ep"))
+        rc = runmod._train_one(c, paths, "single_a026", 0, args)
+        assert rc == runmod.REFUSED and not (paths["train_base"] / "outputs" / "exp003_single_a026_s0" / "checkpoints").exists()
+        sa = paths["train_base"] / "outputs" / "exp003_single_a026_s0"
+        (sa / "checkpoints").mkdir(parents=True, exist_ok=True)
+        (sa / "checkpoints" / "model_latest.pth").write_text("epoch 5")
+        (sa / "checkpoints" / "model_5.pth").write_text("epoch 5")
+        assert runmod._train_one(c, paths, "single_a026", 0, args) == runmod.REFUSED and not (sa / "DONE").exists() and not (sa / "train_env.json").exists()
+        assert runmod.guarded(c, paths, "train:t", lambda: runmod.REFUSED, False) == runmod.REFUSED and not (paths["results_dir"] / "attempts.json").exists()
+        # patched: resume from epoch 5 -> trains 6..15 only
+        (paths["acwm_src"] / "train.py").write_text(FAKE_TRAIN)
+        assert R.train_py_is_patched(paths["acwm_src"])
+        assert runmod._train_one(c, paths, "single_a026", 0, args) == 0 and (sa / "DONE").exists()
+        assert (sa / "fake_trained.txt").read_text().split() == [str(e) for e in range(6, 16)]
+        te = R.read_train_env(sa)
+        assert te["recorded"] and te["resumed"] and te["gpu"] == "SYNTHETIC GPU" and te["attempts"][0]["action"] == "resume" and te["attempts"][0]["epoch_checkpoint_at_start"] == 5 and te["attempts"][0]["target_total_epochs"] == 15
+        # fresh run, interrupted after epoch 6, latest broken, then resume: 1..6 then 7..15 (total 15 epochs, no duplicates)
+        os.environ["FAKE_STOP_AFTER"] = "6"
+        sb = paths["train_base"] / "outputs" / "exp003_single_a248_s1"
+        assert runmod._train_one(c, paths, "single_a248", 1, args) == 1 and not (sb / "DONE").exists()
+        os.environ.pop("FAKE_STOP_AFTER")
+        (sb / "checkpoints" / "model_latest.pth").write_text("BROKEN")
+        assert runmod._train_one(c, paths, "single_a248", 1, args) == 0 and (sb / "DONE").exists()
+        assert (sb / "fake_trained.txt").read_text().split() == [str(e) for e in range(1, 16)], (sb / "fake_trained.txt").read_text()
+        te = R.read_train_env(sb)
+        assert [a["action"] for a in te["attempts"]] == ["fresh", "repaired_resume"] and te["attempts"][1]["restored_from"] == "model_6.pth" and te["n_resumes"] == 1 and te["finished_ok"]
+        assert sorted(f.name for f in (sb / "checkpoints").iterdir()) == ["model_10.pth", "model_15.pth", "model_5.pth", "model_latest.pth"], "prune keeps 5/10/15 + latest"
+        # mix_wide and smoke: unchanged by all of the above, skipped, --force refused
+        assert runmod._train_one(c, paths, "mix_wide", 0, args) == 0
+        args.force = True
+        assert runmod._train_one(c, paths, "mix_wide", 0, args) == runmod.REFUSED
+        args.force = False
+        assert R.prune_run(mw, [15]) == [] and R.prepare_run(mw, paths["train_base"] / "quarantine", loadable)["action"] == "skip"
+        after = _tree(paths["train_base"]), _tree(paths["results_dir"])
+        for key in before[0]:
+            if "mix_wide" in key:
+                assert after[0].get(key) == before[0][key], key
+        assert all(after[1].get(k) == v for k, v in before[1].items())
+        env_mw = R.read_train_env(mw)
+        assert env_mw["recorded"] is False and env_mw["gpu"] == "unknown"
+        log("selftest: _train_one guard (unpatched refused rc 3 not counted as attempt; patched resume 6..15; fresh+interrupt+broken latest -> repaired resume, 15 epochs total; prune keeps 5/10/15+latest; "
+            "finished mix_wide and smoke byte-identical, skipped, --force refused; mix_wide train_env gpu 'unknown') OK")
+        n["ok"] += 1
+    finally:
+        R.default_loadable, R.gpu_info = old_load, old_gpu
+        for k, v in old_env.items():
+            if v is None:
+                os.environ.pop(k, None)
+            else:
+                os.environ[k] = v
+
+    # --- aggregate: train_env in runs, copy to the work root, code sha
+    td = Path(tempfile.mkdtemp(prefix="exp003_agg_"))
+    out = td / "results.json"
+    write_json({"x": 1}, out)
+    dst = AG.persist(out, str(td / "work"))
+    assert dst == td / "work" / "results" / "results.json" and read_json(dst) == {"x": 1} and AG.persist(out, None) is None
+    assert code_snapshot_sha256(EXP_DIR) == code_snapshot_sha256(EXP_DIR) and len(code_snapshot_sha256(EXP_DIR)) == 64
+    log("selftest: aggregate.persist copies results.json to WORK_ROOT/results; code snapshot sha256 computed OK")
+    n["ok"] += 1
+
+    # --- 001 baseline file: not found fails, found is copied and read, ambiguous fails, unreadable fails
+    td = Path(tempfile.mkdtemp(prefix="exp003_base_"))
+    size = 12237220
+    bc = copy.deepcopy(cfg)
+    bc["colab"] = {"baseline_001_bytes": size}
+    base_dir = td / "exp" / "003"
+    base_dir.mkdir(parents=True)
+    spec_b = bc["criteria"]["h2_baseline"]
+
+    def make(path, vals=None, pad=size):
+        d = {"runs": {}}
+        for rn, v in zip(spec_b["runs"], vals or [0.24, 0.25, 0.26]):
+            cur = d["runs"].setdefault(rn, {})
+            for p in spec_b["slope_path"][:-1]:
+                cur = cur.setdefault(p, {})
+            cur[spec_b["slope_path"][-1]] = v
+        b = json.dumps(d).encode()
+        Path(path).parent.mkdir(parents=True, exist_ok=True)
+        Path(path).write_bytes(b + b" " * (pad - len(b)))
+    ok, info = B.run(bc, base_dir=base_dir, roots=[str(td / "drive")])
+    assert not ok and info["action"] == "not_found" and not B.target_path(bc, base_dir).exists()
+    make(td / "drive" / "MyDrive" / "old" / "results.json", pad=size - 5)             # decoy: wrong size
+    make(td / "drive" / "MyDrive" / "exp001_stuff" / "sub" / "results.json")
+    ok, info = B.run(bc, base_dir=base_dir, roots=[str(td / "drive")])
+    assert ok and info["action"] == "copied" and info["found"] and info["baseline"]["values"][spec_b["runs"][0]] == 0.24, info
+    assert B.target_path(bc, base_dir).stat().st_size == size
+    ok, info = B.run(bc, base_dir=base_dir, roots=[])
+    assert ok and info["action"] == "already_present"
+    B.target_path(bc, base_dir).unlink()
+    make(td / "drive" / "MyDrive" / "other" / "results.json", vals=[0.1, 0.2, 0.3])
+    ok, info = B.run(bc, base_dir=base_dir, roots=[str(td / "drive")])
+    assert not ok and info["action"] == "ambiguous"
+    t2 = Path(tempfile.mkdtemp(prefix="exp003_base2_"))
+    (t2 / "d").mkdir()
+    (t2 / "d" / "results.json").write_bytes(b'{"runs": {}}' + b" " * (size - 12))
+    ok, info = B.run(bc, base_dir=t2 / "a" / "b", roots=[str(t2 / "d")])
+    assert not ok and info["found"] and not info["baseline"]["values_readable"], info
+    log("selftest: 001 baseline install (not found -> fail, wrong-size decoy ignored, copied + baseline.found + values read, already present, ambiguous -> fail, unreadable runs -> fail) OK")
+    n["ok"] += 1
+    return n

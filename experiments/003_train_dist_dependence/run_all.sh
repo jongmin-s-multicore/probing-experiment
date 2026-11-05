@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Run experiment 003 end to end (or part of it). Every stage skips work whose result exists (resume).
 #   bash run_all.sh [--dry-run] [--force] [--from STAGE] [--only S1,S2] [--skip S1,S2]
-# Stages (in order): check selftest download maskcheck listing train extract metrics aggregate
+# Stages (in order): check selftest download maskcheck listing train extract metrics baseline aggregate
 #   `smoke` (12 GB memory/time measurement) is NOT in this chain: run it yourself first (`python run.py smoke`).
 #   `train` refuses unless (1) env EXP003_APPROVED lists the distributions the user approved for GPU training and
 #   (2) results/smoke.json exists with status finished (override only with ALLOW_NO_SMOKE=1). Neither was done by the author.
@@ -33,7 +33,7 @@ if [ "$DRY" = 0 ] && [ "$CONDA_ENV" != "none" ]; then   # CONDA_ENV=none: no con
 fi
 PY="python"
 TS="$(date +%Y%m%d_%H%M%S)"
-STAGES="check selftest download maskcheck listing train extract metrics aggregate"
+STAGES="check selftest download maskcheck listing train extract metrics baseline aggregate"
 if [ -z "${MODELS:-}" ]; then MODELS="$($PY - <<'PYEOF'
 import sys; sys.path.insert(0, "src")
 from exp003.common import load_config, all_models
@@ -78,6 +78,7 @@ for m in $MODELS; do
   run_stage extract "extract_$name" "$EXP003_CACHE/$name/DONE"           $PY run.py extract --model "$m" $F
   run_stage metrics "metrics_$name" "$HERE/results/$name/metrics.json"   $PY run.py metrics --model "$m" $F
 done
+run_stage baseline baseline "" $PY run.py baseline          # finds/copies the 001 results.json for H-H2 (fails clearly if missing)
 run_stage aggregate aggregate "" $PY run.py aggregate
 if [ "${SYNC:-0}" = 1 ] && [ "$DRY" = 0 ]; then $PY run.py sync 2>&1 | tee "logs/${TS}_sync.log" || true; fi
 echo "done. results: $HERE/results.json"

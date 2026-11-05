@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Regenerate colab/exp003_colab.ipynb. The notebook embeds a SNAPSHOT (tar+gzip+base64) of this experiment's code, because the 003 folder is not on GitHub.
+"""Regenerate colab/exp003_colab_resume.ipynb (2026-11-05; the older colab/exp003_colab.ipynb holds uncommitted run output and is NEVER written by this script). The notebook embeds a SNAPSHOT (tar+gzip+base64) of this experiment's code, because the 003 folder is not on GitHub.
 Run again after ANY code change:   python3 colab/build_notebook.py
 Embedded: src/ run.py config.yaml run_all.sh setup.sh README.md CHANGES.md colab/requirements_colab.txt   (not: __pycache__, logs, results, manifests, *.pyc)
 """
@@ -9,7 +9,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 EXP = HERE.parent
 TOP = EXP.name                      # 003_train_dist_dependence
-FILES = ["src", "run.py", "config.yaml", "run_all.sh", "setup.sh", "README.md", "CHANGES.md", "colab/requirements_colab.txt"]
+FILES = ["src", "run.py", "config.yaml", "run_all.sh", "setup.sh", "README.md", "CHANGES.md", "colab/requirements_colab.txt", "colab/train_resume.patch"]
 
 
 def _filter(ti):
@@ -41,22 +41,21 @@ def code(s):
 
 
 C0 = r'''
-# Experiment 003 (train-distribution dependence) on Google Colab Pro+ (A100)
-Run the cells top to bottom. Cells 1-8 are idempotent: after a disconnect choose a GPU runtime and run them again.
+# Experiment 003, remaining 9 models (single_a026, single_a248, mix_adjacent x seeds 0,1,2) on Google Colab (resume version, 2026-11-05)
+Run the cells top to bottom. Cells 1-9 are idempotent: after a disconnect choose a GPU runtime and run them again. **Do not touch the 002 runtime or notebook; open this notebook in its own runtime.**
 
-**READ FIRST: if the session is cut, the run that was training is trained again from epoch 0 (about 3 hours per run, estimate, not measured).**
-This notebook deliberately has NO resume patch (the 002 `train_resume.patch` is not used): continuing from a checkpoint would not be bit-identical, and that is a user decision.
-Runs that have a `DONE` marker are skipped, so after a disconnect only the interrupted run is lost. Re-run the training cell (same `EXP003_APPROVED`) and it continues with the next unfinished run.
+**Resume:** cell 5 applies `colab/train_resume.patch` (copied unchanged from experiment 002) to the pinned `train.py`. With it `training.epochs=15` is the TOTAL target epoch: a run interrupted after epoch 5 continues with epochs 6..15 (encoders and optimizer states restored), a fresh run trains 1..15. `save_every_x_epoch` is 1 (operational value, not pre-registered), so at most one epoch is lost per disconnect.
+Before every train start `run.py` checks `train.py`: if it is not patched it REFUSES to train (rc 3). Then it keeps a readable `model_latest.pth` (resume), replaces a broken one by the newest readable `model_<e>.pth`, or MOVES unusable checkpoints to `WORK_ROOT/train_runs/quarantine/` (never deleted) and starts from epoch 0. Each start is recorded in `train_runs/outputs/<run>/train_env.json` (training GPU, resume yes/no, patch sha256) and copied into `results.json` (`runs.<run>.train_env`).
+The three finished `mix_wide` runs have `DONE` and are skipped; they are never retrained, re-extracted, pruned or moved (they were trained WITHOUT the patch, with save_every 5, on an A100; their train_env is reported as "unknown").
+A resumed run is not bit-identical to an uninterrupted one (data order and RNG state are not restored; estimate, not verified on Colab).
 
-**Human approval (CLAUDE.md): cell 9 (smoke) and cell 10 (training) use the GPU. Do not switch `RUN_SMOKE` / `RUN_TRAIN` to True, and do not fill `EXP003_APPROVED`, before you have approved it.**
-The training cell refuses to start when `EXP003_APPROVED` is empty, and `run_all.sh` also refuses without a finished `results/smoke.json`.
+**Human approval (CLAUDE.md):** the user approved GPU training of the 9 models on 2026-11-05 and the current Colab L4 runtime; cell 11 holds `EXP003_APPROVED` accordingly. The smoke gate uses the existing `results/smoke.json` (measured on an A100). **Memory on an L4 (24 GB) has not been measured**: cell 11 prints GPU memory and the time since start; watch the first epoch and stop if it runs out of memory. Do not change batch_size (pre-registered 24).
 
 Session tips (Colab behaviour from memory, 추정, not checked today)
-- Colab may reclaim an idle runtime (about 90 min without interaction) and has a maximum session length (about 24 h). Keep the browser tab open; Pro+ background execution is not a guarantee.
-- Everything that must survive lives on Drive in `MyDrive/exp003_work`: `train_runs/` (checkpoints, DONE), `exp003_cache/`, `results/`, `logs/`, `manifests/`. `/content` (venv, code, copied data) is rebuilt every session.
-- Long commands run in the background (nohup, log file); the cell only tails the log. Interrupting a cell does not stop the background job.
-- Code delivery: the 003 folder is NOT on GitHub. Cell 3 unpacks `MyDrive/exp003_work/exp003_code.tar` if it exists (takes priority), otherwise the snapshot embedded in cell 3 (generated by `colab/build_notebook.py`; regenerate the notebook after code changes).
-- Everything in this notebook is UNVERIFIED on Colab as a whole (only the individual facts listed in the README were observed).
+- Colab may reclaim an idle runtime and has a maximum session length. Keep the tab open.
+- Everything that must survive lives on Drive in `MyDrive/exp003_work`: `train_runs/`, `exp003_cache/`, `results/` (including `results.json` copied by aggregate), `logs/`, `manifests/`. `/content` is rebuilt every session.
+- Code delivery: the 003 folder is NOT on GitHub. Cell 3 unpacks the snapshot embedded in this notebook. A `MyDrive/exp003_work/exp003_code.tar` from an earlier session is IGNORED (it would hide the new code) unless you set `USE_DRIVE_TAR = True` in cell 3.
+- Everything in this notebook is UNVERIFIED on Colab as a whole.
 '''
 
 C1 = r'''
@@ -113,7 +112,8 @@ print('mount source exists:', os.path.isdir(DATA_SRC))
 
 C3 = r'''
 # 3. Unpack the 003 code to /content/mylab/experiments/003_train_dist_dependence
-# Priority: WORK_ROOT/exp003_code.tar (any tar / tar.gz) if present, else the snapshot embedded below.
+# The embedded snapshot is used. A WORK_ROOT/exp003_code.tar from an earlier session is IGNORED (it can be older than this notebook and would hide the resume code),
+# unless USE_DRIVE_TAR = True below.
 # The embedded snapshot was generated at notebook build time (@@STAMP@@); when the code changes, re-run `python3 colab/build_notebook.py` and re-upload the notebook.
 # Only code files are overwritten; results/ logs/ manifests/ (Drive symlinks, cell 6) are untouched.
 import base64, io, os, tarfile
@@ -123,10 +123,13 @@ EXP = REPO + '/experiments/' + TOP
 EMBEDDED = """
 @@B64@@
 """
+USE_DRIVE_TAR = False
 ext_tar = WORK_ROOT + '/exp003_code.tar'
-if os.path.exists(ext_tar):
+if os.path.exists(ext_tar) and not USE_DRIVE_TAR:
+    print('WARNING: %s exists but is IGNORED (USE_DRIVE_TAR=False); the embedded snapshot is used.' % ext_tar)
+if os.path.exists(ext_tar) and USE_DRIVE_TAR:
     src = open(ext_tar, 'rb').read()
-    print('using', ext_tar, len(src), 'bytes')
+    print('using', ext_tar, len(src), 'bytes (USE_DRIVE_TAR=True: make sure it contains src/exp003/resume.py and colab/train_resume.patch)')
 else:
     src = base64.b64decode(''.join(EMBEDDED.split()))
     print('using the embedded snapshot', len(src), 'bytes')
@@ -138,6 +141,7 @@ with tarfile.open(fileobj=io.BytesIO(src), mode='r:*') as tf:
     tf.extractall(os.path.dirname(EXP))
 os.chmod(EXP + '/run_all.sh', 0o755)
 assert os.path.isfile(EXP + '/run.py') and os.path.isfile(EXP + '/colab/requirements_colab.txt')
+assert os.path.isfile(EXP + '/src/exp003/resume.py') and os.path.isfile(EXP + '/colab/train_resume.patch'), 'code snapshot does not contain the resume code'
 print('code in', EXP)
 '''
 
@@ -159,19 +163,30 @@ assert sh('%s -c "%s"' % (PY, CHK)) == 0, 'environment check failed'
 '''
 
 C5 = r'''
-# 5. ACWM-Phys checkout at the pinned commit (== config.yaml code.commit). No patch is applied (no resume patch in 003).
-import os, subprocess
+# 5. ACWM-Phys checkout at the pinned commit (== config.yaml code.commit) + resume patch on train.py only (colab/train_resume.patch, copied unchanged from 002).
+import hashlib, os, subprocess
 COMMIT = '5a640bed66002eca7bdb31d10b2bde59ad944551'
 SRC = '/content/dinowm/acwm_phys_src'
 if not os.path.isdir(SRC + '/.git'):
     os.makedirs(os.path.dirname(SRC), exist_ok=True)
-    subprocess.run(['git', 'clone', 'https://github.com/jongmin-s-multicore/thread0.git', SRC], check=True)
-subprocess.run(['git', '-C', SRC, 'checkout', '--detach', COMMIT], check=True)
+    subprocess.run(['git', 'clone', '--no-checkout', 'https://github.com/jongmin-s-multicore/thread0.git', SRC], check=True)
+subprocess.run(['git', '-C', SRC, 'checkout', '--detach', COMMIT], check=False)      # no-op when already there; a patched train.py blocks a switch, which is fine
 head = subprocess.run(['git', '-C', SRC, 'rev-parse', 'HEAD'], capture_output=True, text=True).stdout.strip()
 assert head == COMMIT, head
-dirty = subprocess.run(['git', '-C', SRC, 'status', '--porcelain', '--untracked-files=no'], capture_output=True, text=True).stdout.strip()
-assert not dirty, 'acwm_phys_src has local modifications: ' + dirty
-print('acwm-phys at', head)
+PATCH = EXP + '/colab/train_resume.patch'
+if subprocess.run(['git', '-C', SRC, 'apply', '--reverse', '--check', PATCH], capture_output=True).returncode == 0:
+    print('resume patch already applied')
+else:
+    subprocess.run(['git', '-C', SRC, 'apply', '--check', PATCH], check=True)
+    subprocess.run(['git', '-C', SRC, 'apply', PATCH], check=True)
+    print('resume patch applied')
+dirty = subprocess.run(['git', '-C', SRC, 'status', '--porcelain', '--untracked-files=no'], capture_output=True, text=True).stdout.splitlines()
+assert [d.strip() for d in dirty if d.strip()] == ['M train.py'], dirty      # only train.py may differ from the pinned commit
+text = open(SRC + '/train.py').read()
+assert '[exp002 operational]' in text and 'range(init_epoch, self.total_epochs + 1)' in text, 'patch marker / total-epoch loop missing in train.py'
+sha = hashlib.sha256(open(PATCH, 'rb').read()).hexdigest()
+open(WORK_ROOT + '/acwm_resume_patch.sha256', 'w').write(sha + '\n')
+print('commit', head, '| patch sha256', sha, '| marker present, loop = range(init_epoch, self.total_epochs + 1)')
 '''
 
 C6 = r'''
@@ -228,7 +243,7 @@ for stage in ('check', 'selftest', 'maskcheck', 'listing'):
 '''
 
 C9 = r'''
-# 9. SMOKE (GPU run: 12 GB memory/time measurement). Needs human approval (CLAUDE.md): set RUN_SMOKE = True only after approval.
+# 9b. SMOKE (GPU run: 12 GB memory/time measurement). Needs human approval (CLAUDE.md): set RUN_SMOKE = True only after approval.
 RUN_SMOKE = False
 if RUN_SMOKE:
     if os.path.exists(EXP + '/results/smoke.json'):
@@ -241,19 +256,29 @@ else:
     print('RUN_SMOKE is False: skipped')
 '''
 
+C9B = r'''
+# 9. 001 baseline results.json for the H-H2 verdict (12237220 bytes). The Colab snapshot has no experiments/001: find the file on Drive and copy it to
+#    EXP/../001_size_collapse_diagnosis/results.json. FAILS (assert) if it is not found or does not contain the baseline runs. Do this BEFORE training.
+#    If it is not under MyDrive, set os.environ['EXP003_001_SEARCH'] to a folder (or copy the file there by hand) and re-run.
+rc = bg('%s run.py baseline' % PY, EXP + '/logs/colab_baseline.log', cwd=EXP, every=15)
+print(open(EXP + '/results/baseline_001_install.json').read() if os.path.exists(EXP + '/results/baseline_001_install.json') else '(no install record)')
+assert rc == 0, '001 results.json not found/readable (rc=%s): see above. Aggregate would give H-H2 not_evaluable.' % rc
+'''
+
 C10 = r'''
-# 10. FULL TRAINING (GPU, about 3 h per run, estimate). Needs human approval (CLAUDE.md).
-# Fill EXP003_APPROVED with the distribution names YOU approved (space separated, e.g. 'single_a026 single_a248 mix_adjacent mix_wide'). Empty -> refuses.
-# Resume behaviour: run_all.sh skips every run that has DONE (WORK_ROOT/train_runs/outputs/<run>/DONE). After a disconnect re-run this cell: finished runs
-# are skipped, the interrupted run is trained again from epoch 0 (no resume patch). Stages after train (extract/metrics/aggregate) also run, per model.
-RUN_TRAIN = False
-EXP003_APPROVED = ''
+# 10. FULL TRAINING (GPU). Approved by the user on 2026-11-05 for single_a026 single_a248 mix_adjacent (mix_wide is listed but has DONE and is skipped).
+# Resume behaviour: run_all.sh skips every run that has DONE. After a disconnect re-run cells 1-9 and this cell: a run without DONE continues from its last readable
+# checkpoint with the patched train.py (epochs k+1..15), or restarts at epoch 0 if no readable checkpoint exists (old ones are moved to train_runs/quarantine).
+# Stages after train (extract/metrics) run per model; baseline + aggregate at the end; aggregate copies results.json to WORK_ROOT/results/.
+# Unmeasured on this GPU: time per epoch and memory on an L4. The loop below prints nvidia-smi memory and, per unfinished run, the epochs written so far and minutes since its start.
+RUN_TRAIN = True
+EXP003_APPROVED = 'single_a026 single_a248 mix_adjacent mix_wide'
 if RUN_TRAIN:
     approved = EXP003_APPROVED.split()
     assert approved, 'EXP003_APPROVED is empty: write the approved distribution names yourself. Refusing to train.'
     assert os.path.exists(EXP + '/results/smoke.json') and '"status": "finished"' in open(EXP + '/results/smoke.json').read(), \
         'results/smoke.json missing or not finished: run the smoke (cell 9) first'
-    import json, subprocess
+    import json, subprocess, glob
     env = dict(os.environ, EXP003_APPROVED=' '.join(approved))
     models = subprocess.run([PY, '-c', "import sys;sys.path.insert(0,'src');from exp003.common import load_config,all_models;print(' '.join(all_models(load_config())))"],
                             cwd=EXP, env=env, capture_output=True, text=True, check=True).stdout.split()
@@ -261,6 +286,21 @@ if RUN_TRAIN:
     print('models to run:', env['MODELS'])
     assert env['MODELS'], 'none of the approved names match config distributions: ' + ' '.join(models)
     LOG = EXP + '/logs/train_all.log'
+    def peek():
+        gpu = subprocess.run('nvidia-smi --query-gpu=name,memory.used,memory.total,utilization.gpu --format=csv,noheader', shell=True, capture_output=True, text=True).stdout.strip()
+        rows = []
+        for d in sorted(glob.glob(WORK_ROOT + '/train_runs/outputs/*')):
+            if os.path.exists(d + '/DONE') or d.endswith('_smoke') or not os.path.exists(d + '/train_env.json'):
+                continue
+            try:
+                a = json.load(open(d + '/train_env.json'))['attempts'][-1]
+                import datetime
+                mins = (datetime.datetime.now() - datetime.datetime.strptime(a['start_time'], '%Y-%m-%d %H:%M:%S')).total_seconds() / 60
+                n = len(open(d + '/epoch_logs.jsonl').read().splitlines()) if os.path.exists(d + '/epoch_logs.jsonl') else 0
+                rows.append('%s: action=%s epochs_logged_total=%d minutes_since_start=%.0f' % (os.path.basename(d), a['action'], n, mins))
+            except Exception as e:
+                rows.append('%s: (cannot read: %s)' % (os.path.basename(d), e))
+        print('GPU[name, mem used, mem total, util]:', gpu, '\n  ' + '\n  '.join(rows), flush=True)
     running = subprocess.run('pgrep -f "[r]un_all.sh"', shell=True, capture_output=True).returncode == 0
     if running:
         print('run_all.sh is already running in this session; attaching to its log')
@@ -270,10 +310,12 @@ if RUN_TRAIN:
     try:
         while subprocess.run('pgrep -f "[r]un_all.sh"', shell=True, capture_output=True).returncode == 0:
             print(subprocess.run(['tail', '-n', '3', LOG], capture_output=True, text=True).stdout, flush=True)
-            time.sleep(300)          # keeps the cell busy; interrupting the cell does not stop the background job
+            peek()
+            time.sleep(120)          # keeps the cell busy; interrupting the cell does not stop the background job
     except KeyboardInterrupt:
         print('cell interrupted; the background job keeps running')
     print(subprocess.run(['tail', '-n', '20', LOG], capture_output=True, text=True).stdout)
+    print('results.json on Drive:', WORK_ROOT + '/results/results.json', os.path.exists(WORK_ROOT + '/results/results.json'))
 else:
     print('RUN_TRAIN is False: skipped')
 '''
@@ -351,13 +393,13 @@ def main():
     b64, n = make_b64()
     stamp = time.strftime("%Y-%m-%d %H:%M UTC", time.gmtime())
     c3 = C3.replace("@@B64@@", b64).replace("@@TOP@@", TOP).replace("@@STAMP@@", stamp)
-    cells = [md(C0), code(C1), code(C2), code(c3), code(C4), code(C5), code(C6), code(C7), code(C8), code(C9), code(C10), code(C11), code(C12)]
+    cells = [md(C0), code(C1), code(C2), code(c3), code(C4), code(C5), code(C6), code(C7), code(C8), code(C9B), code(C9), code(C10), code(C11), code(C12)]
     nb = {"cells": cells, "metadata": {"accelerator": "GPU", "colab": {"gpuClass": "premium", "provenance": []},
                                       "kernelspec": {"display_name": "Python 3", "name": "python3"}, "language_info": {"name": "python"}},
           "nbformat": 4, "nbformat_minor": 5}
     for i, c in enumerate(cells):                      # nbformat >= 4.5 requires cell ids
-        c["id"] = "exp003-%02d" % i
-    out = HERE / "exp003_colab.ipynb"
+        c["id"] = "exp003r-%02d" % i
+    out = HERE / "exp003_colab_resume.ipynb"
     out.write_text(json.dumps(nb, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
     print("wrote", out, "| embedded tar.gz bytes:", n)
 

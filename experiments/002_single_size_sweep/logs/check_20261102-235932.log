@@ -1,0 +1,53 @@
+[2026-11-02 23:59:32] log file: /home/jaekyungkim/mylab/experiments/002_single_size_sweep/logs/check_20261102-235932.log
+[2026-11-02 23:59:32] stage=check dry_run=False python=/tmp/claude-1000/-home-jaekyungkim-mylab/f0a84b41-5f2a-4d16-ab5d-48c13f8581a2/scratchpad/venv/bin/python conda_env=base
+python executable : /tmp/claude-1000/-home-jaekyungkim-mylab/f0a84b41-5f2a-4d16-ab5d-48c13f8581a2/scratchpad/venv/bin/python
+CONDA_DEFAULT_ENV : base
+packages          : {"torch": "2.15.0+cpu", "torchvision": null, "numpy": "2.5.4", "scipy": "1.18.1", "sklearn": null, "yaml": "6.0.3", "cv2": null, "decord": null, "hydra": null, "omegaconf": null, "einops": null}
+torch cuda        : None cuda_available: False gpu: None mem_gb: None
+arch_list         : None
+torch version     : installed=2.15.0+cpu config env.torch_version=2.0.1+cu117 match=False ; torch.version.cuda=None (config expects cu117 -> 11.7)
+paths:
+  work         /home/jaekyungkim/dinowm  exists=False
+  dataset_dir  /home/jaekyungkim/dinowm/data  exists=False
+  data_root    /home/jaekyungkim/dinowm/data/cloth_sim  exists=False
+  acwm_src     /home/jaekyungkim/dinowm/acwm_phys_src  exists=False
+  train_base   /home/jaekyungkim/dinowm/train_runs  exists=False
+  cache        /home/jaekyungkim/dinowm/exp002_cache  exists=False
+  env DINO_WORK        = (unset -> default)
+  env DATASET_DIR      = (unset -> default)
+  env DINO_TRAIN       = (unset -> default)
+  env EXP002_CACHE     = (unset -> default)
+  env ACWM_PHYS_SRC    = (unset -> default)
+branch checkout HEAD: None matches config.code.commit: False
+disk free GB: cache=1020.8 train=1020.8 data=1020.8
+data splits present (metadata.pt):
+  a060_train   False
+  ind_train    False
+  a160_train   False
+  a026_test    False
+  a040_test    False
+  a060_test    False
+  a080_test    False
+  ind_test     False
+  a125_test    False
+  a160_test    False
+  a200_test    False
+  a248_test    False
+config nulls that block training (set by a human after smoke):
+  train.batch_size     None
+  train.num_hist       None
+  train.epochs         None
+  train.budget         None
+  env.torch_version    2.0.1+cu117
+rclone: /usr/bin/rclone
+manifests: None
+q1 cache DONE: False
+  run exp002_multi_60_ind_160_s0         DONE=False
+  run exp002_multi_60_ind_160_s1         DONE=False
+  run exp002_multi_60_ind_160_s2         DONE=False
+  run exp002_single_ind_s0               DONE=False
+  run exp002_single_ind_s1               DONE=False
+  run exp002_single_ind_s2               DONE=False
+  run exp002_multi_60_ind_160_small_s0   DONE=False
+  run exp002_multi_60_ind_160_small_s1   DONE=False
+  run exp002_multi_60_ind_160_small_s2   DONE=False

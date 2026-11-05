@@ -94,7 +94,7 @@ train:
   hydra_overrides:                 # 001 config train.hydra_overrides 와 같은 값. batch_size/epochs 는 위 값에서 채운다 (load_config)
     frameskip: 5
     num_hist: 1
-    "training.save_every_x_epoch": 5
+    "training.save_every_x_epoch": 1   # 2026-11-05 운영 값 (5 -> 1). 사전 등록 값이 아니다. 재개 시 최대 1 epoch 만 잃게 한다. 학습 step/데이터/시드/결과 계산에 영향 없음. 이미 끝난 mix_wide 3개는 5 로 학습했다(체크포인트 model_5/10/15).
     "training.predictor_lr": 5.0e-5
   run_name_template: "exp003_{dist}_s{seed}"
   approved_distributions: []       # 비어 있음. GPU 학습은 사용자 승인 후 환경변수 EXP003_APPROVED="single_a026 ..." 로만 연다 (run.py train 이 확인)
@@ -140,3 +140,8 @@ sync:
     rclone_remote: "gdrive"        # 001 과 같은 값
     remote_path: "exp003_results"
     local_mount: ""
+
+# 2026-11-05 운영 값 (사전 등록 값 아님; 학습 step/통계/임계값에 영향 없음). 나머지 9개 모델 학습은 Colab 에서 패치된 train.py(colab/train_resume.patch)로 한다.
+colab:
+  keep_ckpt_epochs: [5, 10, 15]    # DONE 이 된 run 중 train_env.json(save_every=1)이 있는 run 에서만 이 epoch 의 model_<e>.pth 와 model_latest.pth 를 남기고 나머지 삭제(Drive 용량). extract 는 model_latest.pth 를 읽는다. mix_wide 는 train_env.json 이 없어 건드리지 않는다.
+  baseline_001_bytes: 12237220     # 001 results.json 의 바이트 수. Drive 에서 이 크기의 파일을 찾아 복사한다 (run.py baseline)

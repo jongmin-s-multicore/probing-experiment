@@ -1,0 +1,489 @@
+[2026-11-04 17:46:09] log file: \\wsl.localhost\Ubuntu-D\home\jaekyungkim\mylab\experiments\002_single_size_sweep\logs\selftest_20261104-174609.log
+[2026-11-04 17:46:09] stage=selftest dry_run=False python=C:\Users\jaekyungkim\AppData\Local\Microsoft\WindowsApps\PythonSoftwareFoundation.Python.3.9_qbz5n2kfra8p0\python.exe conda_env=None
+====================================================================================================
+SELFTEST on synthetic data. The numbers below are NOT experiment results.
+====================================================================================================
+A1 stats
+  [ok] R2 from sums == direct 
+  [ok] pearson from sums == np.corrcoef 
+  [ok] MAE from sums 
+  [ok] bootstrap CI contains point (0.783 in [0.706, 0.832])
+  [ok] within-level R2 == direct 
+  [ok] Holm adjusted p [0.03, 0.06, 0.06]
+  [ok] Holm: None counts in family size (m=2) 
+  [ok] Spearman monotone = 1, reversed = -1 
+  [ok] Spearman ties (average ranks) 
+  [ok] pair order accuracy perfect 
+A2 directions / INLP / LEACE
+  [ok] ridge held-out R2 high on linear data 0.783
+  [ok] matched random directions: unit norm 
+  [ok] matched random directions: variance matched (<1%) max rel err 0.0000
+  [ok] isotropic Gaussian directions would NOT be variance matched (control is meaningful) iso rel std 10.48
+  [ok] different RNG streams give different directions 
+  [ok] per-training-seed direction streams are distinct 
+  [ok] INLP: train linear R2 decreases over iterations 0.75 -> 0.00
+  [ok] INLP: linear info gone (held-out ridge R2 < 0.05) r2 -0.008, rank 20
+  [ok] LEACE: linear info gone (held-out ridge R2 < 0.05) 
+  [ok] LEACE: rank-1 change only 
+  [ok] removal strength 0 is identity 
+E  config guards
+  [ok] null batch_size raises ConfigNull with a clear message 
+  [ok] duplicate YAML keys rejected 
+  [ok] Q1 primary window = late (late_deformed), report window = early 
+  [ok] config seeds present 
+F1 equal budget + manifests (episodes per condition)
+  [ok] equal-episode conditions get the same epochs and steps 
+  [ok] small condition: epochs converted to (nearly) the same total steps, rel_diff recorded {'epochs': 30, 'steps_per_epoch': 334, 'steps_computed': 10020, 'steps_target': 10000, 'rel_diff': 0.002}
+  [ok] train.budget (total steps) overrides: epochs = round(steps/spe) 
+  [ok] steps_per_epoch ceil/floor 
+  [ok] (a) single_ind = 900 ind episodes 
+  [ok] (b) = 3 x 300 = 900 
+  [ok] small = 3 x 100 = 300 
+  [ok] small subset of (b); (b)'s ind 300 subset of (a) 
+  [ok] run_order: small last and optional; train.budget null; torch_version set 
+  [ok] too few ind episodes (<900) raises 
+F2 output-space probe (Q1 probe applied to predicted z; no refit on predictor outputs)
+  [ok] encoder-side reads and probe digest do not depend on the predictor output (probe not fitted on it) 
+\\wsl.localhost\Ubuntu-D\home\jaekyungkim\mylab\experiments\002_single_size_sweep\src\exp002\stats.py:95: RuntimeWarning: Mean of empty slice
+  return {"point": float(np.nanmean(pt)), "per_probe_seed": pt, "boot": np.nanmean(bt, axis=1)}
+  [ok] rollout read: preserved signal high, destroyed signal low 0.97 vs -0.03
+  [ok] trained-role baseline cell exists for the same probe 
+  [ok] predicted-size means stored per level source (pm shape = probe seeds x test eps) 
+F3 4c diagnostics (rule of 확정 기록 7 A) incl. boundary values
+  [ok] config diag_4c = 2.0 / 5.0 / 2.0 and seed set 
+  [ok] boundaries: 1.999 small, 2.0 medium, 4.999 medium, 5.0 large 
+  [ok] error boundary: 1.999 not large, 2.0 large 
+  [ok] final: any large -> large; else worst activation class 
+  [ok] final: missing -> not_evaluable 
+  [ok] same distribution as ind -> activation class small ratio 1.14
+  [ok] mean shift of 3 sd -> large 
+  [ok] same activations but next-frame error 2.5x ind -> large (error criterion) 
+  [ok] verdict follows activation class when error < 2x; rule text stored 
+  [ok] noise floor reproducible for a fixed seed; uses only ind episodes 
+  [ok] diagnostics row without data -> not_evaluable 
+  [ok] diagnostics row carries the verdict + rule (large: numbers only) 
+  [ok] cond_a_vs_b with (a) 4c large and (b) missing -> still pending (no judgment) 
+F4 Q3: episode-mean alpha curve, Spearman threshold, tiers
+  [ok] episode_mean: mean within episode then over episodes 
+  [ok] episode mean differs from sample mean when episodes have unequal sizes 
+  [ok] monotonic_min_spearman == 0.9 (from config) 
+  [ok] 7-point curve with one adjacent swap: rho >= 0.9 passes, < 1.0 would fail rho 0.9643
+  [ok] Q3 confirmatory = ridge + INLP (config); others exploratory 
+G  smoke.VramPoller without nvidia-smi
+  [ok] VramPoller start -> finish returns, thread ended {'baseline_mib': 0, 'peak_mib': 0, 'delta_mib': 0}
+  [ok] VramPoller records peak from _read (7) with delta 0 vs baseline 7 {'baseline_mib': 7, 'peak_mib': 7, 'delta_mib': 0}
+  [ok] VramPoller delta = peak - baseline {'baseline_mib': 5, 'peak_mib': 9, 'delta_mib': 4}
+H  static attribute check (AST) + slice-count plausibility
+  [ok] static check: every module-alias attribute / from-import name exists (358 references) 
+  [ok] data.count_train_slices is defined 
+  [ok] static check detects a missing attribute and a missing from-import name ["b.py:2: 'from a import g' - g not defined in a.py", 'b.py:4: A.missing - not defined in a.py']
+  [ok] observed smoke iterations (99 train, 12 valid at batch 24) consistent with the slice formula + ceil train 2365 valid 275
+  [ok] colab: resolve_paths follows env vars 
+  [ok] colab: find_mount_src finds a child folder containing all splits 
+  [ok] colab: default path with [brackets] and space is found 
+  [ok] colab: fallback search below MyDrive/dino-wm-videos finds the split folder after a rename C:\Users\JAEKYU~1\AppData\Local\Temp\exp002_colab_3tqiy0tc\fakedrive\MyDrive\dino-wm-videos\[data]\[cloth-sim] renamed [x]
+  [ok] colab: incomplete folder (missing split) is not accepted 
+[2026-11-04 17:46:12] copy_from_mount: C:\Users\JAEKYU~1\AppData\Local\Temp\exp002_colab_3tqiy0tc\mnt2\[data]\[cloth-sim] cloth_move -> C:\Users\JAEKYU~1\AppData\Local\Temp\exp002_colab_3tqiy0tc\local2\cloth_sim splits=['ind_train', 'a060_test'] workers=16
+[2026-11-04 17:46:12]   [ind_train] source files=4 to copy=4
+[2026-11-04 17:46:12]     ind_train: 4/4 files, 0.00 GB, 0 s (finished)
+[2026-11-04 17:46:12]   [ind_train] done: 3 episodes, 0.00 GB (source: drive_mount)
+[2026-11-04 17:46:12]   [a060_test] source files=4 to copy=4
+[2026-11-04 17:46:12]     a060_test: 4/4 files, 0.00 GB, 0 s (finished)
+[2026-11-04 17:46:12]   [a060_test] done: 3 episodes, 0.00 GB (source: drive_mount)
+  [ok] colab: copy_from_mount works from a [bracket] path 
+  [ok] colab: env var path with brackets/space is used first 
+[2026-11-04 17:46:12] copy_from_mount: C:\Users\JAEKYU~1\AppData\Local\Temp\exp002_colab_3tqiy0tc\mnt\shared -> C:\Users\JAEKYU~1\AppData\Local\Temp\exp002_colab_3tqiy0tc\local\cloth_sim splits=['ind_train', 'a060_test'] workers=16
+[2026-11-04 17:46:12]   [ind_train] source files=4 to copy=4
+[2026-11-04 17:46:12]     ind_train: 4/4 files, 0.00 GB, 0 s (finished)
+[2026-11-04 17:46:12]   [ind_train] done: 3 episodes, 0.00 GB (source: drive_mount)
+[2026-11-04 17:46:12]   [a060_test] source files=4 to copy=4
+[2026-11-04 17:46:12]     a060_test: 4/4 files, 0.00 GB, 0 s (finished)
+[2026-11-04 17:46:12]   [a060_test] done: 3 episodes, 0.00 GB (source: drive_mount)
+  [ok] colab: copy_from_mount completes 
+  [ok] colab: marker records bytes {'n_mp4': 3, 'n_metadata': 3, 'bytes': 307, 'source': 'drive_mount'}
+[2026-11-04 17:46:12] copy_from_mount: C:\Users\JAEKYU~1\AppData\Local\Temp\exp002_colab_3tqiy0tc\mnt\shared -> C:\Users\JAEKYU~1\AppData\Local\Temp\exp002_colab_3tqiy0tc\local\cloth_sim splits=['ind_train', 'a060_test'] workers=16
+[2026-11-04 17:46:12]   [ind_train] complete (mp4=3 metadata=3, bytes checked), skip
+[2026-11-04 17:46:12]   [a060_test] complete (mp4=3 metadata=3, bytes checked), skip
+  [ok] colab: second run skips complete splits (file untouched) 
+[2026-11-04 17:46:12] copy_from_mount: C:\Users\JAEKYU~1\AppData\Local\Temp\exp002_colab_3tqiy0tc\mnt\shared -> C:\Users\JAEKYU~1\AppData\Local\Temp\exp002_colab_3tqiy0tc\local\cloth_sim splits=['ind_train', 'a060_test'] workers=16
+[2026-11-04 17:46:12]   [ind_train] source files=4 to copy=1
+[2026-11-04 17:46:12]     ind_train: 1/1 files, 0.00 GB, 0 s (finished)
+[2026-11-04 17:46:12]   [ind_train] done: 3 episodes, 0.00 GB (source: drive_mount)
+[2026-11-04 17:46:12]   [a060_test] complete (mp4=3 metadata=3, bytes checked), skip
+  [ok] colab: truncated local file is detected via recorded bytes and repaired 
+[2026-11-04 17:46:12] copy_from_mount: C:\Users\JAEKYU~1\AppData\Local\Temp\exp002_colab_3tqiy0tc\mnt\shared -> C:\Users\JAEKYU~1\AppData\Local\Temp\exp002_colab_3tqiy0tc\local\cloth_sim splits=['ind_train', 'a060_test'] workers=16
+[2026-11-04 17:46:12]   [ind_train] source files=3 to copy=0
+[2026-11-04 17:46:12]     ind_train: 0/0 files, 0.00 GB, 0 s (finished)
+[2026-11-04 17:46:12]   [ind_train] INCOMPLETE mp4=2 metadata=3 expected=3; no marker, next run retries
+[2026-11-04 17:46:12]   [a060_test] source files=4 to copy=0
+[2026-11-04 17:46:12]     a060_test: 0/0 files, 0.00 GB, 0 s (finished)
+[2026-11-04 17:46:12]   [a060_test] done: 3 episodes, 0.00 GB (source: drive_mount)
+[2026-11-04 17:46:12] copy_from_mount FAILED for ['ind_train']; re-run (finished files are skipped)
+  [ok] colab: missing source episode -> incomplete, rc=3, no marker 
+  [ok] colab_tools: prune without DONE keeps everything 
+  [ok] colab_tools: prune after DONE removes only non-kept epoch files 
+  [ok] colab_tools: valid checkpoint of an unfinished run is KEPT (resume), nothing moved {'run': 'exp002_x_s0', 'action': 'resume'}
+  [ok] colab_tools: corrupt model_latest.pth is replaced by the newest loadable epoch file, then resume {'run': 'exp002_x_s0', 'action': 'repaired_resume', 'restored_from': 'model_7.pth'}
+  [ok] colab_tools: no loadable checkpoint -> checkpoints and epoch_logs MOVED to quarantine/<run>__<time> (fresh start), nothing deleted {'run': 'exp002_x_s0', 'action': 'quarantined', 'to': 'C:\\Users\\JAEKYU~1\\AppData\\Local\\Temp\\exp002_colab_3tqiy0tc\\drive\\exp002_work\\train_runs\\quarantine\\exp002_x_s0__19700101-090000'}
+  [ok] colab_tools: after quarantine the run is 'fresh' (no checkpoint) 
+  [ok] colab_tools: DONE run and smoke run are never touched by prepare 
+  [ok] colab_tools: prune ignores the quarantine folder (not under outputs/) 
+  [ok] colab_tools: an import error during the load test raises and never quarantines 
+  [ok] colab_tools: default load test uses ACWM_PHYS_SRC, so a good checkpoint resumes {'run': 'exp002_imp_s0', 'action': 'resume'}
+  [ok] resume patch text: contains the marker and the TOTAL-epoch loop, keeps optimizer state_dicts and action_encoder_optimizer 
+  [ok] trainrun: patch marker constant equals the one in the patch 
+  [skipped(pinned commit train.py not available on this machine)] resume patch applied to the pinned train.py (epoch ranges)
+  [ok] resume wiring: overnight.sh calls prepare before train attempts, trainrun refuses an existing checkpoint with an unpatched train.py, notebook applies the patch and calls prepare 
+  [ok] trainrun: unpatched train.py is detected 
+  [ok] trainrun: patched train.py is detected 
+[2026-11-04 17:46:14]   [ind_train] done: 3 episodes, 0.00 GB (source: test)
+[2026-11-04 17:46:14]   [a060_test] done: 3 episodes, 0.00 GB (source: test)
+[2026-11-04 17:46:14] make_archive: 8 files -> C:\Users\JAEKYU~1\AppData\Local\Temp\exp002_arch_oqav7r0o\workroot\cloth_sim_data.tar (via cloth_sim_data.tar.tmp; one-time, later sessions use the archive)
+[2026-11-04 17:46:14]     archive write: 8/8 files, 0.00 GB, 0 s (finished)
+[2026-11-04 17:46:14] make_archive: done 0.00 GB
+  [ok] archive: make_archive writes cloth_sim/<split>/<file> and leaves no .tmp ['cloth_sim/ind_train/ep0.mp4', 'cloth_sim/ind_train/ep1.mp4', 'cloth_sim/ind_train/ep2.mp4']
+  [ok] archive: find_archive finds cloth_sim_data.tar in the work root 
+[2026-11-04 17:46:14] extract_archive: C:\Users\JAEKYU~1\AppData\Local\Temp\exp002_arch_oqav7r0o\workroot\cloth_sim_data.tar -> C:\Users\JAEKYU~1\AppData\Local\Temp\exp002_arch_oqav7r0o\local2\cloth_sim splits to extract=['ind_train', 'a060_test']
+[2026-11-04 17:46:14]     ind_train: 4/4 files, 0.00 GB, 0 s (finished)
+[2026-11-04 17:46:14]   [ind_train] done: 3 episodes, 0.00 GB (source: archive)
+[2026-11-04 17:46:14]     a060_test: 4/4 files, 0.00 GB, 0 s (finished)
+[2026-11-04 17:46:14]   [a060_test] done: 3 episodes, 0.00 GB (source: archive)
+  [ok] archive: extract + verify (mp4 == metadata == expected, bytes recorded) {'n_mp4': 3, 'n_metadata': 3, 'bytes': 157, 'source': 'archive'}
+  [ok] archive: local temporary archive copy removed after extraction 
+[2026-11-04 17:46:14]   [ind_train] complete, skip
+[2026-11-04 17:46:14]   [a060_test] complete, skip
+  [ok] archive: second run skips complete splits 
+[2026-11-04 17:46:14] data source: archive C:\Users\JAEKYU~1\AppData\Local\Temp\exp002_arch_oqav7r0o\workroot\cloth_sim_data.tar (one file; fast path)
+[2026-11-04 17:46:14] extract_archive: C:\Users\JAEKYU~1\AppData\Local\Temp\exp002_arch_oqav7r0o\workroot\cloth_sim_data.tar -> C:\Users\JAEKYU~1\AppData\Local\Temp\exp002_arch_oqav7r0o\local3\cloth_sim splits to extract=['ind_train', 'a060_test']
+[2026-11-04 17:46:15]     ind_train: 4/4 files, 0.00 GB, 0 s (finished)
+[2026-11-04 17:46:15]   [ind_train] done: 3 episodes, 0.00 GB (source: archive)
+[2026-11-04 17:46:15]     a060_test: 4/4 files, 0.00 GB, 0 s (finished)
+[2026-11-04 17:46:15]   [a060_test] done: 3 episodes, 0.00 GB (source: archive)
+  [ok] archive: prepare_data uses the archive when present (mount not needed) 
+[2026-11-04 17:46:15] data source: mounted Drive folder C:\Users\JAEKYU~1\AppData\Local\Temp\exp002_arch_oqav7r0o\mount_src (no archive found; parallel copy)
+[2026-11-04 17:46:15] copy_from_mount: C:\Users\JAEKYU~1\AppData\Local\Temp\exp002_arch_oqav7r0o\mount_src -> C:\Users\JAEKYU~1\AppData\Local\Temp\exp002_arch_oqav7r0o\local4\cloth_sim splits=['ind_train', 'a060_test'] workers=16
+[2026-11-04 17:46:15]   [ind_train] source files=4 to copy=4
+[2026-11-04 17:46:15]     ind_train: 4/4 files, 0.00 GB, 0 s (finished)
+[2026-11-04 17:46:15]   [ind_train] done: 3 episodes, 0.00 GB (source: drive_mount)
+[2026-11-04 17:46:15]   [a060_test] source files=4 to copy=4
+[2026-11-04 17:46:15]     a060_test: 4/4 files, 0.00 GB, 0 s (finished)
+[2026-11-04 17:46:15]   [a060_test] done: 3 episodes, 0.00 GB (source: drive_mount)
+[2026-11-04 17:46:15] make_archive: 8 files -> C:\Users\JAEKYU~1\AppData\Local\Temp\exp002_arch_oqav7r0o\workroot2\cloth_sim_data.tar (via cloth_sim_data.tar.tmp; one-time, later sessions use the archive)
+[2026-11-04 17:46:15]     archive write: 8/8 files, 0.00 GB, 0 s (finished)
+[2026-11-04 17:46:15] make_archive: done 0.00 GB
+  [ok] archive: no archive -> parallel mount copy, verified, then archive created once 
+[2026-11-04 17:46:15] data source: archive C:\Users\JAEKYU~1\AppData\Local\Temp\exp002_arch_oqav7r0o\workroot2\cloth_sim_data.tar (one file; fast path)
+[2026-11-04 17:46:15] extract_archive: C:\Users\JAEKYU~1\AppData\Local\Temp\exp002_arch_oqav7r0o\workroot2\cloth_sim_data.tar -> C:\Users\JAEKYU~1\AppData\Local\Temp\exp002_arch_oqav7r0o\local5\cloth_sim splits to extract=['ind_train', 'a060_test']
+[2026-11-04 17:46:15]     ind_train: 4/4 files, 0.00 GB, 0 s (finished)
+[2026-11-04 17:46:15]   [ind_train] done: 3 episodes, 0.00 GB (source: archive)
+[2026-11-04 17:46:15]     a060_test: 4/4 files, 0.00 GB, 0 s (finished)
+[2026-11-04 17:46:15]   [a060_test] done: 3 episodes, 0.00 GB (source: archive)
+  [ok] archive: next session uses only the archive 
+[2026-11-04 17:46:15] data source: mounted Drive folder C:\Users\JAEKYU~1\AppData\Local\Temp\exp002_arch_oqav7r0o\mount_src (no archive found; parallel copy)
+[2026-11-04 17:46:15] copy_from_mount: C:\Users\JAEKYU~1\AppData\Local\Temp\exp002_arch_oqav7r0o\mount_src -> C:\Users\JAEKYU~1\AppData\Local\Temp\exp002_arch_oqav7r0o\local6\cloth_sim splits=['ind_train', 'a060_test'] workers=16
+[2026-11-04 17:46:15]   [ind_train] source files=4 to copy=4
+[2026-11-04 17:46:15]     ind_train: 4/4 files, 0.00 GB, 0 s (finished)
+[2026-11-04 17:46:15]   [ind_train] done: 3 episodes, 0.00 GB (source: drive_mount)
+[2026-11-04 17:46:15]   [a060_test] source files=4 to copy=4
+[2026-11-04 17:46:15]     a060_test: 4/4 files, 0.00 GB, 0 s (finished)
+[2026-11-04 17:46:15]   [a060_test] done: 3 episodes, 0.00 GB (source: drive_mount)
+  [ok] archive: EXP002_MAKE_ARCHIVE=0 writes no archive 
+[2026-11-04 17:46:15] extract_archive: C:\Users\JAEKYU~1\AppData\Local\Temp\exp002_arch_oqav7r0o\variant_7630.tar -> C:\Users\JAEKYU~1\AppData\Local\Temp\exp002_arch_oqav7r0o\lv_8339351954027107630\cloth_sim splits to extract=['ind_train', 'a060_test']
+[2026-11-04 17:46:16]     ind_train: 4/4 files, 0.00 GB, 0 s (finished)
+[2026-11-04 17:46:16]   [ind_train] done: 3 episodes, 0.00 GB (source: archive)
+[2026-11-04 17:46:16]     a060_test: 4/4 files, 0.00 GB, 0 s (finished)
+[2026-11-04 17:46:16]   [a060_test] done: 3 episodes, 0.00 GB (source: archive)
+  [ok] archive: layout <split>/ at top level (tar) extracts and verifies 
+[2026-11-04 17:46:16] extract_archive: C:\Users\JAEKYU~1\AppData\Local\Temp\exp002_arch_oqav7r0o\variant_1453.tar -> C:\Users\JAEKYU~1\AppData\Local\Temp\exp002_arch_oqav7r0o\lv_2111148182383221453\cloth_sim splits to extract=['ind_train', 'a060_test']
+[2026-11-04 17:46:16]     ind_train: 4/4 files, 0.00 GB, 0 s (finished)
+[2026-11-04 17:46:16]   [ind_train] done: 3 episodes, 0.00 GB (source: archive)
+[2026-11-04 17:46:16]     a060_test: 4/4 files, 0.00 GB, 0 s (finished)
+[2026-11-04 17:46:16]   [a060_test] done: 3 episodes, 0.00 GB (source: archive)
+  [ok] archive: layout other/<split>/ (tar) extracts and verifies 
+[2026-11-04 17:46:16] extract_archive: C:\Users\JAEKYU~1\AppData\Local\Temp\exp002_arch_oqav7r0o\variant_2598.zip -> C:\Users\JAEKYU~1\AppData\Local\Temp\exp002_arch_oqav7r0o\lv_4187939044166622598\cloth_sim splits to extract=['ind_train', 'a060_test']
+[2026-11-04 17:46:16]     ind_train: 4/4 files, 0.00 GB, 0 s (finished)
+[2026-11-04 17:46:16]   [ind_train] done: 3 episodes, 0.00 GB (source: archive)
+[2026-11-04 17:46:16]     a060_test: 4/4 files, 0.00 GB, 0 s (finished)
+[2026-11-04 17:46:16]   [a060_test] done: 3 episodes, 0.00 GB (source: archive)
+  [ok] archive: layout cloth_sim/<split>/ (zip) extracts and verifies 
+[2026-11-04 17:46:16] extract_archive: C:\Users\JAEKYU~1\AppData\Local\Temp\exp002_arch_oqav7r0o\nosplit.tar -> C:\Users\JAEKYU~1\AppData\Local\Temp\exp002_arch_oqav7r0o\lnosplit\cloth_sim splits to extract=['ind_train', 'a060_test']
+[2026-11-04 17:46:16] ERROR no split directory (['a026_test', 'a026_train', 'a040_test', 'a040_train'] ...) found in the archive; top-level entries: ['readme', 'foo']. Expected cloth_sim/<split>/<file> (or <split>/<file>).
+  [ok] archive: no split directories -> clear error, nothing written 
+[2026-11-04 17:46:16] extract_archive: C:\Users\JAEKYU~1\AppData\Local\Temp\exp002_arch_oqav7r0o\mixed.tar -> C:\Users\JAEKYU~1\AppData\Local\Temp\exp002_arch_oqav7r0o\lmixed\cloth_sim splits to extract=['ind_train', 'a060_test']
+[2026-11-04 17:46:16] ERROR inconsistent top-level layout in the archive: prefixes ['cloth_sim', 'other']
+  [ok] archive: inconsistent top-level layout is rejected 
+[2026-11-04 17:46:16] extract_archive: C:\Users\JAEKYU~1\AppData\Local\Temp\exp002_arch_oqav7r0o\escape_484816541462696979.tar -> C:\Users\JAEKYU~1\AppData\Local\Temp\exp002_arch_oqav7r0o\lesc_484816541462696979\cloth_sim splits to extract=['ind_train', 'a060_test']
+[2026-11-04 17:46:16] ERROR unsafe path in archive (absolute or '..'): 'cloth_sim/ind_train/../../../evil.txt'; refusing to extract anything
+  [ok] archive: ../ in the path is refused, no file written outside / no marker 
+[2026-11-04 17:46:16] extract_archive: C:\Users\JAEKYU~1\AppData\Local\Temp\exp002_arch_oqav7r0o\escape_2742235692589171603.tar -> C:\Users\JAEKYU~1\AppData\Local\Temp\exp002_arch_oqav7r0o\lesc_2742235692589171603\cloth_sim splits to extract=['ind_train', 'a060_test']
+[2026-11-04 17:46:16] ERROR unsafe path in archive (absolute or '..'): 'C:\\Users\\JAEKYU~1\\AppData\\Local\\Temp\\exp002_arch_oqav7r0o\\evil.txt'; refusing to extract anything
+  [ok] archive: absolute path is refused, no file written outside / no marker 
+[2026-11-04 17:46:16] extract_archive: C:\Users\JAEKYU~1\AppData\Local\Temp\exp002_arch_oqav7r0o\symlink.tar -> C:\Users\JAEKYU~1\AppData\Local\Temp\exp002_arch_oqav7r0o\lsym\cloth_sim splits to extract=['ind_train', 'a060_test']
+[2026-11-04 17:46:17] ERROR non-regular entry (link/device) inside a split folder: 'cloth_sim/ind_train/link.mp4'; refusing
+  [ok] archive: symlink member inside a split is refused 
+[2026-11-04 17:46:17] extract_archive: C:\Users\JAEKYU~1\AppData\Local\Temp\exp002_arch_oqav7r0o\truncated.tar -> C:\Users\JAEKYU~1\AppData\Local\Temp\exp002_arch_oqav7r0o\ltrunc\cloth_sim splits to extract=['ind_train', 'a060_test']
+[2026-11-04 17:46:17]     ind_train: 4/4 files, 0.00 GB, 0 s (finished)
+[2026-11-04 17:46:17]   [ind_train] done: 3 episodes, 0.00 GB (source: archive)
+[2026-11-04 17:46:17]     a060_test: 1/1 files, 0.00 GB, 0 s (finished)
+[2026-11-04 17:46:17]   [a060_test] INCOMPLETE mp4=1 metadata=None expected=3; no marker, next run retries
+[2026-11-04 17:46:17] extract_archive FAILED for ['a060_test']. The archive is incomplete or damaged: delete/rename it (it is not modified by this code) and re-run to copy from the mounted Drive.
+  [ok] archive: truncated archive is rejected (rc 3); the split cut off by the truncation gets no completion marker 
+[2026-11-04 17:46:17] extract_archive: C:\Users\JAEKYU~1\AppData\Local\Temp\exp002_arch_oqav7r0o\missing_episode.tar -> C:\Users\JAEKYU~1\AppData\Local\Temp\exp002_arch_oqav7r0o\lmiss\cloth_sim splits to extract=['ind_train', 'a060_test']
+[2026-11-04 17:46:17]     ind_train: 3/3 files, 0.00 GB, 0 s (finished)
+[2026-11-04 17:46:17]   [ind_train] INCOMPLETE mp4=2 metadata=3 expected=3; no marker, next run retries
+[2026-11-04 17:46:17]     a060_test: 4/4 files, 0.00 GB, 0 s (finished)
+[2026-11-04 17:46:17]   [a060_test] done: 3 episodes, 0.00 GB (source: archive)
+[2026-11-04 17:46:17] extract_archive FAILED for ['ind_train']. The archive is incomplete or damaged: delete/rename it (it is not modified by this code) and re-run to copy from the mounted Drive.
+  [ok] archive: archive with a missing episode (mp4 count != metadata) is rejected, no marker 
+[2026-11-04 17:46:17] extract_archive: C:\Users\JAEKYU~1\AppData\Local\Temp\exp002_arch_oqav7r0o\missing_split.tar -> C:\Users\JAEKYU~1\AppData\Local\Temp\exp002_arch_oqav7r0o\lmsplit\cloth_sim splits to extract=['ind_train', 'a060_test']
+[2026-11-04 17:46:17] ERROR archive has no split(s) ['a060_test'] (it contains ['ind_train']); it is not a complete archive. Delete or rename it to fall back to the mount copy.
+  [ok] archive: archive without a needed split is rejected 
+[2026-11-04 17:46:17] extract_archive: C:\Users\JAEKYU~1\AppData\Local\Temp\exp002_arch_oqav7r0o\garbage.tar -> C:\Users\JAEKYU~1\AppData\Local\Temp\exp002_arch_oqav7r0o\lgarb\cloth_sim splits to extract=['ind_train', 'a060_test']
+[2026-11-04 17:46:17] ERROR cannot read archive C:\Users\JAEKYU~1\AppData\Local\Temp\exp002_arch_oqav7r0o\lgarb\_archive_tmp\garbage.tar: ReadError: file could not be opened successfully (truncated or not a tar/zip file?). Delete or rename it to fall back to copying from the mounted Drive.
+  [ok] archive: non-archive file gives a clear error (rc 3) 
+[2026-11-04 17:46:17] extract_archive: C:\Users\JAEKYU~1\AppData\Local\Temp\exp002_arch_oqav7r0o\workroot\cloth_sim_data.tar -> C:\Users\JAEKYU~1\AppData\Local\Temp\exp002_arch_oqav7r0o\linterrupt\cloth_sim splits to extract=['ind_train', 'a060_test']
+[2026-11-04 17:46:17]     ind_train: 4/4 files, 0.00 GB, 0 s (finished)
+[2026-11-04 17:46:17]   [ind_train] done: 3 episodes, 0.00 GB (source: archive)
+[2026-11-04 17:46:17]     a060_test: 4/4 files, 0.00 GB, 0 s (finished)
+[2026-11-04 17:46:17]   [a060_test] done: 3 episodes, 0.00 GB (source: archive)
+  [ok] archive: re-run after an interruption repairs short files and removes .part leftovers 
+B  synthetic cache -> Q1 (probes + 3 controls) -> H-a verdicts
+  [skipped(no torch)] attentive probe (Q1)
+[2026-11-04 17:46:18] q1 plan: kinds=['linear_pooled'] probe seeds=[0, 1] controls=['random_init_encoder', 'label_shuffle', 'mask_area_bbox_baseline'] targets=[log_nominal_area_ratio, log_frame_mask_area]
+[2026-11-04 17:46:18] q1 cell log_nominal_area_ratio|linear_pooled|dino|all|early done (0s)
+[2026-11-04 17:46:18] q1 cell log_nominal_area_ratio|linear_pooled|dino|all|late done (0s)
+[2026-11-04 17:46:19] q1 cell log_nominal_area_ratio|linear_pooled|dino|all|all done (0s)
+[2026-11-04 17:46:19] q1 cell log_nominal_area_ratio|linear_pooled|dino|all|union done (0s)
+[2026-11-04 17:46:19] q1 cell log_nominal_area_ratio|linear_pooled|dino|early|early done (0s)
+[2026-11-04 17:46:19] q1 cell log_nominal_area_ratio|linear_pooled|dino|early|late done (0s)
+[2026-11-04 17:46:19] q1 cell log_nominal_area_ratio|linear_pooled|dino|union|union done (1s)
+[2026-11-04 17:46:19] q1 cell log_nominal_area_ratio|linear_pooled|rand|all|early done (1s)
+[2026-11-04 17:46:19] q1 cell log_nominal_area_ratio|linear_pooled|rand|all|late done (1s)
+[2026-11-04 17:46:19] q1 cell log_nominal_area_ratio|linear_pooled|rand|all|all done (1s)
+[2026-11-04 17:46:19] q1 cell log_nominal_area_ratio|linear_pooled|rand|all|union done (1s)
+[2026-11-04 17:46:19] q1 cell log_nominal_area_ratio|linear_pooled|rand|early|early done (1s)
+[2026-11-04 17:46:19] q1 cell log_nominal_area_ratio|linear_pooled|rand|early|late done (1s)
+[2026-11-04 17:46:19] q1 cell log_nominal_area_ratio|linear_pooled|shuffle|all|early done (1s)
+[2026-11-04 17:46:19] q1 cell log_nominal_area_ratio|linear_pooled|shuffle|all|late done (1s)
+[2026-11-04 17:46:19] q1 cell log_nominal_area_ratio|linear_pooled|shuffle|all|all done (1s)
+[2026-11-04 17:46:19] q1 cell log_nominal_area_ratio|linear_pooled|shuffle|all|union done (1s)
+[2026-11-04 17:46:19] q1 cell log_nominal_area_ratio|linear_pooled|shuffle|early|early done (1s)
+[2026-11-04 17:46:19] q1 cell log_nominal_area_ratio|linear_pooled|shuffle|early|late done (1s)
+[2026-11-04 17:46:19] q1 cell log_nominal_area_ratio|linear_pooled|dino|f1|frame1 done (1s)
+[2026-11-04 17:46:19] q1 cell log_nominal_area_ratio|linear_pooled|dino|f2|frame2 done (1s)
+[2026-11-04 17:46:19] q1 cell log_nominal_area_ratio|linear_pooled|dino|f3|frame3 done (1s)
+[2026-11-04 17:46:20] q1 cell log_nominal_area_ratio|linear_pooled|dino|f4|frame4 done (1s)
+[2026-11-04 17:46:20] q1 cell log_nominal_area_ratio|linear_pooled|dino|f5|frame5 done (1s)
+[2026-11-04 17:46:20] q1 cell log_nominal_area_ratio|linear_pooled|dino|f6|frame6 done (1s)
+[2026-11-04 17:46:20] q1 cell log_nominal_area_ratio|linear_pooled|dino|f7|frame7 done (2s)
+[2026-11-04 17:46:20] q1 cell log_nominal_area_ratio|linear_pooled|dino|f8|frame8 done (2s)
+[2026-11-04 17:46:20] q1 cell log_nominal_area_ratio|linear_pooled|dino|f9|frame9 done (2s)
+[2026-11-04 17:46:20] q1 cell log_nominal_area_ratio|linear_pooled|dino|f10|frame10 done (2s)
+[2026-11-04 17:46:20] q1 cell log_nominal_area_ratio|linear_pooled|dino|f11|frame11 done (2s)
+[2026-11-04 17:46:20] q1 cell log_nominal_area_ratio|linear_pooled|dino|f12|frame12 done (2s)
+[2026-11-04 17:46:20] q1 cell log_nominal_area_ratio|mask_ridge|mask|all|early done (2s)
+[2026-11-04 17:46:20] q1 cell log_nominal_area_ratio|mask_ridge|mask|all|late done (2s)
+[2026-11-04 17:46:20] q1 cell log_nominal_area_ratio|mask_ridge|mask|all|all done (2s)
+[2026-11-04 17:46:21] q1 cell log_nominal_area_ratio|mask_ridge|mask|all|union done (2s)
+[2026-11-04 17:46:21] q1 cell log_nominal_area_ratio|mask_ridge|mask|early|early done (2s)
+[2026-11-04 17:46:21] q1 cell log_nominal_area_ratio|mask_ridge|mask|early|late done (2s)
+[2026-11-04 17:46:21] q1 cell log_nominal_area_ratio|mask_ridge|mask|union|union done (2s)
+[2026-11-04 17:46:21] q1 cell log_frame_mask_area|linear_pooled|dino|all|early done (3s)
+[2026-11-04 17:46:21] q1 cell log_frame_mask_area|linear_pooled|dino|all|late done (3s)
+[2026-11-04 17:46:21] q1 cell log_frame_mask_area|linear_pooled|dino|all|all done (3s)
+[2026-11-04 17:46:21] q1 cell log_frame_mask_area|linear_pooled|dino|all|union done (3s)
+[2026-11-04 17:46:21] q1 cell log_frame_mask_area|linear_pooled|dino|early|early done (3s)
+[2026-11-04 17:46:21] q1 cell log_frame_mask_area|linear_pooled|dino|early|late done (3s)
+[2026-11-04 17:46:21] q1 cell log_frame_mask_area|linear_pooled|dino|union|union done (3s)
+[2026-11-04 17:46:21] q1 cell log_frame_mask_area|linear_pooled|rand|all|early done (3s)
+[2026-11-04 17:46:21] q1 cell log_frame_mask_area|linear_pooled|rand|all|late done (3s)
+[2026-11-04 17:46:21] q1 cell log_frame_mask_area|linear_pooled|rand|all|all done (3s)
+[2026-11-04 17:46:21] q1 cell log_frame_mask_area|linear_pooled|rand|all|union done (3s)
+[2026-11-04 17:46:21] q1 cell log_frame_mask_area|linear_pooled|rand|early|early done (3s)
+[2026-11-04 17:46:21] q1 cell log_frame_mask_area|linear_pooled|rand|early|late done (3s)
+[2026-11-04 17:46:22] q1 cell log_frame_mask_area|linear_pooled|shuffle|all|early done (3s)
+[2026-11-04 17:46:22] q1 cell log_frame_mask_area|linear_pooled|shuffle|all|late done (3s)
+[2026-11-04 17:46:22] q1 cell log_frame_mask_area|linear_pooled|shuffle|all|all done (3s)
+[2026-11-04 17:46:22] q1 cell log_frame_mask_area|linear_pooled|shuffle|all|union done (4s)
+[2026-11-04 17:46:22] q1 cell log_frame_mask_area|linear_pooled|shuffle|early|early done (4s)
+[2026-11-04 17:46:22] q1 cell log_frame_mask_area|linear_pooled|shuffle|early|late done (4s)
+[2026-11-04 17:46:22] q1 cell log_frame_mask_area|mask_ridge|mask|all|early done (4s)
+[2026-11-04 17:46:22] q1 cell log_frame_mask_area|mask_ridge|mask|all|late done (4s)
+[2026-11-04 17:46:22] q1 cell log_frame_mask_area|mask_ridge|mask|all|all done (4s)
+[2026-11-04 17:46:22] q1 cell log_frame_mask_area|mask_ridge|mask|all|union done (4s)
+[2026-11-04 17:46:22] q1 cell log_frame_mask_area|mask_ridge|mask|early|early done (4s)
+[2026-11-04 17:46:22] q1 cell log_frame_mask_area|mask_ridge|mask|early|late done (4s)
+[2026-11-04 17:46:23] q1 cell log_frame_mask_area|mask_ridge|mask|union|union done (4s)
+[2026-11-04 17:46:23] q1 done: 64 cells
+[2026-11-04 17:46:24] aggregate: 14 decision rows: {'exploratory': 1, 'not_evaluable': 3, 'pass': 2, 'pending': 8}
+  [ok] H-a [signal]: 2 rows for the probe kinds that ran 
+  [ok] H-a [signal]: all statuses == pass [('H_a:interp:linear_pooled', 'pass'), ('H_a:extrap:linear_pooled', 'pass')]
+  [ok] H-a [signal]: early_flat reported (not judged) with baseline R2 + saturation flag 
+  [ok] signal: real R2 high, shuffle control low, random-init low real 0.66 rand -0.01 base -0.03
+  [ok] label-shuffle control R2 near 0 or negative -0.678
+  [ok] results.json has CI caveat + prereg values used 
+[2026-11-04 17:46:25] aggregate: 14 decision rows: {'exploratory': 1, 'fail': 2, 'not_evaluable': 3, 'pending': 8}
+  [ok] threshold wiring: raising q1 margin to 0.99 changes status to fail 
+[2026-11-04 17:46:26] aggregate: 14 decision rows: {'exploratory': 1, 'not_evaluable': 5, 'pending': 8}
+  [ok] null margin -> not_evaluable 
+[2026-11-04 17:46:26] q1 plan: kinds=['linear_pooled'] probe seeds=[0, 1] controls=['random_init_encoder', 'label_shuffle', 'mask_area_bbox_baseline'] targets=[log_nominal_area_ratio, log_frame_mask_area]
+[2026-11-04 17:46:27] q1 cell log_nominal_area_ratio|linear_pooled|dino|all|early done (0s)
+[2026-11-04 17:46:27] q1 cell log_nominal_area_ratio|linear_pooled|dino|all|late done (0s)
+[2026-11-04 17:46:27] q1 cell log_nominal_area_ratio|linear_pooled|dino|all|all done (0s)
+[2026-11-04 17:46:27] q1 cell log_nominal_area_ratio|linear_pooled|dino|all|union done (0s)
+[2026-11-04 17:46:27] q1 cell log_nominal_area_ratio|linear_pooled|dino|early|early done (1s)
+[2026-11-04 17:46:27] q1 cell log_nominal_area_ratio|linear_pooled|dino|early|late done (1s)
+[2026-11-04 17:46:27] q1 cell log_nominal_area_ratio|linear_pooled|dino|union|union done (1s)
+[2026-11-04 17:46:27] q1 cell log_nominal_area_ratio|linear_pooled|rand|all|early done (1s)
+[2026-11-04 17:46:27] q1 cell log_nominal_area_ratio|linear_pooled|rand|all|late done (1s)
+[2026-11-04 17:46:27] q1 cell log_nominal_area_ratio|linear_pooled|rand|all|all done (1s)
+[2026-11-04 17:46:27] q1 cell log_nominal_area_ratio|linear_pooled|rand|all|union done (1s)
+[2026-11-04 17:46:28] q1 cell log_nominal_area_ratio|linear_pooled|rand|early|early done (1s)
+[2026-11-04 17:46:28] q1 cell log_nominal_area_ratio|linear_pooled|rand|early|late done (1s)
+[2026-11-04 17:46:28] q1 cell log_nominal_area_ratio|linear_pooled|shuffle|all|early done (1s)
+[2026-11-04 17:46:28] q1 cell log_nominal_area_ratio|linear_pooled|shuffle|all|late done (2s)
+[2026-11-04 17:46:28] q1 cell log_nominal_area_ratio|linear_pooled|shuffle|all|all done (2s)
+[2026-11-04 17:46:28] q1 cell log_nominal_area_ratio|linear_pooled|shuffle|all|union done (2s)
+[2026-11-04 17:46:28] q1 cell log_nominal_area_ratio|linear_pooled|shuffle|early|early done (2s)
+[2026-11-04 17:46:29] q1 cell log_nominal_area_ratio|linear_pooled|shuffle|early|late done (2s)
+[2026-11-04 17:46:29] q1 cell log_nominal_area_ratio|linear_pooled|dino|f1|frame1 done (2s)
+[2026-11-04 17:46:29] q1 cell log_nominal_area_ratio|linear_pooled|dino|f2|frame2 done (2s)
+[2026-11-04 17:46:29] q1 cell log_nominal_area_ratio|linear_pooled|dino|f3|frame3 done (2s)
+[2026-11-04 17:46:29] q1 cell log_nominal_area_ratio|linear_pooled|dino|f4|frame4 done (3s)
+[2026-11-04 17:46:29] q1 cell log_nominal_area_ratio|linear_pooled|dino|f5|frame5 done (3s)
+[2026-11-04 17:46:29] q1 cell log_nominal_area_ratio|linear_pooled|dino|f6|frame6 done (3s)
+[2026-11-04 17:46:29] q1 cell log_nominal_area_ratio|linear_pooled|dino|f7|frame7 done (3s)
+[2026-11-04 17:46:29] q1 cell log_nominal_area_ratio|linear_pooled|dino|f8|frame8 done (3s)
+[2026-11-04 17:46:29] q1 cell log_nominal_area_ratio|linear_pooled|dino|f9|frame9 done (3s)
+[2026-11-04 17:46:29] q1 cell log_nominal_area_ratio|linear_pooled|dino|f10|frame10 done (3s)
+[2026-11-04 17:46:29] q1 cell log_nominal_area_ratio|linear_pooled|dino|f11|frame11 done (3s)
+[2026-11-04 17:46:29] q1 cell log_nominal_area_ratio|linear_pooled|dino|f12|frame12 done (3s)
+[2026-11-04 17:46:30] q1 cell log_nominal_area_ratio|mask_ridge|mask|all|early done (3s)
+[2026-11-04 17:46:30] q1 cell log_nominal_area_ratio|mask_ridge|mask|all|late done (3s)
+[2026-11-04 17:46:30] q1 cell log_nominal_area_ratio|mask_ridge|mask|all|all done (3s)
+[2026-11-04 17:46:30] q1 cell log_nominal_area_ratio|mask_ridge|mask|all|union done (3s)
+[2026-11-04 17:46:30] q1 cell log_nominal_area_ratio|mask_ridge|mask|early|early done (3s)
+[2026-11-04 17:46:30] q1 cell log_nominal_area_ratio|mask_ridge|mask|early|late done (3s)
+[2026-11-04 17:46:30] q1 cell log_nominal_area_ratio|mask_ridge|mask|union|union done (3s)
+[2026-11-04 17:46:30] q1 cell log_frame_mask_area|linear_pooled|dino|all|early done (4s)
+[2026-11-04 17:46:30] q1 cell log_frame_mask_area|linear_pooled|dino|all|late done (4s)
+[2026-11-04 17:46:30] q1 cell log_frame_mask_area|linear_pooled|dino|all|all done (4s)
+[2026-11-04 17:46:30] q1 cell log_frame_mask_area|linear_pooled|dino|all|union done (4s)
+[2026-11-04 17:46:30] q1 cell log_frame_mask_area|linear_pooled|dino|early|early done (4s)
+[2026-11-04 17:46:30] q1 cell log_frame_mask_area|linear_pooled|dino|early|late done (4s)
+[2026-11-04 17:46:30] q1 cell log_frame_mask_area|linear_pooled|dino|union|union done (4s)
+[2026-11-04 17:46:30] q1 cell log_frame_mask_area|linear_pooled|rand|all|early done (4s)
+[2026-11-04 17:46:30] q1 cell log_frame_mask_area|linear_pooled|rand|all|late done (4s)
+[2026-11-04 17:46:30] q1 cell log_frame_mask_area|linear_pooled|rand|all|all done (4s)
+[2026-11-04 17:46:31] q1 cell log_frame_mask_area|linear_pooled|rand|all|union done (4s)
+[2026-11-04 17:46:31] q1 cell log_frame_mask_area|linear_pooled|rand|early|early done (4s)
+[2026-11-04 17:46:31] q1 cell log_frame_mask_area|linear_pooled|rand|early|late done (4s)
+[2026-11-04 17:46:31] q1 cell log_frame_mask_area|linear_pooled|shuffle|all|early done (4s)
+[2026-11-04 17:46:31] q1 cell log_frame_mask_area|linear_pooled|shuffle|all|late done (4s)
+[2026-11-04 17:46:31] q1 cell log_frame_mask_area|linear_pooled|shuffle|all|all done (4s)
+[2026-11-04 17:46:31] q1 cell log_frame_mask_area|linear_pooled|shuffle|all|union done (4s)
+[2026-11-04 17:46:31] q1 cell log_frame_mask_area|linear_pooled|shuffle|early|early done (4s)
+[2026-11-04 17:46:31] q1 cell log_frame_mask_area|linear_pooled|shuffle|early|late done (4s)
+[2026-11-04 17:46:31] q1 cell log_frame_mask_area|mask_ridge|mask|all|early done (5s)
+[2026-11-04 17:46:31] q1 cell log_frame_mask_area|mask_ridge|mask|all|late done (5s)
+[2026-11-04 17:46:31] q1 cell log_frame_mask_area|mask_ridge|mask|all|all done (5s)
+[2026-11-04 17:46:31] q1 cell log_frame_mask_area|mask_ridge|mask|all|union done (5s)
+[2026-11-04 17:46:31] q1 cell log_frame_mask_area|mask_ridge|mask|early|early done (5s)
+[2026-11-04 17:46:31] q1 cell log_frame_mask_area|mask_ridge|mask|early|late done (5s)
+[2026-11-04 17:46:31] q1 cell log_frame_mask_area|mask_ridge|mask|union|union done (5s)
+[2026-11-04 17:46:32] q1 done: 64 cells
+[2026-11-04 17:46:33] aggregate: 14 decision rows: {'exploratory': 1, 'fail': 2, 'not_evaluable': 3, 'pending': 8}
+  [ok] H-a [no_signal]: 2 rows for the probe kinds that ran 
+  [ok] H-a [no_signal]: all statuses == fail [('H_a:interp:linear_pooled', 'fail'), ('H_a:extrap:linear_pooled', 'fail')]
+  [ok] H-a [no_signal]: early_flat reported (not judged) with baseline R2 + saturation flag 
+[2026-11-04 17:46:33] q1 plan: kinds=['linear_pooled'] probe seeds=[0, 1] controls=['random_init_encoder', 'label_shuffle', 'mask_area_bbox_baseline'] targets=[log_nominal_area_ratio, log_frame_mask_area]
+[2026-11-04 17:46:33] q1 cell log_nominal_area_ratio|linear_pooled|dino|all|early done (0s)
+[2026-11-04 17:46:33] q1 cell log_nominal_area_ratio|linear_pooled|dino|all|late done (0s)
+[2026-11-04 17:46:33] q1 cell log_nominal_area_ratio|linear_pooled|dino|all|all done (0s)
+[2026-11-04 17:46:33] q1 cell log_nominal_area_ratio|linear_pooled|dino|all|union done (0s)
+[2026-11-04 17:46:33] q1 cell log_nominal_area_ratio|linear_pooled|dino|early|early done (0s)
+[2026-11-04 17:46:33] q1 cell log_nominal_area_ratio|linear_pooled|dino|early|late done (0s)
+[2026-11-04 17:46:33] q1 cell log_nominal_area_ratio|linear_pooled|dino|union|union done (0s)
+[2026-11-04 17:46:33] q1 cell log_nominal_area_ratio|linear_pooled|rand|all|early done (0s)
+[2026-11-04 17:46:33] q1 cell log_nominal_area_ratio|linear_pooled|rand|all|late done (0s)
+[2026-11-04 17:46:33] q1 cell log_nominal_area_ratio|linear_pooled|rand|all|all done (0s)
+[2026-11-04 17:46:33] q1 cell log_nominal_area_ratio|linear_pooled|rand|all|union done (0s)
+[2026-11-04 17:46:33] q1 cell log_nominal_area_ratio|linear_pooled|rand|early|early done (0s)
+[2026-11-04 17:46:33] q1 cell log_nominal_area_ratio|linear_pooled|rand|early|late done (0s)
+[2026-11-04 17:46:34] q1 cell log_nominal_area_ratio|linear_pooled|shuffle|all|early done (0s)
+[2026-11-04 17:46:34] q1 cell log_nominal_area_ratio|linear_pooled|shuffle|all|late done (1s)
+[2026-11-04 17:46:34] q1 cell log_nominal_area_ratio|linear_pooled|shuffle|all|all done (1s)
+[2026-11-04 17:46:34] q1 cell log_nominal_area_ratio|linear_pooled|shuffle|all|union done (1s)
+[2026-11-04 17:46:34] q1 cell log_nominal_area_ratio|linear_pooled|shuffle|early|early done (1s)
+[2026-11-04 17:46:34] q1 cell log_nominal_area_ratio|linear_pooled|shuffle|early|late done (1s)
+[2026-11-04 17:46:34] q1 cell log_nominal_area_ratio|linear_pooled|dino|f1|frame1 done (1s)
+[2026-11-04 17:46:34] q1 cell log_nominal_area_ratio|linear_pooled|dino|f2|frame2 done (1s)
+[2026-11-04 17:46:34] q1 cell log_nominal_area_ratio|linear_pooled|dino|f3|frame3 done (1s)
+[2026-11-04 17:46:34] q1 cell log_nominal_area_ratio|linear_pooled|dino|f4|frame4 done (1s)
+[2026-11-04 17:46:34] q1 cell log_nominal_area_ratio|linear_pooled|dino|f5|frame5 done (1s)
+[2026-11-04 17:46:34] q1 cell log_nominal_area_ratio|linear_pooled|dino|f6|frame6 done (1s)
+[2026-11-04 17:46:34] q1 cell log_nominal_area_ratio|linear_pooled|dino|f7|frame7 done (1s)
+[2026-11-04 17:46:34] q1 cell log_nominal_area_ratio|linear_pooled|dino|f8|frame8 done (1s)
+[2026-11-04 17:46:34] q1 cell log_nominal_area_ratio|linear_pooled|dino|f9|frame9 done (1s)
+[2026-11-04 17:46:34] q1 cell log_nominal_area_ratio|linear_pooled|dino|f10|frame10 done (1s)
+[2026-11-04 17:46:34] q1 cell log_nominal_area_ratio|linear_pooled|dino|f11|frame11 done (1s)
+[2026-11-04 17:46:34] q1 cell log_nominal_area_ratio|linear_pooled|dino|f12|frame12 done (1s)
+[2026-11-04 17:46:34] q1 cell log_nominal_area_ratio|mask_ridge|mask|all|early done (1s)
+[2026-11-04 17:46:34] q1 cell log_nominal_area_ratio|mask_ridge|mask|all|late done (1s)
+[2026-11-04 17:46:34] q1 cell log_nominal_area_ratio|mask_ridge|mask|all|all done (1s)
+[2026-11-04 17:46:34] q1 cell log_nominal_area_ratio|mask_ridge|mask|all|union done (1s)
+[2026-11-04 17:46:34] q1 cell log_nominal_area_ratio|mask_ridge|mask|early|early done (1s)
+[2026-11-04 17:46:34] q1 cell log_nominal_area_ratio|mask_ridge|mask|early|late done (1s)
+[2026-11-04 17:46:34] q1 cell log_nominal_area_ratio|mask_ridge|mask|union|union done (1s)
+[2026-11-04 17:46:34] q1 cell log_frame_mask_area|linear_pooled|dino|all|early done (1s)
+[2026-11-04 17:46:34] q1 cell log_frame_mask_area|linear_pooled|dino|all|late done (1s)
+[2026-11-04 17:46:34] q1 cell log_frame_mask_area|linear_pooled|dino|all|all done (1s)
+[2026-11-04 17:46:34] q1 cell log_frame_mask_area|linear_pooled|dino|all|union done (1s)
+[2026-11-04 17:46:34] q1 cell log_frame_mask_area|linear_pooled|dino|early|early done (1s)
+[2026-11-04 17:46:34] q1 cell log_frame_mask_area|linear_pooled|dino|early|late done (1s)
+[2026-11-04 17:46:34] q1 cell log_frame_mask_area|linear_pooled|dino|union|union done (1s)
+[2026-11-04 17:46:34] q1 cell log_frame_mask_area|linear_pooled|rand|all|early done (1s)
+[2026-11-04 17:46:35] q1 cell log_frame_mask_area|linear_pooled|rand|all|late done (1s)
+[2026-11-04 17:46:35] q1 cell log_frame_mask_area|linear_pooled|rand|all|all done (2s)
+[2026-11-04 17:46:35] q1 cell log_frame_mask_area|linear_pooled|rand|all|union done (2s)
+[2026-11-04 17:46:35] q1 cell log_frame_mask_area|linear_pooled|rand|early|early done (2s)
+[2026-11-04 17:46:35] q1 cell log_frame_mask_area|linear_pooled|rand|early|late done (2s)
+[2026-11-04 17:46:35] q1 cell log_frame_mask_area|linear_pooled|shuffle|all|early done (2s)
+[2026-11-04 17:46:35] q1 cell log_frame_mask_area|linear_pooled|shuffle|all|late done (2s)
+[2026-11-04 17:46:35] q1 cell log_frame_mask_area|linear_pooled|shuffle|all|all done (2s)
+[2026-11-04 17:46:35] q1 cell log_frame_mask_area|linear_pooled|shuffle|all|union done (2s)
+[2026-11-04 17:46:35] q1 cell log_frame_mask_area|linear_pooled|shuffle|early|early done (2s)
+[2026-11-04 17:46:35] q1 cell log_frame_mask_area|linear_pooled|shuffle|early|late done (2s)
+[2026-11-04 17:46:35] q1 cell log_frame_mask_area|mask_ridge|mask|all|early done (2s)
+[2026-11-04 17:46:35] q1 cell log_frame_mask_area|mask_ridge|mask|all|late done (2s)
+[2026-11-04 17:46:35] q1 cell log_frame_mask_area|mask_ridge|mask|all|all done (2s)
+[2026-11-04 17:46:35] q1 cell log_frame_mask_area|mask_ridge|mask|all|union done (2s)
+[2026-11-04 17:46:35] q1 cell log_frame_mask_area|mask_ridge|mask|early|early done (2s)
+[2026-11-04 17:46:35] q1 cell log_frame_mask_area|mask_ridge|mask|early|late done (2s)
+[2026-11-04 17:46:35] q1 cell log_frame_mask_area|mask_ridge|mask|union|union done (2s)
+[2026-11-04 17:46:35] q1 done: 64 cells
+[2026-11-04 17:46:36] aggregate: 14 decision rows: {'exploratory': 1, 'not_evaluable': 5, 'pending': 8}
+  [ok] H-a [saturated_baseline]: 2 rows for the probe kinds that ran 
+  [ok] H-a [saturated_baseline]: all statuses == not_evaluable [('H_a:interp:linear_pooled', 'not_evaluable'), ('H_a:extrap:linear_pooled', 'not_evaluable')]
+  [ok] H-a [saturated_baseline]: early_flat reported (not judged) with baseline R2 + saturation flag 
+C  H-b verdict logic on synthetic Q2 cells
+[2026-11-04 17:46:38] aggregate: 14 decision rows: {'decided': 1, 'exploratory': 1, 'not_evaluable': 2, 'pass': 4, 'pending': 6}
+  [ok] H-b [preserved]: statuses == pass [('H_b:last_block', 'pass', 0.005), ('H_b:last_rollout_step', 'pass', 0.031)]
+[2026-11-04 17:46:39] aggregate: 14 decision rows: {'decided': 1, 'exploratory': 1, 'fail': 2, 'not_evaluable': 2, 'pass': 2, 'pending': 6}
+  [ok] threshold wiring: q2.drop_threshold=-0.5 flips H-b to fail 
+[2026-11-04 17:46:40] aggregate: 14 decision rows: {'decided': 1, 'exploratory': 1, 'not_evaluable': 4, 'pass': 2, 'pending': 6}
+  [ok] null q2.drop_threshold -> not_evaluable 
+[2026-11-04 17:46:42] aggregate: 14 decision rows: {'decided': 1, 'exploratory': 1, 'fail': 2, 'not_evaluable': 2, 'pass': 2, 'pending': 6}
+  [ok] H-b [destroyed]: statuses == fail [('H_b:last_block', 'fail', 0.984), ('H_b:last_rollout_step', 'fail', 1.02)]
+[2026-11-04 17:46:43] aggregate: 14 decision rows: {'decided': 1, 'exploratory': 1, 'fail': 2, 'not_evaluable': 2, 'pass': 2, 'pending': 6}
+  [ok] cond (a) vs (b) is 'pending' when (a) results are missing 
+[2026-11-04 17:46:45] aggregate: 14 decision rows: {'decided': 1, 'exploratory': 1, 'fail': 2, 'not_evaluable': 2, 'pass': 2, 'pending': 6}
+  [ok] exploratory row has no p-value 
+D  hooks + Q3 on a toy predictor (module layout like the branch: transformer.layers[(attn, ff)], transformer.norm)
+  [skipped(no torch)] hooks / Q3 run_layer / H-c verdicts
+====================================================================================================
+selftest summary: passed=133 failed=0 skipped=3
+  skipped: resume patch applied to the pinned train.py (epoch ranges)
+  skipped: attentive probe (Q1)
+  skipped: hooks / Q3 run_layer / H-c verdicts
+(synthetic numbers are not results; skipped sub-tests were NOT run)
