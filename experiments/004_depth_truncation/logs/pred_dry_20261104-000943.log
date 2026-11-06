@@ -1,0 +1,3 @@
+[2026-11-04 00:09:43] log file: /home/jaekyungkim/mylab/experiments/004_depth_truncation/logs/pred_dry_20261104-000943.log
+[2026-11-04 00:09:43] stage=pred dry_run=True python=/tmp/claude-1000/-home-jaekyungkim-mylab/946c4814-b78e-43b8-b219-56c1dae9dbd6/scratchpad/venv/bin/python conda_env=base pilot=True
+[2026-11-04 00:09:43] pred plan: 002 runs (condition multi_60_ind_160) seeds=[0, 1, 2] controls=['real', 'random_init'] num_hist=1 feature_part=z_only rollout_steps=[1, 4, 8] ; tmp disk about 26 GB per run (assumes 6 blocks, 'real' control) ; hidden probe fits per run = (blocks+1) x kinds x probe seeds x (1 + label_shuffle) ; exp1-probe fits = kinds x probe seeds

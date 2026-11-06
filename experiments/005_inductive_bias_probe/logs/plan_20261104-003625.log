@@ -1,0 +1,13 @@
+[2026-11-04 00:36:25] log file: /home/jaekyungkim/mylab/experiments/005_inductive_bias_probe/logs/plan_20261104-003625.log
+[2026-11-04 00:36:25] stage=plan dry_run=False python=/tmp/claude-1000/-home-jaekyungkim-mylab/946c4814-b78e-43b8-b219-56c1dae9dbd6/scratchpad/venv/bin/python conda_env=base pilot=True
+[2026-11-04 00:36:25] plan from /home/jaekyungkim/mylab/experiments/004_depth_truncation/results/summary.json: rows=[] hold=False layers=[] layer_subexps={} unresolved=['exp4_summary_missing'] pilot=True
+ERROR FileNotFoundError: experiment 4 summary.json not found at /home/jaekyungkim/mylab/experiments/004_depth_truncation/results/summary.json - run experiment 4 aggregate first
+Traceback (most recent call last):
+  File "/home/jaekyungkim/mylab/experiments/005_inductive_bias_probe/run.py", line 62, in main
+    S.plan_stage(cfg, paths, args.summary, dry_run=args.dry_run)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/jaekyungkim/mylab/experiments/005_inductive_bias_probe/src/exp005/stages.py", line 42, in plan_stage
+    raise FileNotFoundError("experiment 4 summary.json not found at %s - run experiment 4 aggregate first" % p)
+FileNotFoundError: experiment 4 summary.json not found at /home/jaekyungkim/mylab/experiments/004_depth_truncation/results/summary.json - run experiment 4 aggregate first
+
+FAILED. Paste the log file shown at the top (logs/).

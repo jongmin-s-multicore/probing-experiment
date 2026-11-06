@@ -1,0 +1,3 @@
+[2026-11-04 00:36:15] log file: /home/jaekyungkim/mylab/experiments/005_inductive_bias_probe/logs/tasks_dry_20261104-003615.log
+[2026-11-04 00:36:15] stage=tasks dry_run=True python=/tmp/claude-1000/-home-jaekyungkim-mylab/946c4814-b78e-43b8-b219-56c1dae9dbd6/scratchpad/venv/bin/python conda_env=base pilot=True
+[2026-11-04 00:36:15] tasks plan: eval inputs 2000 (half early / half late), 5-A tasks 100 x 100 inputs, 5-B tasks 100 x 100 inputs (sum of 3 sinusoids, f in [0.3, 1.5] cycles per unit log-area), 5-D heads 4 (labels fraction 0.01 (min 30))

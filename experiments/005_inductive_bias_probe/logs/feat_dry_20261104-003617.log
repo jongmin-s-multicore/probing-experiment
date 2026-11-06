@@ -1,0 +1,3 @@
+[2026-11-04 00:36:17] log file: /home/jaekyungkim/mylab/experiments/005_inductive_bias_probe/logs/feat_dry_20261104-003617.log
+[2026-11-04 00:36:17] stage=feat dry_run=True python=/tmp/claude-1000/-home-jaekyungkim-mylab/946c4814-b78e-43b8-b219-56c1dae9dbd6/scratchpad/venv/bin/python conda_env=base pilot=True
+[2026-11-04 00:36:17] feat plan: predictor layers ['pred_h3', 'pred_h4'] (extracted here, real + random-init predictor), encoder layers ['enc_k12', 'enc_k9'] (read from the 004 cache /home/jaekyungkim/dinowm/exp004_cache/enc)

@@ -1,0 +1,81 @@
+[2026-11-04 00:35:07] log file: /home/jaekyungkim/mylab/experiments/004_depth_truncation/logs/selftest_20261104-003507.log
+[2026-11-04 00:35:07] stage=selftest dry_run=False python=/tmp/claude-1000/-home-jaekyungkim-mylab/946c4814-b78e-43b8-b219-56c1dae9dbd6/scratchpad/venv_nt/bin/python conda_env=base pilot=True
+  [skipped(no torch)] C1/C2 torch tests
+A1 vanishing point (first depth >= threshold below the running max)
+  [ok] planted drop at depth 8 is found {'depth': 8, 'value': 0.4, 'running_max_before': 0.92, 'drop': 0.52}
+  [ok] no drop -> None 
+  [ok] slow decline: each step < 0.2 but 0.2 below the running max -> found at the first depth that reaches it 
+  [ok] boundary: drop exactly 0.2 counts, 0.199 does not 
+  [ok] NaN depths are skipped 
+  [ok] increase after a dip does not reset the running max 
+  [ok] null threshold raises ConfigNull 
+  [ok] config drop_threshold is 0.2 
+A2 summary.json: k*/m*, loss_ood_only, l_best, H-d verdicts
+  [ok] k_star = 6 (earliest over splits), per split {train:None, interp:8, extrap:6} {'train': None, 'interp': 8, 'extrap': 6}
+  [ok] m_star = 4 
+  [ok] loss_ood_only False because the predictor also loses InD 
+  [ok] pilot field carried; layers carried 
+  [ok] refine_suggestion names the interval before the drop 
+  [ok] verdict H-d supported (OoD earlier, curves separate) drop_ge_threshold_and_ood_vanish_earlier_and_curves_separate
+  [ok] encoder only: loss_ood_only True, m_star None 
+  [ok] l_best: argmax of mean(interp, extrap) R2 -> encoder depth <= 4 
+  [ok] no drop anywhere -> k*/m* null and verdict refuted(no_drop) 
+  [ok] InD and OoD curves identical -> refuted (overlap within seed sd) ind_ood_curves_overlap_within_seed_sd
+  [ok] single seed -> sd undefined -> not_evaluable {'status': 'not_evaluable', 'reason': 'seed_sd_undefined_single_seed', 'per_module': {'encoder': {'any_drop_ge_threshold': True, 'ood_vanish_earlier_than_ind': True, 'ind_vanish_depth': None, 'ood_vanish_depth_min': 6, 'curves_overlap_within_seed_sd': None, 'gap_evaluable': False}, 'predictor': {'any_drop_ge_threshold': True, 'ood_vanish_earlier_than_ind': False, 'ind_vanish_depth': 4, 'ood_vanish_depth_min': 4, 'curves_overlap_within_seed_sd': None, 'gap_evaluable': False}}}
+  [ok] null drop_threshold in config -> ConfigNull (not silently defaulted) 
+  [ok] null overlap_sd_mult -> verdict not_evaluable 
+  [ok] OoD vanishes later than InD -> refuted(ood_not_earlier) ood_vanish_not_earlier_than_ind
+  [ok] fewer than min_depths -> not_evaluable 
+A3 cell_rows (level rows use pooled-variance R2), csv round trip
+  [ok] ALL/all R2 equals direct 
+  [ok] level row R2 = 1 - MSE_level / Var_all 
+  [ok] one row per probe seed x group; seed carried 
+  [ok] csv round trip keeps r2 and empty pearson as NaN 
+  [ok] spec column names present in order ['module', 'depth', 'probe', 'fit', 'level', 'split', 'timepoint', 'seed', 'r2', 'mae', 'pearson']
+A4 pixel tokens
+  [ok] shape (n, 196, q*q*3) with q reduced to the patch size 
+  [ok] constant white image -> all ones 
+B1 planted encoder depth structure -> probes -> rows -> summary (k* recovered)
+Traceback (most recent call last):
+  File "/home/jaekyungkim/mylab/experiments/002_single_size_sweep/src/exp002/probes.py", line 33, in _torch
+    import torch
+ModuleNotFoundError: No module named 'torch'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/jaekyungkim/mylab/experiments/004_depth_truncation/src/exp004/selftest.py", line 532, in run
+    fn()
+    ~~^^
+  File "/home/jaekyungkim/mylab/experiments/004_depth_truncation/src/exp004/selftest.py", line 524, in <lambda>
+    tests = [("A1", lambda: t_first_drop(cfg)), ("A2", lambda: t_summary(cfg)), ("A3", t_rows), ("A4", t_pixels), ("B1", lambda: t_encoder_probe_planted(cfg, cfg2)),
+                                                                                                                                 ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "/home/jaekyungkim/mylab/experiments/004_depth_truncation/src/exp004/selftest.py", line 219, in t_encoder_probe_planted
+    r1 = run_case(until_ind=12, until_ood=4)
+  File "/home/jaekyungkim/mylab/experiments/004_depth_truncation/src/exp004/selftest.py", line 215, in run_case
+    allrows += S.probe_hidden(c2, ["linear_pooled", "attentive"], c2["probe"]["seeds"], F, Y[:Etr], Y[Etr:], Etr, pos, te, levels,
+               ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                              {"module": "encoder", "depth": k, "fit": "new", "train_seed": "NA"}, ctrl_name="real")
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/jaekyungkim/mylab/experiments/004_depth_truncation/src/exp004/stages.py", line 181, in probe_hidden
+    c, p = EG.fit_predict_cells(cfg2, kind, F[:Etr], Ytr_pos, F[Etr:], Yte_pos, list(range(nF)), pos_windows, seeds, shuffle_base=shuffle_base)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/jaekyungkim/mylab/experiments/002_single_size_sweep/src/exp002/evalgrid.py", line 77, in fit_predict_cells
+    h = PR.fit_predict(pk, xtr, ytr, ep_tr, [xte], s, cfg)[0]
+        ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/jaekyungkim/mylab/experiments/002_single_size_sweep/src/exp002/probes.py", line 151, in fit_predict
+    return attentive_fit_predict(Xtr, ytr, eptr, Xte_list, seed, cfg)
+  File "/home/jaekyungkim/mylab/experiments/002_single_size_sweep/src/exp002/probes.py", line 115, in attentive_fit_predict
+    torch = _torch()
+  File "/home/jaekyungkim/mylab/experiments/002_single_size_sweep/src/exp002/probes.py", line 36, in _torch
+    raise ImportError("torch is required for the attentive / mlp probes (%s)" % e)
+ImportError: torch is required for the attentive / mlp probes (No module named 'torch')
+D  Part resume, config explicitness
+  [ok] Part.done sees rows written by an earlier run (resume) 
+  [ok] fresh=True ignores old rows 
+  [ok] probe seeds explicit, 5 
+  [ok] 002 config loaded with 004 seeds/kinds override and sha recorded 
+  [ok] predictor feature_part is z_only (spec 3.2 (i)) 
+  [ok] 002 num_hist=1, frameskip=5 (확정 기록 8) 
+selftest summary: passed=36 failed=1 skipped=1
+FAILED: ['B1 (exception)']

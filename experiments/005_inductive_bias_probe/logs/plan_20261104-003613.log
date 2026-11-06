@@ -1,0 +1,3 @@
+[2026-11-04 00:36:13] log file: /home/jaekyungkim/mylab/experiments/005_inductive_bias_probe/logs/plan_20261104-003613.log
+[2026-11-04 00:36:13] stage=plan dry_run=False python=/tmp/claude-1000/-home-jaekyungkim-mylab/946c4814-b78e-43b8-b219-56c1dae9dbd6/scratchpad/venv/bin/python conda_env=base pilot=True
+[2026-11-04 00:36:13] plan from /tmp/claude-1000/-home-jaekyungkim-mylab/946c4814-b78e-43b8-b219-56c1dae9dbd6/scratchpad/ex_summary.json: rows=['m_star_only', 'loss_ood_only'] hold=False layers=['enc_k12', 'pred_h3', 'pred_h4', 'enc_k9'] layer_subexps={'enc_k12': ['5-A', '5-C'], 'pred_h3': ['5-A', '5-C'], 'pred_h4': ['5-A', '5-C'], 'enc_k9': ['5-B', '5-D']} unresolved=[] pilot=True

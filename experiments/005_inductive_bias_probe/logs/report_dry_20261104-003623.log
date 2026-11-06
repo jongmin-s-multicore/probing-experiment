@@ -1,0 +1,3 @@
+[2026-11-04 00:36:23] log file: /home/jaekyungkim/mylab/experiments/005_inductive_bias_probe/logs/report_dry_20261104-003623.log
+[2026-11-04 00:36:23] stage=report dry_run=True python=/tmp/claude-1000/-home-jaekyungkim-mylab/946c4814-b78e-43b8-b219-56c1dae9dbd6/scratchpad/venv/bin/python conda_env=base pilot=True
+[2026-11-04 00:36:23] report plan: reads results/ib_scores.csv calibration_dev.csv law_fits.csv, applies verdict rules with thresholds from config, writes REPORT.md and results.json

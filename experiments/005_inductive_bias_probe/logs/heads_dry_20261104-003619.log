@@ -1,0 +1,3 @@
+[2026-11-04 00:36:19] log file: /home/jaekyungkim/mylab/experiments/005_inductive_bias_probe/logs/heads_dry_20261104-003619.log
+[2026-11-04 00:36:19] stage=heads dry_run=True python=/tmp/claude-1000/-home-jaekyungkim-mylab/946c4814-b78e-43b8-b219-56c1dae9dbd6/scratchpad/venv/bin/python conda_env=base pilot=True
+[2026-11-04 00:36:19] heads plan: layers ['enc_k12', 'pred_h3', 'pred_h4', 'enc_k9'] ; seeds [0, 1, 2, 3, 4] ; attentive heads (ours + random-init) = 4040 ; base heads (oracle linear/MLP, area) = 3060 ; measure the first head (logged) before the full run; estimates are in README (추정)

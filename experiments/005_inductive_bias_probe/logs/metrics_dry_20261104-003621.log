@@ -1,0 +1,3 @@
+[2026-11-04 00:36:21] log file: /home/jaekyungkim/mylab/experiments/005_inductive_bias_probe/logs/metrics_dry_20261104-003621.log
+[2026-11-04 00:36:21] stage=metrics dry_run=True python=/tmp/claude-1000/-home-jaekyungkim-mylab/946c4814-b78e-43b8-b219-56c1dae9dbd6/scratchpad/venv/bin/python conda_env=base pilot=True
+[2026-11-04 00:36:21] metrics plan: layers ['enc_k12', 'pred_h3', 'pred_h4', 'enc_k9'] ; seeds [0, 1, 2, 3, 4] ; reads results/predictions/*.npz and results/tasks.npz ; writes ib_scores.csv calibration.csv calibration_dev.csv law_fits.csv

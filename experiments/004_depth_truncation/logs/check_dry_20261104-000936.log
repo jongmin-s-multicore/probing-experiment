@@ -1,0 +1,18 @@
+[2026-11-04 00:09:36] log file: /home/jaekyungkim/mylab/experiments/004_depth_truncation/logs/check_dry_20261104-000936.log
+[2026-11-04 00:09:36] stage=check dry_run=True python=/tmp/claude-1000/-home-jaekyungkim-mylab/946c4814-b78e-43b8-b219-56c1dae9dbd6/scratchpad/venv/bin/python conda_env=base pilot=True
+python executable : /tmp/claude-1000/-home-jaekyungkim-mylab/946c4814-b78e-43b8-b219-56c1dae9dbd6/scratchpad/venv/bin/python
+CONDA_DEFAULT_ENV : base
+packages          : {"torch": "2.15.0+cpu", "torchvision": null, "numpy": "2.5.4", "scipy": null, "sklearn": null, "yaml": "6.0.3", "cv2": null, "decord": null, "hydra": null, "omegaconf": null, "einops": null}
+cuda_available    : False None None
+  work       /home/jaekyungkim/dinowm exists=True
+  acwm_src   /home/jaekyungkim/dinowm/acwm_phys_src exists=False
+  train_base /home/jaekyungkim/dinowm/train_runs exists=False
+  cache002   /home/jaekyungkim/dinowm/exp002_cache exists=False
+  cache      /home/jaekyungkim/dinowm/exp004_cache exists=False
+002 Q1 cache        DONE=False
+002 Q1 cache_smoke  DONE=False
+002 run exp002_multi_60_ind_160_s0 DONE=False
+002 run exp002_multi_60_ind_160_s1 DONE=False
+002 run exp002_multi_60_ind_160_s2 DONE=False
+config002 sha256  : f1a84e82c7c8bbcc1240f695f0f3ae3c172a7ebb4427822cb5fc191ccd19925a
+train.num_hist (002) = 1 ; frameskip = 5

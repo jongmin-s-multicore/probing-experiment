@@ -1,0 +1,15 @@
+[2026-11-04 00:36:27] log file: /home/jaekyungkim/mylab/experiments/004_depth_truncation/logs/enc_probe_20261104-003627.log
+[2026-11-04 00:36:27] stage=enc_probe dry_run=False python=/tmp/claude-1000/-home-jaekyungkim-mylab/946c4814-b78e-43b8-b219-56c1dae9dbd6/scratchpad/venv/bin/python conda_env=base pilot=True
+[2026-11-04 00:36:27] enc_probe plan: k=[0, 2, 4, 6, 8, 10, 12] controls=['real', 'random_init', 'label_shuffle'] kinds=['linear_pooled', 'attentive'] probe seeds=[0, 1, 2, 3, 4] ; probe fits (linear+attentive) = 225 (+ pixel baseline, mask baseline included)
+ERROR FileNotFoundError: /home/jaekyungkim/dinowm/exp002_cache/q1_tokens/DONE missing - run `python run.py cache` first
+Traceback (most recent call last):
+  File "/home/jaekyungkim/mylab/experiments/004_depth_truncation/run.py", line 61, in main
+    S.enc_probe(cfg, cfg2, paths, suffix=args.suffix, fresh=args.fresh, dry_run=args.dry_run)
+    ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/jaekyungkim/mylab/experiments/004_depth_truncation/src/exp004/stages.py", line 198, in enc_probe
+    C = CA.load(p2, suffix)
+  File "/home/jaekyungkim/mylab/experiments/002_single_size_sweep/src/exp002/cache.py", line 101, in load
+    raise FileNotFoundError("%s/DONE missing - run `python run.py cache` first" % cd)
+FileNotFoundError: /home/jaekyungkim/dinowm/exp002_cache/q1_tokens/DONE missing - run `python run.py cache` first
+
+FAILED. Paste the log file shown at the top (logs/).

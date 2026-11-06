@@ -1,0 +1,4 @@
+[2026-11-04 00:09:38] log file: /home/jaekyungkim/mylab/experiments/004_depth_truncation/logs/enc_cache_dry_20261104-000938.log
+[2026-11-04 00:09:38] stage=enc_cache dry_run=True python=/tmp/claude-1000/-home-jaekyungkim-mylab/946c4814-b78e-43b8-b219-56c1dae9dbd6/scratchpad/venv/bin/python conda_env=base pilot=True
+[2026-11-04 00:09:38] DRY-RUN: 002 Q1 cache not found (/home/jaekyungkim/dinowm/exp002_cache/q1_tokens/DONE missing - run `python run.py cache` first); using config sizes for the estimate
+[2026-11-04 00:09:38] enc_cache plan: k_grid=[0, 2, 4, 6, 8, 10, 12] frames=[0, 1, 2, 3, 8, 9, 10, 11] episodes=1800 random_init_control=True -> /home/jaekyungkim/dinowm/exp004_cache/enc ; disk {'tokens_per_k_gb': 2.17, 'tokens_total_gb': 30.3, 'pixel_gb': 0.27}

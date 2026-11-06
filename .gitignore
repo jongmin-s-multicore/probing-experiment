@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+.venv/
+*.ckpt
+*.pt
+*.safetensors
+wandb/
+.env
+.DS_Store
+
+# papers (not tracked)
+notes/research/papers/
+*.pdf

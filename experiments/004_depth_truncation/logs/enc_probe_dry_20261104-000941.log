@@ -1,0 +1,3 @@
+[2026-11-04 00:09:41] log file: /home/jaekyungkim/mylab/experiments/004_depth_truncation/logs/enc_probe_dry_20261104-000941.log
+[2026-11-04 00:09:41] stage=enc_probe dry_run=True python=/tmp/claude-1000/-home-jaekyungkim-mylab/946c4814-b78e-43b8-b219-56c1dae9dbd6/scratchpad/venv/bin/python conda_env=base pilot=True
+[2026-11-04 00:09:41] enc_probe plan: k=[0, 2, 4, 6, 8, 10, 12] controls=['real', 'random_init', 'label_shuffle'] kinds=['linear_pooled', 'attentive'] probe seeds=[0, 1, 2, 3, 4] ; probe fits (linear+attentive) = 225 (+ pixel baseline, mask baseline included)
