@@ -1,0 +1,4 @@
+[2026-11-09 17:56:31] log file: /home/jaekyungkim/mylab/experiments/005_inductive_bias_probe/logs/heads_dry_20261109-175631.log
+[2026-11-09 17:56:31] stage=heads dry_run=True python=/home/jaekyungkim/miniconda3/envs/lab07/bin/python conda_env=lab07 pilot=True
+[2026-11-09 17:56:31] plan from /home/jaekyungkim/mylab/experiments/004_depth_truncation/results/summary.json: rows=[] hold=False layers=[] layer_subexps={} unresolved=['exp4_summary_missing'] pilot=True
+[2026-11-09 17:56:31] heads plan: layers [] ; seeds [0, 1, 2, 3, 4] ; attentive heads (ours + random-init) = 0 ; base heads (oracle linear/MLP, area) = 0 ; measure the first head (logged) before the full run; estimates are in README (추정)

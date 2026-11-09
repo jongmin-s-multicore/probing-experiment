@@ -18,6 +18,7 @@
    - 분모 `|raw_oracle - raw_ref| < normalization.min_gap`(0.05, impl default)이면 점수를 NaN 으로 쓴다(잡음 점수 방지). 이때 H-e 는 `not_evaluable`(사유 기록).
    - 대안 기준(`const`: 모든 입력에 같은 출력 -> R-IB 1, D-IB 0)을 같이 계산해 `score_alt` 열에 항상 저장하고, config `normalization.noninf.{R,D}` 로 주 점수의 기준을 바꿀 수 있다. 기본은 명세대로 `iid`. 바꾸면 결과를 보기 전에 기록한다.
    - 면적 head 와 random 모델도 같은 분모로 정규화한다. 무정보 모델 행(`noninf`)과 상수 모델 행(`const`)은 `ib_scores.csv` 에 raw 와 함께 들어간다.
+8a. **확정 기록 12 (2026-11-09, 사용자 결정, 004/005 결과 보기 전):** config `branch.exp1_negative` null -> `false`, `normalization.noninf` `{R: iid, D: iid}` -> `{R: iid, D: const}` (D-IB 는 상수 출력 기준: raw 0 이라 분모가 약 0.5, R-IB 는 i.i.d. 유지). 반대쪽 기준 점수는 `score_alt` 로 계속 저장. 다른 임계값(0.1, 0.8~1.2, min_gap 0.05, sd_mult 2.0)은 바꾸지 않았다. 위 8번의 "기본은 명세대로 iid" 문장은 이 변경 전 상태이다. 원문 App. B 식은 여전히 미확인.
 9. **OoD 의 정의.** 쌍 그룹의 InD = 학습 레벨(a060, ind, a160), OoD = 학습 레벨이 아닌 모든 레벨(보간 + 외삽; config `ib.ood_roles`). 명세는 "InD 쌍만 / OoD 하나 이상 / 둘 다 OoD" 만 말한다. 5-B 의 "외삽 레벨이 포함된 쌍" 은 외삽 역할(a026, a040, a200, a248)만(`calib.extrap_roles`, 그룹 이름 `extrap_any`).
 10. **쌍 정의.** 서로 다른 두 평가 입력의 unordered 쌍(대각 제외). 같은 episode 의 서로 다른 프레임도 "같은 크기"로 센다(명세 4.1). 쌍 수는 약 2백만이고 행렬 연산으로 계산한다.
 11. **5-C 쌍 그룹.** `D-IB_area=`, `D-IB_area≠`, `R-IB_fold` 도 pair_group 4가지(all/ind/ood_any/ood_both)별로 계산한다(CSV 열 구조를 같게). H-f 판정은 config `verdict.h_f.pair_group: all`.
@@ -47,3 +48,8 @@
 - head 수 = (5-A 과제 100 + 5-B 과제 100 + 5-D 4개) x seed 5 x 모델 2(ours, random) = 층당 약 2040 개의 attentive head, 레이어 독립 모델(oracle 2 + 면적 1)은 약 3060 개의 소형 head. 층 수는 4.6 분기에 따라 1~4 개(2~3 개가 흔함).
 - attentive head 1개: 학습 400 step(100 epoch x 4) + 평가 입력 2000개 순전파. 12GB GPU 에서 약 1.5~3초(추정) -> 층당 1~1.7시간, 층 3개면 3~5시간 + 소형 head 약 0.3시간. 첫 head 의 실측 시간이 로그에 나오므로 길면 seed 3 / 과제 50 으로 줄이고 여기에 기록한다.
 - 디스크: predictor 층 특징 파일 층당 real + random-init 각 약 2.2 GB, 평가 입력은 GPU 에 올려 둠(층당 약 0.3 GB, 학습 풀 1.1 GB).
+
+## 7. Colab 실행과 운영 변경 (2026-11-09)
+- 005 전용 노트북 없음: `../004_depth_truncation/colab/exp004_005_colab.ipynb` 가 004 다음에 005 를 실행한다. 004 CHANGES.md 7절 참고(운영 값만 추가, config 의 시드/임계값 변경 없음).
+- **코드 수정(운영, 필수):** `run.py` 의 `exp002.common.attempts_check` import 가 002 커밋 545168e 로 깨져 있어(ImportError) `src/exp005/base.py` 에 같은 동작의 `attempts_check` 를 복사했다. 재시도 상한 3회 동작은 그대로다.
+- config 변경은 8a 항목(확정 기록 12) 뿐이다.

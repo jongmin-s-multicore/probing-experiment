@@ -22,7 +22,8 @@ sys.path.insert(0, str(HERE / "src"))
 
 from exp005 import base as B  # noqa: E402
 from exp005.base import log, set_seed, ConfigNull  # noqa: E402
-from exp002.common import start_file_log, log_exception, attempts_check, attempts_record, warn_conda  # noqa: E402
+from exp002.common import start_file_log, log_exception, attempts_record, warn_conda  # noqa: E402
+from exp005.base import attempts_check  # noqa: E402
 
 
 def main():

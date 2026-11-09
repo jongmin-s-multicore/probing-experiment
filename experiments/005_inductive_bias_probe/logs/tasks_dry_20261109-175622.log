@@ -1,0 +1,4 @@
+[2026-11-09 17:56:22] log file: /home/jaekyungkim/mylab/experiments/005_inductive_bias_probe/logs/tasks_dry_20261109-175622.log
+[2026-11-09 17:56:22] stage=tasks dry_run=True python=/home/jaekyungkim/miniconda3/envs/lab07/bin/python conda_env=lab07 pilot=True
+[2026-11-09 17:56:22] plan from /home/jaekyungkim/mylab/experiments/004_depth_truncation/results/summary.json: rows=[] hold=False layers=[] layer_subexps={} unresolved=['exp4_summary_missing'] pilot=True
+[2026-11-09 17:56:22] tasks plan: eval inputs 2000 (half early / half late), 5-A tasks 100 x 100 inputs, 5-B tasks 100 x 100 inputs (sum of 3 sinusoids, f in [0.3, 1.5] cycles per unit log-area), 5-D heads 4 (labels fraction 0.01 (min 30))

@@ -1,0 +1,4 @@
+[2026-11-09 17:56:26] log file: /home/jaekyungkim/mylab/experiments/005_inductive_bias_probe/logs/feat_dry_20261109-175626.log
+[2026-11-09 17:56:26] stage=feat dry_run=True python=/home/jaekyungkim/miniconda3/envs/lab07/bin/python conda_env=lab07 pilot=True
+[2026-11-09 17:56:26] plan from /home/jaekyungkim/mylab/experiments/004_depth_truncation/results/summary.json: rows=[] hold=False layers=[] layer_subexps={} unresolved=['exp4_summary_missing'] pilot=True
+[2026-11-09 17:56:26] feat plan: predictor layers [] (extracted here, real + random-init predictor), encoder layers [] (read from the 004 cache /tmp/tmp.kZ5WGd6z15/c4/enc)

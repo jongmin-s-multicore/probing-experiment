@@ -14,7 +14,7 @@ exp4:
   summary: "../004_depth_truncation/results/summary.json"   # 4.6 분기의 입력 (experiments/005 기준 상대 경로)
   cache_suffix: ""               # 파일럿에서 부분 캐시를 쓰면 _smoke (002/004 와 같은 접미사)
 branch:
-  exp1_negative: null            # 실험 1(002 Q1) 음성 여부. 사람이 002 결과를 보고 true/false 로 채운다. null 이면 false 로 취급하고 plan.json 에 기록
+  exp1_negative: false           # 확정 기록 12, 2026-11-09 (사용자 결정, 004/005 결과 보기 전): 002 H-a 보간 pass, 실험 1 음성 아님. 이전 값 null (null 이면 false 로 취급하고 plan.json 에 기록)
 feat:
   train_seed: 0                  # 예측기 층 특징을 꺼낼 002 조건 (b) 학습 seed
   random_init_seed: 1234
@@ -60,7 +60,7 @@ head:                            # 과제당 새로 초기화. 구조는 002 pro
   batch_size: 32
   small: {steps: 400, lr: 0.02}  # oracle linear/MLP(hidden 5)
 normalization:                   # score = (raw - raw_ref) / (raw_oracle - raw_ref) (명세 4.2). 원문 App. B 와 대조 못 함 -> CHANGES.md
-  noninf: {R: iid, D: iid}       # iid = 입력과 무관한 i.i.d. Bernoulli(0.5) 예측 (명세 문구). const = 모든 입력에 같은 출력. 반대쪽 기준 점수는 score_alt 열에 항상 같이 저장
+  noninf: {R: iid, D: const}       # 확정 기록 12, 2026-11-09: 각 지표에서 분모가 정의되는 기준 (D-IB 는 iid 이면 oracle 과 raw 가 같아 분모 0, R-IB 는 const 이면 분모 0). 이전 {R: iid, D: iid}. 아래는 이전 주석:       # iid = 입력과 무관한 i.i.d. Bernoulli(0.5) 예측 (명세 문구). const = 모든 입력에 같은 출력. 반대쪽 기준 점수는 score_alt 열에 항상 같이 저장
   min_gap: 0.05                  # |raw_oracle - raw_ref| 가 이보다 작으면 score = NaN (분모가 잡음). impl default
 oracle:
   primary: "mlp"                 # 정규화와 calibration x 축에 쓰는 oracle (mlp | linear). 다른 쪽도 별도 model 이름으로 저장

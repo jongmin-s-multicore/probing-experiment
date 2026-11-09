@@ -1,0 +1,3 @@
+# Extra pip packages for 004/005 on top of 002/colab/requirements_colab.txt (operational; no pinned experiment value).
+# matplotlib: only for the optional figures of 004 aggregate / 005 metrics (both skip figures when it is missing). PySR is NOT installed (005 records pysr_not_installed).
+matplotlib

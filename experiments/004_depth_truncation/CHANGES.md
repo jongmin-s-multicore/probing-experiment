@@ -52,3 +52,9 @@
 - `enc_probe`: 225 fit(linear 포함; attentive 는 105 + pixel 10). attentive 1 fit = 7200 샘플 x 30 epoch 이므로 1 fit 15~30초(추정, 실측 필요) -> 약 0.5~1시간.
 - `pred`: 학습 seed 마다 임시 디스크 약 26 GB(6 block 가정, 'real'), 은닉 probe 140 fit (+ exp1 probe 10 fit + 88 개 집합 적용) -> seed 당 약 1~1.5시간(추정). 3 seed x (real + random-init) 약 3~4시간.
 - 합계: 파일럿 1시간 안팎, 본 실행 5~6시간(모두 추정, 실측 필요: 첫 attentive fit 시간을 로그로 확인).
+
+## 7. Colab 노트북 (2026-11-09, 운영 변경만; 실험 값 변경 없음)
+- 추가: `colab/exp004_005_colab.ipynb`(004 -> 005), `colab/build_notebook.py`(노트북 생성, 코드 스냅샷 내장), `colab/exp045_tools.py`(표준 라이브러리만: stage 실행 + 시간/VRAM 기록, 입력 점검, 링크, tar 보관, 비용 투영), `colab/requirements_colab_extra.txt`(matplotlib). 002 `colab_tools.py`/`requirements_colab.txt` 는 수정 없이 스냅샷에 복사해 사용(요구 파일).
+- **코드 수정(운영, 필수): `run.py` 가 `exp002.common.attempts_check` 를 import 했는데 002 의 커밋 545168e("stop attempts.json refusing runs")가 그 함수를 삭제해 004/005 `run.py` 가 ImportError 로 시작하지 못했다**(셀프테스트도 실패). 002 를 건드리지 않고 `src/exp004/base.py`, `src/exp005/base.py` 에 같은 동작(`run.max_attempts` 도달 시 RuntimeError, `<results_dir>/attempts.json` 기록은 그대로 `exp002.common.attempts_record`)의 `attempts_check` 를 복사하고 `run.py` 가 거기서 import 한다. 재시도 상한 3회 동작은 그대로다.
+- 운영 값(config.yaml 이 아니라 노트북/환경변수): 경로(`exp002_work`, `exp004_work`, `exp005_work`, `/content/main|pilot`), 파일럿 suffix `_smoke`, `--results-dir`(파일럿 `results_pilot`). config.yaml 의 시드와 임계값은 변하지 않았다(004). 파일럿 결과와 본 결과는 폴더, 캐시 루트, suffix 가 모두 분리된다.
+- 검증(이 머신, CPU): 노트북 JSON 유효성(nbformat), 코드 셀 문법, `exp045_tools.py selftest`, 004/005 selftest, 모든 단계 `--dry-run`. 미검증: 노트북의 모든 셀(Colab 실행 없음), 002 `download`/`cache` 호출 경로, VRAM 샘플링(nvidia-smi 전체 GPU 사용량 폴링, 최대값은 샘플링 하한), tar 보관 셀의 대용량 동작.

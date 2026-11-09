@@ -23,6 +23,20 @@ cget = C2.cget
 set_seed = C2.set_seed
 
 
+def attempts_check(cfg, paths, key):
+    """Retry guard (CLAUDE.md: max 3). exp002.common.attempts_check was removed in 002 commit 545168e, so it is kept here with the same behaviour:
+    returns the consecutive failures recorded for key in <results_dir>/attempts.json, raises when cfg run.max_attempts is reached.
+    Recording stays exp002.common.attempts_record."""
+    p = paths["results_dir"] / "attempts.json"
+    d = C2.read_json(p) if p.exists() else {}
+    n = int(d.get(key, 0))
+    mx = int(cfg["run"]["max_attempts"])
+    if n >= mx:
+        raise RuntimeError("%s failed %d times in a row (limit %d, CLAUDE.md). Stop and report the cause from logs/. "
+                           "A human may delete the entry in %s to allow another try." % (key, n, mx, p))
+    return n
+
+
 def load_config(path=None):
     """Own config (strict loader: duplicate YAML keys are an error)."""
     return C2.load_config(Path(path) if path else EXP_DIR / "config.yaml")
