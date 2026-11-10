@@ -1,0 +1,5 @@
+[2026-11-09 12:45:44] log file: /content/mylab/experiments/005_inductive_bias_probe/logs/report_20261109-124544.log
+[2026-11-09 12:45:44] stage=report dry_run=False python=/content/venv/bin/python conda_env=None pilot=True
+[2026-11-09 12:45:44] WARNING: CONDA_DEFAULT_ENV is empty - not running inside an activated conda environment (python=/content/venv/bin/python). Continuing.
+[2026-11-09 12:45:44] report plan: reads results/ib_scores.csv calibration_dev.csv law_fits.csv, applies verdict rules with thresholds from config, writes REPORT.md and results.json
+[2026-11-09 12:45:45] report done

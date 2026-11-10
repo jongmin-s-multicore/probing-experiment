@@ -1,0 +1,71 @@
+[2026-11-10 16:06:45] log file: /home/jaekyungkim/mylab/experiments/009_positive_control_depth/logs/selftest_20261110-160645.log
+[2026-11-10 16:06:45] stage=selftest dry_run=False python=/home/jaekyungkim/miniconda3/envs/lab07/bin/python conda_env=base pilot=True
+A  eraser algebra (numpy)
+  [ok] leace_scalar: after alpha=1 the covariance of every coordinate with the label is ~0 (9.5e-16 vs 1.8 before)
+  [ok] leace_scalar: best linear probe on the erased features explains ~0 of the variance (in-sample R2 < 0.05) (R2 0.000)
+  [ok] leace_scalar: alpha=0.5 is the midpoint of alpha=0 and alpha=1 
+  [ok] leace_scalar: alpha=0 is identity 
+  [ok] probe_direction: component along u is zero after alpha=1 
+  [ok] probe_direction: other coordinates still carry size info (in-sample linear R2 > 0.3) -> weaker than leace (R2 0.390)
+  [ok] probe_direction: alpha=0.5 is the midpoint of alpha=0 and alpha=1 
+  [ok] probe_direction: alpha=0 is identity 
+  [ok] constant labels in the fit set raise 
+  [ok] unknown method raises 
+B  units, resume, shared baseline, override, verdicts
+  [ok] units: 3 baselines (one per train seed, shared by all blocks) + 3 blocks x 3 strengths x 3 seeds = 30 
+  [ok] part file names distinct for every unit 
+  [ok] unit_done recognises finished units only 
+  [ok] a single-block list needs 1/3 of the intervention units 
+  [ok] default m_int [1,3,5] from config, not overridden 
+  [ok] CLI override sorted, recorded as overridden (source cli) 
+  [ok] env override recorded (source env) 
+  [ok] CLI value equal to config is not 'overridden' 
+  [ok] verdict: 2 of 3 seeds with m* <= m_int+1 -> criterion_met 
+  [ok] verdict: m* = m_int+2 does not count 
+  [ok] verdict: no detection -> criterion_not_met 
+  [ok] detect uses 004's first_drop (0.2 below running max) 
+  [ok] m_star = earliest vanishing depth over splits 
+D  config explicitness
+  [ok] m_int is a list default [1,3,5]; strengths include 0 
+  [ok] seeds explicit (train seeds, probe seeds, fit seed, global) 
+  [ok] decision rule equals 004 config (threshold 0.2, primary) 
+  [ok] success rule: strength 1.0, 2 seeds, slack 1 
+C  toy world model: forward with intervention, extraction, probes, per-block verdict end to end
+  [ok] torch erase_stream == numpy reference; action coordinates untouched 
+  [ok] torch probe_direction erase removes the u component 
+  [ok] forward_hidden(no erase) == exp004.deep.ee_forward at every depth; alpha=0 is the same 
+  [ok] intervention at m_int=3 leaves h_0..h_2 unchanged and changes h_3 and later 
+[2026-11-10 16:06:46] s0 base extract 16/138 (0s)
+[2026-11-10 16:06:50] s0 baseline done (546 rows)
+[2026-11-10 16:06:51] s0 m_int 2: direction fitted on 24 fit episodes (192 samples), corr(a.x, y) on fit data 0.998
+[2026-11-10 16:06:51] s0 m2 a0.5 extract 16/138 (0s)
+[2026-11-10 16:06:54] s0 m_int 2 alpha 0.5 done (390 rows)
+[2026-11-10 16:06:54] s0 m2 a1 extract 16/138 (0s)
+[2026-11-10 16:06:58] s0 m_int 2 alpha 1 done (390 rows)
+[2026-11-10 16:06:59] s0 m_int 4: direction fitted on 24 fit episodes (192 samples), corr(a.x, y) on fit data 0.998
+[2026-11-10 16:06:59] s0 m4 a0.5 extract 16/138 (0s)
+[2026-11-10 16:07:01] s0 m_int 4 alpha 0.5 done (234 rows)
+[2026-11-10 16:07:01] s0 m4 a1 extract 16/138 (0s)
+[2026-11-10 16:07:04] s0 m_int 4 alpha 1 done (234 rows)
+  [ok] run_seed wrote 1 baseline + 2 blocks x 2 strengths = 5 part files (baseline shared across blocks) ['base_s0.csv', 'unit_m2_a0p5_s0.csv', 'unit_m2_a1_s0.csv', 'unit_m4_a0p5_s0.csv', 'unit_m4_a1_s0.csv']
+  [ok] resume: nothing left to do after a full run 
+  [ok] resume: part files untouched on a second call 
+[2026-11-10 16:07:04] s0 m4 a0.5 extract 16/138 (0s)
+[2026-11-10 16:07:06] s0 m_int 4 alpha 0.5 done (234 rows)
+  [ok] resume: only the deleted unit is recomputed 
+[2026-11-10 16:07:06] aggregate: m_int [2, 4] (source config, overridden=False), strengths [0.0, 0.5, 1.0], train seeds [0]
+[2026-11-10 16:07:08] aggregate done: {'2': 'criterion_met', '4': 'criterion_met'}
+  [ok] toy: erasing at block 2 with alpha=1 -> 004 rule fires at m* <= 3 (criterion_met) {'0': 2}
+  [ok] toy: baseline (alpha=0) shows no 0.2 drop (m* None) 
+  [ok] toy: erasing at block 4 with alpha=1 -> 004 rule fires at m* <= 5 (criterion_met) {'0': 4}
+  [ok] toy: baseline (alpha=0) shows no 0.2 drop (m* None) 
+  [FAIL] toy: R2 at depth m_int decreases monotonically with strength (0 > 0.5 > 1) (1.00 1.00 -0.02)
+  [ok] toy: depths below m_int are identical to the baseline at every strength 
+  [ok] results.json records m_int_config / m_int_used / m_int_overridden and interpretation null 
+  [FAIL] diagnostic: readout correlation after erasure on held-out episodes is much smaller than before {'corr_readout_fit_episodes_pre': 0.998, 'corr_readout_after_train_heldout': 0.581, 'corr_readout_after_test': 0.536}
+[2026-11-10 16:07:08] aggregate: m_int [2, 4] (source config, overridden=False), strengths [0.0, 0.5, 1.0], train seeds [0]
+[2026-11-10 16:07:08] aggregate done: {'2': 'not_evaluable', '4': 'criterion_met'}
+  [ok] missing unit at the success strength -> that block not_evaluable (other block unaffected) 
+  [ok] direction-fit episodes are a subset of the train split (evaluation episodes never used) 
+selftest summary: passed=43 failed=2 skipped=0
+FAILED: ['toy: R2 at depth m_int decreases monotonically with strength (0 > 0.5 > 1)', 'diagnostic: readout correlation after erasure on held-out episodes is much smaller than before']

@@ -14,6 +14,8 @@ def _axis(rows, prim):
 
 
 def make(rows, cfg, cfg2, outdir):
+    import os
+    os.environ["MPLBACKEND"] = "Agg"      # unconditional: a kernel-inherited backend (module://matplotlib_inline...) is invalid outside the kernel; figures are only saved to files
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt

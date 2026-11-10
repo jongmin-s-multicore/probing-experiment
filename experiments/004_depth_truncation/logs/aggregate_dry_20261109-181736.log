@@ -1,0 +1,3 @@
+[2026-11-09 18:17:36] log file: /home/jaekyungkim/mylab/experiments/004_depth_truncation/logs/aggregate_dry_20261109-181736.log
+[2026-11-09 18:17:36] stage=aggregate dry_run=True python=/home/jaekyungkim/miniconda3/envs/lab07/bin/python conda_env=lab07 pilot=True
+[2026-11-09 18:17:36] aggregate: 0 part files ([])

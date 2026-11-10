@@ -28,8 +28,16 @@ Q1_FILES = ("frames_u8.npy", "tokens_dino.npy", "tokens_rand.npy", "mask_feat.np
 
 
 # ------------------------------------------------------------------------------------------ shell / stage runner
+def force_mpl_agg(env=None):
+    """Copy of env (default os.environ) with MPLBACKEND=Agg forced, whatever value was inherited."""
+    e = dict(os.environ if env is None else env)
+    e["MPLBACKEND"] = "Agg"
+    return e
+
+
 def sh(cmd, cwd=None, env=None):
     """Run a shell command, stream its output into the cell, return the exit code."""
+    env = force_mpl_agg(env)
     p = subprocess.Popen(cmd, shell=True, cwd=cwd, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1)
     for line in p.stdout:
         print(line, end="")
@@ -69,6 +77,7 @@ def run_stage(py, exp_dir, stage, args, env, timing_file=None, label=None, sampl
     Returns the record dict (rc != 0 is NOT raised here: use require_ok)."""
     cmd = [py, "-u", "run.py", stage] + list(args)
     print("$ (cd %s && %s)" % (exp_dir, " ".join(cmd)), flush=True)
+    env = force_mpl_agg(env)          # the Colab kernel exports MPLBACKEND=module://matplotlib_inline..., invalid in the py3.9 venv
     sampler = VramSampler() if sample_vram else None
     if sampler:
         sampler.start()
@@ -414,6 +423,7 @@ def selftest():
     pr = project_004({"enc_cache": 100, "enc_probe": 200, "pred": 300, "aggregate": 5}, 300, 1800)
     check("project_004 scales by episodes and seeds", pr["enc_cache"] == 600 and pr["enc_probe"] == 1200 and pr["pred"] == 5400 and pr["aggregate"] == 5)
     check("project_005", project_005(2.0, 100)["heads_total_s"] == 200)
+    check("force_mpl_agg overrides an inherited backend", force_mpl_agg({"MPLBACKEND": "module://x"})["MPLBACKEND"] == "Agg")
     check("hms", hms(5400) == "1h30m")
     print("exp045_tools selftest: passed=%d failed=%d" % (n_ok, n_bad))
     return 0 if n_bad == 0 else 1

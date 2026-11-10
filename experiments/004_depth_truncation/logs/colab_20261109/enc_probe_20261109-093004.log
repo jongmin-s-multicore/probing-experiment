@@ -1,0 +1,26 @@
+[2026-11-09 09:30:04] log file: /content/mylab/experiments/004_depth_truncation/logs/enc_probe_20261109-093004.log
+[2026-11-09 09:30:04] stage=enc_probe dry_run=False python=/content/venv/bin/python conda_env=None pilot=True
+[2026-11-09 09:30:04] WARNING: CONDA_DEFAULT_ENV is empty - not running inside an activated conda environment (python=/content/venv/bin/python). Continuing.
+[2026-11-09 09:30:04] enc_probe plan: k=[0, 2, 4, 6, 8, 10, 12] controls=['real', 'random_init', 'label_shuffle'] kinds=['linear_pooled', 'attentive'] probe seeds=[0, 1, 2, 3, 4] ; probe fits (linear+attentive) = 225 (+ pixel baseline, mask baseline included)
+[2026-11-09 09:31:04] enc_probe k=0 control=real done (60s)
+[2026-11-09 09:32:01] enc_probe k=0 control=random_init done (117s)
+[2026-11-09 09:32:56] enc_probe k=0 control=label_shuffle done (172s)
+[2026-11-09 09:33:53] enc_probe k=2 control=real done (229s)
+[2026-11-09 09:34:51] enc_probe k=2 control=random_init done (287s)
+[2026-11-09 09:35:48] enc_probe k=2 control=label_shuffle done (344s)
+[2026-11-09 09:36:46] enc_probe k=4 control=real done (402s)
+[2026-11-09 09:37:46] enc_probe k=4 control=random_init done (462s)
+[2026-11-09 09:38:41] enc_probe k=4 control=label_shuffle done (517s)
+[2026-11-09 09:39:43] enc_probe k=6 control=real done (578s)
+[2026-11-09 09:40:43] enc_probe k=6 control=random_init done (639s)
+[2026-11-09 09:41:39] enc_probe k=6 control=label_shuffle done (695s)
+[2026-11-09 09:42:41] enc_probe k=8 control=real done (756s)
+[2026-11-09 09:43:43] enc_probe k=8 control=random_init done (819s)
+[2026-11-09 09:44:39] enc_probe k=8 control=label_shuffle done (875s)
+[2026-11-09 09:45:43] enc_probe k=10 control=real done (939s)
+[2026-11-09 09:46:51] enc_probe k=10 control=random_init done (1006s)
+[2026-11-09 09:47:46] enc_probe k=10 control=label_shuffle done (1061s)
+[2026-11-09 09:48:51] enc_probe k=12 control=real done (1127s)
+[2026-11-09 09:49:57] enc_probe k=12 control=random_init done (1193s)
+[2026-11-09 09:50:53] enc_probe k=12 control=label_shuffle done (1249s)
+[2026-11-09 09:51:28] enc_probe done: 5850 rows -> /content/drive/MyDrive/exp004_work/results/parts/encoder.csv

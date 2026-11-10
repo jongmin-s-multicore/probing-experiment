@@ -1,0 +1,142 @@
+/home/jaekyungkim/mylab/experiments/008_posthoc_reaggregate_004_005/analysis/recompute_stats.py:46: RuntimeWarning: divide by zero encountered in scalar divide
+  for i,d in enumerate(ds): print(f' {d:2d} {rm[i]:6.3f} {xm[i]:6.3f} {mean[i]:6.3f} {sdl[i]:6.3f} {lo[i]:6.3f} {mean[i]/sdl[i]:7.1f}')
+Counter({('predictor', 'real', False): 13230, ('predictor', 'real', True): 5880, ('predictor', 'random_init', False): 3780, ('predictor', 'label_shuffle', False): 3780, ('predictor', 'random_init', True): 1680, ('predictor', 'label_shuffle', True): 1680, ('reference', 'encoder_tokens', False): 1350, ('encoder', 'real', False): 1260, ('encoder', 'random_init', False): 1260, ('encoder', 'label_shuffle', False): 1260, ('reference', 'encoder_tokens', True): 600, ('encoder', 'real', True): 560, ('encoder', 'random_init', True): 560, ('encoder', 'label_shuffle', True): 560, ('baseline', 'pixel', False): 180, ('baseline', 'mask_area_bbox', False): 90, ('baseline', 'pixel', True): 80, ('baseline', 'mask_area_bbox', True): 40})
+train_seeds ['0', '1', '2', 'NA'] probe seeds ['0', '1', '2', '3', '4']
+depths enc [0, 2, 4, 6, 8, 10, 12] pred [0, 1, 2, 3, 4, 5, 6]
+probes Counter({'linear': 18980, 'attentive': 18850}) fit Counter({'new': 22230, 'exp1_probe': 15600}) tp Counter({'early': 14235, 'late': 14235, 'rollout_t+1': 3120, 'rollout_t+4': 3120, 'rollout_t+8': 3120})
+levels {('a026', 'extrap'): 100, ('a040', 'extrap'): 100, ('a060', 'train'): 100, ('a080', 'interp'): 100, ('ind', 'train'): 100, ('a125', 'interp'): 100, ('a160', 'train'): 100, ('a200', 'extrap'): 100, ('a248', 'extrap'): 100}
+== A
+
+encoder train: maxdiff vs json delta 0.0e+00 lo 0.0e+00; firstdrop delta=None real=None; n_gt0 recomputed=7 json=7
+ depth  real  rand  delta  sd   lo   delta/sd
+  0  0.733  0.458  0.275  0.000  0.275     inf
+  2  0.793  0.642  0.150  0.000  0.149   494.8
+  4  0.826  0.654  0.172  0.000  0.171   428.8
+  6  0.840  0.662  0.178  0.000  0.178     inf
+  8  0.837  0.661  0.176  0.000  0.175   355.3
+ 10  0.846  0.655  0.191  0.000  0.191     inf
+ 12  0.834  0.658  0.177  0.001  0.174   136.8
+
+encoder interp: maxdiff vs json delta 0.0e+00 lo 0.0e+00; firstdrop delta=None real=None; n_gt0 recomputed=7 json=7
+ depth  real  rand  delta  sd   lo   delta/sd
+  0  0.217 -0.147  0.365  0.000  0.365     inf
+  2  0.428  0.161  0.266  0.007  0.252    39.0
+  4  0.466  0.170  0.296  0.006  0.283    48.2
+  6  0.490  0.192  0.298  0.000  0.298     inf
+  8  0.534  0.200  0.333  0.004  0.325    84.6
+ 10  0.542  0.184  0.358  0.000  0.358     inf
+ 12  0.509  0.207  0.302  0.004  0.294    75.2
+
+encoder extrap: maxdiff vs json delta 0.0e+00 lo 0.0e+00; firstdrop delta=None real=None; n_gt0 recomputed=7 json=7
+ depth  real  rand  delta  sd   lo   delta/sd
+  0  0.788  0.656  0.132  0.000  0.132     inf
+  2  0.824  0.756  0.068  0.002  0.065    42.3
+  4  0.822  0.766  0.056  0.001  0.055    98.6
+  6  0.840  0.767  0.073  0.000  0.073     inf
+  8  0.836  0.770  0.066  0.001  0.064    52.4
+ 10  0.841  0.765  0.075  0.000  0.075     inf
+ 12  0.852  0.768  0.083  0.002  0.080    49.1
+
+predictor train: maxdiff vs json delta 0.0e+00 lo 0.0e+00; firstdrop delta=None real=None; n_gt0 recomputed=6 json=6
+ depth  real  rand  delta  sd   lo   delta/sd
+  0  0.834  0.834  0.000  0.000 -0.000     0.2
+  1  0.842  0.834  0.008  0.003  0.002     2.7
+  2  0.845  0.836  0.010  0.003  0.004     3.5
+  3  0.847  0.835  0.012  0.003  0.005     3.7
+  4  0.851  0.835  0.016  0.004  0.008     3.9
+  5  0.856  0.834  0.022  0.005  0.012     4.5
+  6  0.859  0.835  0.025  0.003  0.018     7.7
+
+predictor interp: maxdiff vs json delta 0.0e+00 lo 0.0e+00; firstdrop delta=None real=None; n_gt0 recomputed=2 json=2
+ depth  real  rand  delta  sd   lo   delta/sd
+  0  0.509  0.509  0.000  0.000 -0.000     0.3
+  1  0.519  0.510  0.009  0.014 -0.018     0.7
+  2  0.531  0.500  0.031  0.031 -0.031     1.0
+  3  0.537  0.503  0.034  0.027 -0.020     1.3
+  4  0.546  0.505  0.041  0.025 -0.008     1.7
+  5  0.543  0.508  0.035  0.006  0.023     5.6
+  6  0.553  0.504  0.048  0.016  0.016     3.0
+
+predictor extrap: maxdiff vs json delta 0.0e+00 lo 0.0e+00; firstdrop delta=None real=None; n_gt0 recomputed=0 json=0
+ depth  real  rand  delta  sd   lo   delta/sd
+  0  0.852  0.852 -0.000  0.000 -0.000    -0.1
+  1  0.845  0.851 -0.007  0.002 -0.011    -2.7
+  2  0.842  0.852 -0.010  0.004 -0.017    -2.5
+  3  0.843  0.852 -0.010  0.004 -0.018    -2.5
+  4  0.844  0.852 -0.009  0.002 -0.012    -4.5
+  5  0.847  0.852 -0.006  0.002 -0.009    -3.4
+  6  0.852  0.852 -0.000  0.003 -0.006    -0.1
+
+== B
+area {'a026': 0.259, 'a040': 0.399, 'a060': 0.599, 'a080': 0.801, 'ind': 1.0, 'a125': 1.249, 'a160': 1.6, 'a200': 2.0, 'a248': 2.479}
+Var_all 0.49999293541242407 json 0.49999293541242396
+train ['a060', 'a160', 'ind'] n 300 split var 0.161 split label range [-0.512, 0.47, 0.0] ratio var_split/var_all 0.322
+interp ['a080', 'a125'] n 200 split var 0.0493 split label range [-0.222, 0.222] ratio var_split/var_all 0.099
+extrap ['a026', 'a040', 'a200', 'a248'] n 400 split var 0.9655 split label range [-1.351, -0.919, 0.693, 0.908] ratio var_split/var_all 1.931
+
+encoder train maxdiff r2_common vs json 1.1e-16; firstdrop common=None split=None
+ depth  mae   mse   r2split r2common
+  0  0.161  0.043   0.733   0.914
+  2  0.141  0.033   0.793   0.933
+  4  0.131  0.028   0.826   0.944
+  6  0.125  0.026   0.840   0.949
+  8  0.127  0.026   0.837   0.948
+ 10  0.122  0.025   0.846   0.950
+ 12  0.128  0.027   0.834   0.947
+
+encoder interp maxdiff r2_common vs json 1.1e-16; firstdrop common=None split=None
+ depth  mae   mse   r2split r2common
+  0  0.148  0.039   0.217   0.923
+  2  0.130  0.028   0.428   0.944
+  4  0.124  0.026   0.466   0.947
+  6  0.116  0.025   0.490   0.950
+  8  0.115  0.023   0.534   0.954
+ 10  0.116  0.023   0.542   0.955
+ 12  0.119  0.024   0.509   0.952
+
+encoder extrap maxdiff r2_common vs json 1.1e-16; firstdrop common=None split=None
+ depth  mae   mse   r2split r2common
+  0  0.370  0.205   0.788   0.590
+  2  0.339  0.170   0.824   0.660
+  4  0.335  0.172   0.822   0.656
+  6  0.310  0.155   0.840   0.691
+  8  0.313  0.158   0.836   0.683
+ 10  0.309  0.154   0.841   0.692
+ 12  0.290  0.143   0.852   0.713
+
+predictor train maxdiff r2_common vs json 2.2e-16; firstdrop common=None split=None
+ depth  mae   mse   r2split r2common
+  0  0.128  0.027   0.834   0.947
+  1  0.125  0.025   0.842   0.949
+  2  0.122  0.025   0.845   0.950
+  3  0.121  0.025   0.847   0.951
+  4  0.119  0.024   0.851   0.952
+  5  0.116  0.023   0.856   0.953
+  6  0.114  0.023   0.859   0.955
+
+predictor interp maxdiff r2_common vs json 3.3e-16; firstdrop common=None split=None
+ depth  mae   mse   r2split r2common
+  0  0.119  0.024   0.509   0.952
+  1  0.117  0.024   0.519   0.953
+  2  0.114  0.023   0.531   0.954
+  3  0.114  0.023   0.537   0.954
+  4  0.114  0.022   0.546   0.955
+  5  0.113  0.023   0.543   0.955
+  6  0.111  0.022   0.553   0.956
+
+predictor extrap maxdiff r2_common vs json 3.3e-16; firstdrop common=None split=None
+ depth  mae   mse   r2split r2common
+  0  0.290  0.143   0.852   0.713
+  1  0.297  0.150   0.845   0.700
+  2  0.301  0.153   0.842   0.695
+  3  0.299  0.152   0.843   0.696
+  4  0.296  0.151   0.844   0.698
+  5  0.290  0.148   0.847   0.704
+  6  0.283  0.143   0.852   0.714
+
+== C
+encoder interp inside 0 / 7 [(0, 0.516, 0.0), (2, 0.365, 0.0), (4, 0.36, 0.012), (6, 0.35, 0.0), (8, 0.304, 0.008), (10, 0.304, 0.0), (12, 0.325, 0.008)]
+predictor interp inside 0 / 7 [(0, 0.325, 0.0), (1, 0.323, 0.021), (2, 0.314, 0.033), (3, 0.31, 0.031), (4, 0.305, 0.027), (5, 0.312, 0.008), (6, 0.307, 0.016)]
+encoder extrap inside 1 / 7 [(0, -0.055, 0.0), (2, -0.031, 0.0), (4, 0.004, 0.001), (6, 0.001, 0.0), (8, 0.001, 0.003), (10, 0.006, 0.0), (12, -0.017, 0.003)]
+predictor extrap inside 5 / 7 [(0, -0.017, 0.0), (1, -0.003, 0.004), (2, 0.003, 0.007), (3, 0.005, 0.007), (4, 0.007, 0.007), (5, 0.009, 0.008), (6, 0.008, 0.01)]
+json C predictor {'interp': 0.0, 'extrap': 0.7142857142857143} ref004 {'encoder': {'interp': 0.0, 'extrap': 0.14285714285714285}, 'predictor': {'interp': 0.0, 'extrap': 0.5714285714285714}}

@@ -10,6 +10,8 @@ LAB = {"multi_60_ind_160": "(b) multi_60_ind_160", "single_ind": "(a) single_ind
 
 
 def _plt():
+    import os
+    os.environ["MPLBACKEND"] = "Agg"      # unconditional: a kernel-inherited backend (module://matplotlib_inline...) is invalid in the venv subprocess; figures are only saved to files
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt

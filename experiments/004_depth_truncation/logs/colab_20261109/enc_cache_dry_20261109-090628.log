@@ -1,0 +1,4 @@
+[2026-11-09 09:06:28] log file: /content/mylab/experiments/004_depth_truncation/logs/enc_cache_dry_20261109-090628.log
+[2026-11-09 09:06:28] stage=enc_cache dry_run=True python=/content/venv/bin/python conda_env=None pilot=True
+[2026-11-09 09:06:28] WARNING: CONDA_DEFAULT_ENV is empty - not running inside an activated conda environment (python=/content/venv/bin/python). Continuing.
+[2026-11-09 09:06:36] enc_cache plan: k_grid=[0, 2, 4, 6, 8, 10, 12] frames=[0, 1, 2, 3, 8, 9, 10, 11] episodes=1800 random_init_control=True -> /content/main/exp004_cache/enc ; disk {'tokens_per_k_gb': 2.17, 'tokens_total_gb': 30.3, 'pixel_gb': 0.27}

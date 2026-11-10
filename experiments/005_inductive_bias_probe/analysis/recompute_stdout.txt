@@ -1,0 +1,222 @@
+/tmp/claude-1000/-home-jaekyungkim-mylab/b0a01414-ba52-46b0-aa53-432499f1ad94/scratchpad/pdlib/pandas/core/nanops.py:1016: RuntimeWarning: invalid value encountered in subtract
+  sqr = _ensure_numeric((avg - values) ** 2)
+rows merged 700 max|raw diff| 1.3326085449016922e-07 max|score diff| 2.4054048823884955e-06 alt diff 2.038342703958307e-06
+
+RAW & scores (group, metric, model): mean sd over 5 seeds
+      group      metric          model  raw_mean  raw_sd  score_mean  score_sd  alt_mean  alt_sd  orclin_const_mean
+0       all        R-IB           ours    0.8687  0.0038      0.7374    0.0077      -inf     NaN               -inf
+1       all        R-IB         random    0.8519  0.0030      0.7037    0.0060      -inf     NaN               -inf
+2       all        R-IB           area    0.8783  0.0006      0.7565    0.0011      -inf     NaN               -inf
+3       all        R-IB         oracle    1.0000  0.0000      1.0000    0.0000       NaN     NaN                NaN
+4       all        R-IB  oracle_linear    1.0000  0.0000      1.0000    0.0000       NaN     NaN                NaN
+5       all        R-IB         noninf    0.5001  0.0003      0.0000    0.0000      -inf     NaN               -inf
+6       all        R-IB          const    1.0000  0.0000      1.0000    0.0000       NaN     NaN                NaN
+7       all        D-IB           ours    0.3220  0.0038      1.0106    0.0311    0.9841  0.0511             1.3313
+8       all        D-IB         random    0.3267  0.0040      1.0253    0.0318    0.9583  0.0546             1.3507
+9       all        D-IB           area    0.3324  0.0024      1.0430    0.0267    0.9266  0.0413             1.3742
+10      all        D-IB         oracle    0.3188  0.0080      1.0000    0.0000    1.0000  0.0000             1.3181
+11      all        D-IB  oracle_linear    0.2419  0.0006      0.7590    0.0183    1.4267  0.0605             1.0000
+12      all        D-IB         noninf    0.5000  0.0001      1.5693    0.0397    0.0000  0.0000             2.0674
+13      all        D-IB          const    0.0000  0.0000      0.0000    0.0000    2.7634  0.1211             0.0000
+14      all  D-IB_area=           ours    0.1964  0.0041      0.9278    0.0452    1.0547  0.0364             1.5273
+15      all  D-IB_area=         random    0.1994  0.0030      0.9417    0.0368    1.0443  0.0308             1.5507
+16      all  D-IB_area=           area    0.1922  0.0011      0.9080    0.0351    1.0691  0.0301             1.4950
+17      all  D-IB_area=         oracle    0.2119  0.0078      1.0000    0.0000    1.0000  0.0000             1.6483
+18      all  D-IB_area=  oracle_linear    0.1286  0.0003      0.6073    0.0221    1.2902  0.0350             1.0000
+19      all  D-IB_area=         noninf    0.4999  0.0002      2.3613    0.0868    0.0000  0.0000             3.8881
+20      all  D-IB_area=          const    0.0000  0.0000      0.0000    0.0000    1.7370  0.0475             0.0000
+21      all  D-IB_area≠           ours    0.3324  0.0038      1.0150    0.0306    0.9744  0.0534             1.3230
+22      all  D-IB_area≠         random    0.3372  0.0041      1.0297    0.0316    0.9465  0.0579             1.3423
+23      all  D-IB_area≠           area    0.3439  0.0025      1.0502    0.0265    0.9070  0.0430             1.3691
+24      all  D-IB_area≠         oracle    0.3276  0.0080      1.0000    0.0000    1.0000  0.0000             1.3042
+25      all  D-IB_area≠  oracle_linear    0.2512  0.0007      0.7671    0.0181    1.4456  0.0647             1.0000
+26      all  D-IB_area≠         noninf    0.5000  0.0001      1.5271    0.0379    0.0000  0.0000             1.9906
+27      all  D-IB_area≠          const    0.0000  0.0000      0.0000    0.0000    2.9051  0.1345             0.0000
+28      all   R-IB_fold           ours    0.8524  0.0039      0.7048    0.0079      -inf     NaN               -inf
+29      all   R-IB_fold         random    0.8368  0.0033      0.6736    0.0066      -inf     NaN               -inf
+30      all   R-IB_fold           area    0.8579  0.0007      0.7157    0.0013      -inf     NaN               -inf
+31      all   R-IB_fold         oracle    1.0000  0.0000      1.0000    0.0000       NaN     NaN                NaN
+32      all   R-IB_fold  oracle_linear    1.0000  0.0000      1.0000    0.0000       NaN     NaN                NaN
+33      all   R-IB_fold         noninf    0.5001  0.0003      0.0000    0.0000      -inf     NaN               -inf
+34      all   R-IB_fold          const    1.0000  0.0000      1.0000    0.0000       NaN     NaN                NaN
+35  ood_any        R-IB           ours    0.8859  0.0037      0.7717    0.0073      -inf     NaN               -inf
+36  ood_any        R-IB         random    0.8700  0.0027      0.7400    0.0053      -inf     NaN               -inf
+37  ood_any        R-IB           area    0.8960  0.0011      0.7920    0.0021      -inf     NaN               -inf
+38  ood_any        R-IB         oracle    1.0000  0.0000      1.0000    0.0000       NaN     NaN                NaN
+39  ood_any        R-IB  oracle_linear    1.0000  0.0000      1.0000    0.0000       NaN     NaN                NaN
+40  ood_any        R-IB         noninf    0.5002  0.0004      0.0000    0.0000      -inf     NaN               -inf
+41  ood_any        R-IB          const    1.0000  0.0000      1.0000    0.0000       NaN     NaN                NaN
+42  ood_any        D-IB           ours    0.3173  0.0036      1.0404    0.0324    0.9390  0.0444             1.3340
+43  ood_any        D-IB         random    0.3231  0.0040      1.0596    0.0333    0.9091  0.0476             1.3586
+44  ood_any        D-IB           area    0.3260  0.0024      1.0691    0.0286    0.8939  0.0370             1.3709
+45  ood_any        D-IB         oracle    0.3051  0.0079      1.0000    0.0000    1.0000  0.0000             1.2829
+46  ood_any        D-IB  oracle_linear    0.2378  0.0007      0.7798    0.0195    1.3469  0.0520             1.0000
+47  ood_any        D-IB         noninf    0.5001  0.0000      1.6397    0.0429    0.0000  0.0000             2.1026
+48  ood_any        D-IB          const    0.0000  0.0000      0.0000    0.0000    2.5687  0.1027             0.0000
+49  ood_any  D-IB_area=           ours    0.1839  0.0039      0.9957    0.0491    1.0038  0.0288             1.5754
+50  ood_any  D-IB_area=         random    0.1896  0.0030      1.0261    0.0406    0.9857  0.0238             1.6239
+51  ood_any  D-IB_area=           area    0.1776  0.0010      0.9612    0.0389    1.0239  0.0241             1.5209
+52  ood_any  D-IB_area=         oracle    0.1850  0.0070      1.0000    0.0000    1.0000  0.0000             1.5843
+53  ood_any  D-IB_area=  oracle_linear    0.1168  0.0003      0.6319    0.0235    1.2171  0.0268             1.0000
+54  ood_any  D-IB_area=         noninf    0.4999  0.0002      2.7056    0.1020    0.0000  0.0000             4.2815
+55  ood_any  D-IB_area=          const    0.0000  0.0000      0.0000    0.0000    1.5880  0.0353             0.0000
+56  ood_any  D-IB_area≠           ours    0.3282  0.0036      1.0426    0.0319    0.9301  0.0468             1.3247
+57  ood_any  D-IB_area≠         random    0.3340  0.0041      1.0612    0.0331    0.8985  0.0508             1.3484
+58  ood_any  D-IB_area≠           area    0.3382  0.0025      1.0743    0.0284    0.8759  0.0390             1.3651
+59  ood_any  D-IB_area≠         oracle    0.3149  0.0080      1.0000    0.0000    1.0000  0.0000             1.2713
+60  ood_any  D-IB_area≠  oracle_linear    0.2477  0.0007      0.7869    0.0193    1.3650  0.0562             1.0000
+61  ood_any  D-IB_area≠         noninf    0.5001  0.0001      1.5887    0.0408    0.0000  0.0000             2.0187
+62  ood_any  D-IB_area≠          const    0.0000  0.0000      0.0000    0.0000    2.7051  0.1153             0.0000
+63  ood_any   R-IB_fold           ours    0.8691  0.0036      0.7383    0.0072      -inf     NaN               -inf
+64  ood_any   R-IB_fold         random    0.8559  0.0029      0.7117    0.0058      -inf     NaN               -inf
+65  ood_any   R-IB_fold           area    0.8773  0.0012      0.7546    0.0023      -inf     NaN               -inf
+66  ood_any   R-IB_fold         oracle    1.0000  0.0000      1.0000    0.0000       NaN     NaN                NaN
+67  ood_any   R-IB_fold  oracle_linear    1.0000  0.0000      1.0000    0.0000       NaN     NaN                NaN
+68  ood_any   R-IB_fold         noninf    0.5001  0.0004      0.0000    0.0000      -inf     NaN               -inf
+69  ood_any   R-IB_fold          const    1.0000  0.0000      1.0000    0.0000       NaN     NaN                NaN/tmp/claude-1000/-home-jaekyungkim-mylab/b0a01414-ba52-46b0-aa53-432499f1ad94/scratchpad/pdlib/numpy/_core/_methods.py:191: RuntimeWarning: invalid value encountered in subtract
+  x = asanyarray(arr - arrmean)
+/home/jaekyungkim/mylab/experiments/005_inductive_bias_probe/analysis/recompute_stats.py:101: RuntimeWarning: invalid value encountered in scalar subtract
+  print(m, col, "ours %.4f(%.4f) random %.4f(%.4f) area %.4f(%.4f)  |o-r| %.4f  2*maxsd %.4f ratio %.2f  o-a %.4f" % (o.mean(), o.std(ddof=1), r_.mean(), r_.std(ddof=1), a_.mean(), a_.std(ddof=1), abs(o.mean() - r_.mean()), 2 * max(o.std(ddof=1), r_.std(ddof=1)), abs(o.mean() - r_.mean()) / (2 * max(o.std(ddof=1), r_.std(ddof=1))), o.mean() - a_.mean()))
+
+
+Denominators (all, mean over seeds): oracle_raw, noninf_raw, const_raw
+all R-IB orc 1.0000 noninf 0.5001 const 1.0000  den_iid 0.4999 den_const 0.0000
+all D-IB orc 0.3188 noninf 0.5000 const 0.0000  den_iid -0.1812 den_const 0.3188
+all D-IB_area= orc 0.2119 noninf 0.4999 const 0.0000  den_iid -0.2880 den_const 0.2119
+all D-IB_area≠ orc 0.3276 noninf 0.5000 const 0.0000  den_iid -0.1724 den_const 0.3276
+all R-IB_fold orc 1.0000 noninf 0.5001 const 1.0000  den_iid 0.4999 den_const 0.0000
+ood_any R-IB orc 1.0000 noninf 0.5002 const 1.0000  den_iid 0.4998 den_const 0.0000
+ood_any D-IB orc 0.3051 noninf 0.5001 const 0.0000  den_iid -0.1949 den_const 0.3051
+ood_any D-IB_area= orc 0.1850 noninf 0.4999 const 0.0000  den_iid -0.3149 den_const 0.1850
+ood_any D-IB_area≠ orc 0.3149 noninf 0.5001 const 0.0000  den_iid -0.1851 den_const 0.3149
+ood_any R-IB_fold orc 1.0000 noninf 0.5001 const 1.0000  den_iid 0.4999 den_const 0.0000
+
+H-f
+                                 eq     neq     diff      tol   ratio  paired_t_p  welch_p   d_mean  d_ci_lo  d_ci_hi       dz  n_pos
+all      score_primary       0.9278  1.0150   0.0872   0.0905  0.9633      0.0011   0.0091  -0.0872  -0.1158  -0.0586  -3.7854    5.0
+         score_alt           1.0547  0.9744   0.0804   0.1068  0.7525      0.0024   0.0271   0.0804   0.0479   0.1129   3.0710    0.0
+         score_iid           1.0547  0.9744   0.0804   0.1068  0.7525      0.0024   0.0271   0.0804   0.0479   0.1129   3.0710    0.0
+         score_const         0.9278  1.0150   0.0872   0.0905  0.9633      0.0011   0.0091  -0.0872  -0.1158  -0.0586  -3.7854    5.0
+         score_orclin_const  1.5273  1.3230   0.2043   0.0583  3.5030      0.0000   0.0000   0.2043   0.1799   0.2287  10.3892    0.0
+ind      score_primary       0.6639  0.8030   0.1390   0.0640  2.1712      0.0000   0.0001  -0.1390  -0.1469  -0.1312 -22.0025    5.0
+         score_alt          -7.9706  6.1378  14.1084  49.4724  0.2852      0.3100   0.2732 -14.1084 -47.8291  19.6122  -0.5195    2.0
+         score_iid          -7.9706  6.1378  14.1084  49.4724  0.2852      0.3100   0.2732 -14.1084 -47.8291  19.6122  -0.5195    2.0
+         score_const         0.6639  0.8030   0.1390   0.0640  2.1712      0.0000   0.0001  -0.1390  -0.1469  -0.1312 -22.0025    5.0
+         score_orclin_const  1.2969  1.3064   0.0095   0.0511  0.1862      0.0361   0.5298  -0.0095  -0.0180  -0.0010  -1.3882    5.0
+ood_any  score_primary       0.9957  1.0426   0.0468   0.0982  0.4770      0.0161   0.1175  -0.0468  -0.0793  -0.0144  -1.7908    5.0
+         score_alt           1.0038  0.9301   0.0737   0.0935  0.7880      0.0029   0.0212   0.0737   0.0422   0.1052   2.9044    0.0
+         score_iid           1.0038  0.9301   0.0737   0.0935  0.7880      0.0029   0.0212   0.0737   0.0422   0.1052   2.9044    0.0
+         score_const         0.9957  1.0426   0.0468   0.0982  0.4770      0.0161   0.1175  -0.0468  -0.0793  -0.0144  -1.7908    5.0
+         score_orclin_const  1.5754  1.3247   0.2506   0.0611  4.1027      0.0000   0.0000   0.2506   0.2230   0.2782  11.2811    0.0
+ood_both score_primary       1.0528  1.0805   0.0277   0.1155  0.2400      0.0873   0.4059  -0.0277  -0.0619   0.0064  -1.0076    5.0
+         score_alt           0.9799  0.8650   0.1148   0.1029  1.1155      0.0018   0.0050   0.1148   0.0717   0.1579   3.3075    0.0
+         score_iid           0.9799  0.8650   0.1148   0.1029  1.1155      0.0018   0.0050   0.1148   0.0717   0.1579   3.3075    0.0
+         score_const         1.0528  1.0805   0.0277   0.1155  0.2400      0.0873   0.4059  -0.0277  -0.0619   0.0064  -1.0076    5.0
+         score_orclin_const  1.3951  1.2357   0.1594   0.0622  2.5611      0.0002   0.0002   0.1594   0.1259   0.1928   5.9184    0.0
+diff 0.08717775773998349 per-seed a [0.891 0.939 0.983 0.954 0.873] b [0.99  1.009 1.066 1.017 0.993]
+sd_mult 1 tol 0.04524812597294259 refuted
+sd_mult 1.5 tol 0.06787218895941388 refuted
+sd_mult 1.92 tol 0.08687640186804976 refuted
+sd_mult 2 tol 0.09049625194588518 supported
+sd_mult 2.5 tol 0.11312031493235647 supported
+sd_mult 3 tol 0.13574437791882776 supported
+sd_mult threshold for flip: 1.926660074101498
+n pairs D-IB {'all': 359706, 'ind': 28775, 'ood_any': 330931, 'ood_both': 152767}
+n pairs D-IB_area= {'all': 27401, 'ind': 2429, 'ood_any': 24972, 'ood_both': 9654}
+n pairs D-IB_area≠ {'all': 332305, 'ind': 26346, 'ood_any': 305959, 'ood_both': 143113}
+n pairs R-IB {'all': 44844, 'ind': 14296, 'ood_any': 30548, 'ood_both': 30548}
+n pairs R-IB_fold {'all': 32195, 'ind': 11301, 'ood_any': 20894, 'ood_both': 20894}
+
+H-e hypothetical (ood_any)
+R-IB score_primary ours 0.7717(0.0073) random 0.7400(0.0053) area 0.7920(0.0021)  |o-r| 0.0318  2*maxsd 0.0147 ratio 2.17  o-a -0.0203
+R-IB score_alt ours -inf(nan) random -inf(nan) area -inf(nan)  |o-r| nan  2*maxsd nan ratio nan  o-a nan
+D-IB score_primary ours 1.0404(0.0324) random 1.0596(0.0333) area 1.0691(0.0286)  |o-r| 0.0192  2*maxsd 0.0667 ratio 0.29  o-a -0.0287
+D-IB score_alt ours 0.9390(0.0444) random 0.9091(0.0476) area 0.8939(0.0370)  |o-r| 0.0299  2*maxsd 0.0952 ratio 0.31  o-a 0.0451
+
+D-IB all, per seed raw: 
+ours [0.3242 0.32   0.3258 0.3236 0.3164]
+random [0.3216 0.3322 0.3256 0.325  0.3289]
+area [0.3328 0.3314 0.3326 0.3293 0.3358]
+oracle [0.3293 0.3183 0.3069 0.319  0.3205]
+oracle_linear [0.2429 0.2419 0.2419 0.2414 0.2413]
+noninf [0.5    0.4999 0.5001 0.5001 0.5   ]
+const [0. 0. 0. 0. 0.]
+ours per-task D-IB raw: mean over seeds-tasks 0.322 sd across tasks (seed-avg) 0.2087 sd across seeds of task-mean 0.0038
+area per-task D-IB raw: mean over seeds-tasks 0.3324 sd across tasks (seed-avg) 0.2107 sd across seeds of task-mean 0.0024
+oracle per-task D-IB raw: mean over seeds-tasks 0.3188 sd across tasks (seed-avg) 0.2126 sd across seeds of task-mean 0.008
+task-bootstrap ratio ours/oracle raw D-IB (const ref): mean 1.0101 95% [0.9803 1.0422]
+       layer   model group  seed     value  n_pairs       norm
+0  pred_out6    ours   all     0  0.313664   404550  16.574732
+1  pred_out6  random   all     0  0.314754   404550  16.574732
+2  pred_out6    area   all     0  0.294433   404550  16.574732
+['layer', 'model', 'group', 'seed', 'value', 'n_pairs', 'norm']
+                             dev         dev_pairweighted         mean_oracle_dist         mean_model_dist        
+                            mean     std             mean     std             mean     std            mean     std
+group      model                                                                                                  
+all        area           0.3004  0.0145           0.1946  0.0057           0.2747  0.0126          0.1001  0.0085
+           oracle         0.0000  0.0000           0.0000  0.0000           0.2747  0.0126          0.2747  0.0126
+           oracle_linear  0.2210  0.0170           0.1389  0.0033           0.2747  0.0126          0.1385  0.0106
+           ours           0.3227  0.0176           0.2042  0.0078           0.2747  0.0126          0.0860  0.0065
+           random         0.3231  0.0187           0.2048  0.0073           0.2747  0.0126          0.0883  0.0076
+           truth          0.3177  0.0154           0.1992  0.0072           0.2747  0.0126          0.1191  0.0091
+extrap_any area           0.3116  0.0156           0.2605  0.0070           0.3617  0.0157          0.1090  0.0097
+           oracle         0.0000  0.0000           0.0000  0.0000           0.3617  0.0157          0.3617  0.0157
+           oracle_linear  0.2264  0.0169           0.1812  0.0042           0.3617  0.0157          0.1842  0.0141
+           ours           0.3347  0.0182           0.2752  0.0101           0.3617  0.0157          0.0886  0.0065
+           random         0.3342  0.0200           0.2740  0.0092           0.3617  0.0157          0.0907  0.0079
+           truth          0.3284  0.0182           0.2680  0.0091           0.3617  0.0157          0.1233  0.0094
+ind        area           0.0367  0.0022           0.0453  0.0034           0.1036  0.0079          0.0871  0.0063
+           oracle         0.0000  0.0000           0.0000  0.0000           0.1036  0.0079          0.1036  0.0079
+           oracle_linear  0.0498  0.0067           0.0599  0.0044           0.1036  0.0079          0.0444  0.0034
+           ours           0.0378  0.0029           0.0452  0.0026           0.1036  0.0079          0.0863  0.0075
+           random         0.0431  0.0029           0.0527  0.0042           0.1036  0.0079          0.0861  0.0072
+           truth          0.0082  0.0012           0.0098  0.0019           0.1036  0.0079          0.1130  0.0086
+calib max|diff| vs csv 9.020562075079397e-17
+                                slope_mean  slope_sd      r2    icpt
+model         slice                                                 
+area          early                 0.4481    0.0866  0.6157  0.1260
+              extrap                0.4559    0.0818  0.7526  0.2509
+              interp                0.7914    0.0278  0.4551  0.0276
+              labels_a060+a160      0.5579    0.0034  0.7268  0.0388
+              labels_a060+ind      -0.0132    0.0496  0.0182 -0.3273
+              labels_ind+a160       0.2739    0.0120  0.6841  0.1938
+              late                  0.5011    0.0727  0.6055  0.1201
+oracle        early                 0.8335    0.0934  0.9525 -0.0241
+              extrap                0.8068    0.0849  0.9882 -0.0493
+              interp                1.0051    0.0121  1.0000  0.0012
+              labels_a060+a160      0.8772    0.1054  0.9214 -0.0175
+              labels_a060+ind       0.8509    0.1326  0.9446 -0.0430
+              labels_ind+a160       0.6930    0.2669  0.9110  0.0743
+              late                  0.8363    0.0854  0.9503 -0.0198
+oracle_linear early                 1.0000    0.0000  1.0000  0.0000
+              extrap                1.0000    0.0000  1.0000  0.0000
+              interp                1.0000    0.0000  1.0000 -0.0000
+              labels_a060+a160      1.0000    0.0000  1.0000  0.0000
+              labels_a060+ind       1.0000    0.0000  1.0000  0.0000
+              labels_ind+a160       1.0000    0.0000  1.0000 -0.0000
+              late                  1.0000    0.0000  1.0000  0.0000
+ours          early                 0.6066    0.0574  0.8854  0.0109
+              extrap                0.5432    0.0604  0.9555  0.0625
+              interp                0.9356    0.0873  0.5573 -0.0200
+              labels_a060+a160      0.5409    0.0056  0.6831 -0.0074
+              labels_a060+ind       0.3041    0.0266  0.7073 -0.1692
+              labels_ind+a160       0.2523    0.0243  0.6814  0.1944
+              late                  0.5362    0.0509  0.7910  0.0169
+random        early                 0.5855    0.0155  0.8704  0.0470
+              extrap                0.5209    0.0179  0.9576  0.0861
+              interp                0.9813    0.0368  0.5142 -0.0140
+              labels_a060+a160      0.5326    0.0103  0.6825 -0.0399
+              labels_a060+ind       0.2736    0.0454  0.6245 -0.2051
+              labels_ind+a160       0.2512    0.0082  0.6438  0.1881
+              late                  0.5180    0.0115  0.7535  0.0227
+law max|slope diff| 2.220446049250313e-16 175
+s_eval range -1.3509272172825992 0.9078552530530535 s_range [-1.35092722  0.90785525] n labels per D (4, 72)
+lvl s by role: {np.str_('extrap'): (np.float64(-1.351), np.float64(0.908), 407), np.str_('interp'): (np.float64(-0.222), np.float64(0.222), 199), np.str_('trained'): (np.float64(-0.512), np.float64(0.47), 294)}
+ids_d level counts: [[0, 0, 22, 0, 30, 0, 20, 0, 0], [0, 0, 46, 0, 26, 0, 0, 0, 0], [0, 0, 0, 0, 36, 0, 36, 0, 0], [0, 0, 47, 0, 0, 0, 25, 0, 0]]
+early ours slope 0.607 sd 0.057; t vs 0.8: p=0.0017 ; vs 1.0 p=0.0001054; 95%CI(t) [0.535 0.678]
+extrap ours slope 0.543 sd 0.060; t vs 0.8: p=0.0007 ; vs 1.0 p=7.165e-05; 95%CI(t) [0.468 0.618]
+interp ours slope 0.936 sd 0.087; t vs 0.8: p=0.0255 ; vs 1.0 p=0.1741; 95%CI(t) [0.827 1.044]
+labels_a060+a160 ours slope 0.541 sd 0.006; t vs 0.8: p=0.0000 ; vs 1.0 p=5.318e-09; 95%CI(t) [0.534 0.548]
+labels_a060+ind ours slope 0.304 sd 0.027; t vs 0.8: p=0.0000 ; vs 1.0 p=5.124e-07; 95%CI(t) [0.271 0.337]
+labels_ind+a160 ours slope 0.252 sd 0.024; t vs 0.8: p=0.0000 ; vs 1.0 p=2.664e-07; 95%CI(t) [0.222 0.282]
+late ours slope 0.536 sd 0.051; t vs 0.8: p=0.0003 ; vs 1.0 p=3.418e-05; 95%CI(t) [0.473 0.599]

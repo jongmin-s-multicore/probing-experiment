@@ -1,0 +1,13 @@
+[2026-11-09 09:25:26] log file: /content/mylab/experiments/005_inductive_bias_probe/logs/heads_20261109-092526.log
+[2026-11-09 09:25:26] stage=heads dry_run=False python=/content/venv/bin/python conda_env=None pilot=True
+[2026-11-09 09:25:26] WARNING: CONDA_DEFAULT_ENV is empty - not running inside an activated conda environment (python=/content/venv/bin/python). Continuing.
+[2026-11-09 09:25:26] heads plan: layers ['pred_out6'] ; seeds [0] ; attentive heads (ours + random-init) = 20 ; base heads (oracle linear/MLP, area) = 30 ; measure the first head (logged) before the full run; estimates are in README (추정)
+[2026-11-09 09:25:29] base/oracle_linear/s0 5-A first head: 1.34s -> projected 134s for 100 tasks
+[2026-11-09 09:25:32] base/oracle_mlp/s0 5-A first head: 0.44s -> projected 44s for 100 tasks
+[2026-11-09 09:25:37] base/area/s0 5-A first head: 1.20s -> projected 120s for 100 tasks
+/content/mylab/experiments/005_inductive_bias_probe/src/exp005/stages.py:177: UserWarning: The given NumPy array is not writable, and PyTorch does not support non-writable tensors. This means writing to this tensor will result in undefined behavior. You may want to copy the array to protect its data or make it writable before converting it to a tensor. This type of warning will be suppressed for the rest of this program. (Triggered internally at ../torch/csrc/utils/tensor_numpy.cpp:206.)
+  tr = torch.as_tensor(a).to(dev)
+[2026-11-09 09:25:45] pred_out6/ours/s0 5-A first head: 1.42s -> projected 142s for 100 tasks
+[2026-11-09 09:25:54] heads pred_out6 ours seed 0 done (10s)
+[2026-11-09 09:25:55] pred_out6/random/s0 5-A first head: 1.39s -> projected 139s for 100 tasks
+[2026-11-09 09:26:04] heads pred_out6 random seed 0 done (10s)

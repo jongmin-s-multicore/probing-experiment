@@ -1,0 +1,27 @@
+{
+  "entries": [
+    {
+      "what": "base/oracle_linear/seed0",
+      "seconds": 4.159519195556641
+    },
+    {
+      "what": "base/oracle_mlp/seed0",
+      "seconds": 4.3309712409973145
+    },
+    {
+      "what": "base/area/seed0",
+      "seconds": 8.17761778831482
+    },
+    {
+      "what": "pred_out6/ours/seed0",
+      "seconds": 9.753936529159546
+    },
+    {
+      "what": "pred_out6/random/seed0",
+      "seconds": 9.916290283203125
+    }
+  ],
+  "gpu": "NVIDIA L4",
+  "max_vram_mb": 659.16845703125,
+  "last_heads_stage_seconds": 37.62206554412842
+}

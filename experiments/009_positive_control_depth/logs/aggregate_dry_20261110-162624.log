@@ -1,0 +1,3 @@
+[2026-11-10 16:26:24] log file: /home/jaekyungkim/mylab/experiments/009_positive_control_depth/logs/aggregate_dry_20261110-162624.log
+[2026-11-10 16:26:24] stage=aggregate dry_run=True python=/home/jaekyungkim/miniconda3/envs/lab07/bin/python conda_env=base pilot=True
+[2026-11-10 16:26:24] aggregate: m_int [1, 2, 3, 4, 5, 6] (source config, overridden=False), strengths [0.0, 0.25, 0.5, 1.0], train seeds [0, 1, 2]

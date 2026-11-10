@@ -1,0 +1,28 @@
+[2026-11-09 09:18:20] log file: /content/mylab/experiments/004_depth_truncation/logs/pred_20261109-091820.log
+[2026-11-09 09:18:20] stage=pred dry_run=False python=/content/venv/bin/python conda_env=None pilot=True
+[2026-11-09 09:18:20] WARNING: CONDA_DEFAULT_ENV is empty - not running inside an activated conda environment (python=/content/venv/bin/python). Continuing.
+[2026-11-09 09:18:20] pred plan: 002 runs (condition multi_60_ind_160) seeds=[0] controls=['real', 'random_init'] num_hist=1 feature_part=z_only rollout_steps=[1, 4, 8] ; tmp disk about 26 GB per run (assumes 6 blocks, 'real' control) ; hidden probe fits per run = (blocks+1) x kinds x probe seeds x (1 + label_shuffle) ; exp1-probe fits = kinds x probe seeds
+Using cache found in /root/.cache/torch/hub/facebookresearch_dinov2_85a24602099d397264d5b30461ad7f3bfd726ca1
+/root/.cache/torch/hub/facebookresearch_dinov2_85a24602099d397264d5b30461ad7f3bfd726ca1/dinov2/layers/swiglu_ffn.py:51: UserWarning: xFormers is not available (SwiGLU)
+  warnings.warn("xFormers is not available (SwiGLU)")
+/root/.cache/torch/hub/facebookresearch_dinov2_85a24602099d397264d5b30461ad7f3bfd726ca1/dinov2/layers/attention.py:33: UserWarning: xFormers is not available (Attention)
+  warnings.warn("xFormers is not available (Attention)")
+/root/.cache/torch/hub/facebookresearch_dinov2_85a24602099d397264d5b30461ad7f3bfd726ca1/dinov2/layers/block.py:40: UserWarning: xFormers is not available (Block)
+  warnings.warn("xFormers is not available (Block)")
+num_action_repeat: 1
+num_proprio_repeat: 1
+proprio encoder: ProprioceptiveEmbedding(
+  (patch_embed): Conv1d(1, 10, kernel_size=(1,), stride=(1,))
+)
+action encoder: ProprioceptiveEmbedding(
+  (patch_embed): Conv1d(30, 10, kernel_size=(1,), stride=(1,))
+)
+proprio_dim: 10, after repeat: 10
+action_dim: 10, after repeat: 10
+emb_dim: 404
+Model emb_dim:  404
+/content/venv/lib/python3.9/site-packages/torch/_utils.py:776: UserWarning: TypedStorage is deprecated. It will be removed in the future and UntypedStorage will be the only storage class. This should only matter to you if you are using storages directly.  To access UntypedStorage directly, use tensor.untyped_storage() instead of tensor.storage()
+  return self.fget.__get__(instance, owner)()
+[2026-11-09 09:18:24] pred seed 0: epoch 15, 6 predictor blocks (read from the model), num_hist 1
+[2026-11-09 09:18:24] pred predictor_s0_real: part file exists (8840 rows) - skipped (use --fresh to redo)
+[2026-11-09 09:18:24] pred predictor_s0_random_init: part file exists (1820 rows) - skipped (use --fresh to redo)

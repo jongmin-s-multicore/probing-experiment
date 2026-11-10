@@ -184,6 +184,7 @@ def do_extract(cfg, cfg2, paths, args):
 
 def do_figures(cfg, paths):
     try:
+        os.environ["MPLBACKEND"] = "Agg"      # unconditional (see src/exp006/figs.py)
         import matplotlib  # noqa: F401
     except ImportError:
         log("matplotlib not installed: figures skipped (no error)")

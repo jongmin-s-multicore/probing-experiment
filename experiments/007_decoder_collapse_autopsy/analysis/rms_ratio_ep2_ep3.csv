@@ -1,0 +1,6 @@
+layer,mixS0_ep2/ctl,singleS1_ep2/ctl,mixS0_ep3/ctl,singleS1_ep3/ctl
+upsample_b.blocks.0,1.027,0.912,3.14,3.28
+upsample_b.blocks.4,1.051,0.91,8.46,9.28
+upsample_b.blocks.6,1.217,1.012,107.72,109.82
+dec.blocks.0,1.1,0.886,0.62,1.2
+dec.blocks.8,0.991,0.996,0.92,0.97

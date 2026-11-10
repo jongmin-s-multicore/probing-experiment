@@ -1,0 +1,26 @@
+[2026-11-09 09:09:06] log file: /content/mylab/experiments/004_depth_truncation/logs/enc_probe_20261109-090906.log
+[2026-11-09 09:09:06] stage=enc_probe dry_run=False python=/content/venv/bin/python conda_env=None pilot=True
+[2026-11-09 09:09:06] WARNING: CONDA_DEFAULT_ENV is empty - not running inside an activated conda environment (python=/content/venv/bin/python). Continuing.
+[2026-11-09 09:09:06] enc_probe plan: k=[0, 2, 4, 6, 8, 10, 12] controls=['real', 'random_init', 'label_shuffle'] kinds=['linear_pooled', 'attentive'] probe seeds=[0, 1, 2, 3, 4] ; probe fits (linear+attentive) = 225 (+ pixel baseline, mask baseline included)
+[2026-11-09 09:09:14] enc_probe k=0 control=real done (8s)
+[2026-11-09 09:09:20] enc_probe k=0 control=random_init done (14s)
+[2026-11-09 09:09:26] enc_probe k=0 control=label_shuffle done (20s)
+[2026-11-09 09:09:32] enc_probe k=2 control=real done (26s)
+[2026-11-09 09:09:38] enc_probe k=2 control=random_init done (32s)
+[2026-11-09 09:09:45] enc_probe k=2 control=label_shuffle done (38s)
+[2026-11-09 09:09:51] enc_probe k=4 control=real done (45s)
+[2026-11-09 09:09:57] enc_probe k=4 control=random_init done (51s)
+[2026-11-09 09:10:04] enc_probe k=4 control=label_shuffle done (57s)
+[2026-11-09 09:10:10] enc_probe k=6 control=real done (63s)
+[2026-11-09 09:10:17] enc_probe k=6 control=random_init done (71s)
+[2026-11-09 09:10:23] enc_probe k=6 control=label_shuffle done (77s)
+[2026-11-09 09:10:31] enc_probe k=8 control=real done (85s)
+[2026-11-09 09:10:37] enc_probe k=8 control=random_init done (91s)
+[2026-11-09 09:10:45] enc_probe k=8 control=label_shuffle done (98s)
+[2026-11-09 09:10:51] enc_probe k=10 control=real done (104s)
+[2026-11-09 09:10:58] enc_probe k=10 control=random_init done (112s)
+[2026-11-09 09:11:04] enc_probe k=10 control=label_shuffle done (118s)
+[2026-11-09 09:11:11] enc_probe k=12 control=real done (124s)
+[2026-11-09 09:11:17] enc_probe k=12 control=random_init done (131s)
+[2026-11-09 09:11:24] enc_probe k=12 control=label_shuffle done (138s)
+[2026-11-09 09:11:28] enc_probe done: 5850 rows -> /content/drive/MyDrive/exp004_work/results_pilot/parts/encoder.csv

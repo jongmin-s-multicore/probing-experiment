@@ -1,0 +1,107 @@
+{
+  "entries": [
+    {
+      "what": "base/oracle_linear/seed0",
+      "seconds": 70.03379392623901
+    },
+    {
+      "what": "base/oracle_mlp/seed0",
+      "seconds": 87.20909452438354
+    },
+    {
+      "what": "base/area/seed0",
+      "seconds": 241.36983966827393
+    },
+    {
+      "what": "base/oracle_linear/seed1",
+      "seconds": 67.19171214103699
+    },
+    {
+      "what": "base/oracle_mlp/seed1",
+      "seconds": 85.86089015007019
+    },
+    {
+      "what": "base/area/seed1",
+      "seconds": 240.71271634101868
+    },
+    {
+      "what": "base/oracle_linear/seed2",
+      "seconds": 66.69194388389587
+    },
+    {
+      "what": "base/oracle_mlp/seed2",
+      "seconds": 87.75158381462097
+    },
+    {
+      "what": "base/area/seed2",
+      "seconds": 240.02438974380493
+    },
+    {
+      "what": "base/oracle_linear/seed3",
+      "seconds": 67.01795697212219
+    },
+    {
+      "what": "base/oracle_mlp/seed3",
+      "seconds": 88.121337890625
+    },
+    {
+      "what": "base/area/seed3",
+      "seconds": 238.62472438812256
+    },
+    {
+      "what": "base/oracle_linear/seed4",
+      "seconds": 66.32097744941711
+    },
+    {
+      "what": "base/oracle_mlp/seed4",
+      "seconds": 86.88164353370667
+    },
+    {
+      "what": "base/area/seed4",
+      "seconds": 240.81130027770996
+    },
+    {
+      "what": "pred_out6/ours/seed0",
+      "seconds": 296.9824664592743
+    },
+    {
+      "what": "pred_out6/ours/seed1",
+      "seconds": 296.2484378814697
+    },
+    {
+      "what": "pred_out6/ours/seed2",
+      "seconds": 294.05796003341675
+    },
+    {
+      "what": "pred_out6/ours/seed3",
+      "seconds": 295.7530424594879
+    },
+    {
+      "what": "pred_out6/ours/seed4",
+      "seconds": 296.6630537509918
+    },
+    {
+      "what": "pred_out6/random/seed0",
+      "seconds": 296.4791135787964
+    },
+    {
+      "what": "pred_out6/random/seed1",
+      "seconds": 298.3630883693695
+    },
+    {
+      "what": "pred_out6/random/seed2",
+      "seconds": 300.5498342514038
+    },
+    {
+      "what": "pred_out6/random/seed3",
+      "seconds": 297.83817529678345
+    },
+    {
+      "what": "pred_out6/random/seed4",
+      "seconds": 296.9634027481079
+    }
+  ],
+  "gpu": "NVIDIA L4",
+  "max_vram_mb": 1607.18701171875,
+  "last_heads_stage_seconds": 4946.51225733757
+}

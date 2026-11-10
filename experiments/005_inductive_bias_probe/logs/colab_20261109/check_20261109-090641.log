@@ -1,0 +1,13 @@
+[2026-11-09 09:06:41] log file: /content/mylab/experiments/005_inductive_bias_probe/logs/check_20261109-090641.log
+[2026-11-09 09:06:41] stage=check dry_run=False python=/content/venv/bin/python conda_env=None pilot=True
+[2026-11-09 09:06:41] WARNING: CONDA_DEFAULT_ENV is empty - not running inside an activated conda environment (python=/content/venv/bin/python). Continuing.
+python executable : /content/venv/bin/python
+CONDA_DEFAULT_ENV : None
+packages          : {'torch': '2.0.1+cu117', 'torchvision': '0.15.2+cu117', 'numpy': '1.26.4', 'scipy': '1.13.1', 'sklearn': None, 'yaml': '6.0.3', 'cv2': '4.6.0', 'decord': '0.6.0', 'hydra': '1.2.0', 'omegaconf': '2.3.0', 'einops': '0.4.1'} pysr installed: False
+cuda_available    : True NVIDIA L4 23.66
+004 summary.json  : /content/drive/MyDrive/exp004_work/results/summary.json exists=False pilot=None
+  cache002  /content/drive/MyDrive/exp002_work/exp002_cache exists=True
+  cache004  /content/main/exp004_cache exists=True
+  cache     /content/main/exp005_cache exists=True
+002 Q1 cache DONE: True
+results/tasks.npz: False  plan.json: False

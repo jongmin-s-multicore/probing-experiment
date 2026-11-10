@@ -18,6 +18,7 @@ from . import verdicts as VD
 from .base import write_json, read_json
 
 REC = {"pass": [], "fail": [], "skipped": []}
+_STASH = {}   # filled by t_torch_pipeline, read by t_skeptic
 
 
 def check(name, cond, detail=""):
@@ -278,6 +279,7 @@ def t_torch_pipeline(cfg, cfg2):
     cc["normalization"] = {"noninf": {"R": "iid", "D": "const"}, "min_gap": 0.05}
     R = S.compute_metrics(cc, T, P, plan, c["seeds"]["head"])
     ib = R["ib"]
+    _STASH.update({"P": P, "T": T, "cc": cc, "plan": plan, "R": R, "seeds": c["seeds"]["head"]})   # for t_skeptic (H)
 
     def val(layer, model, metric, group="all", key="raw"):
         v = [r[key] for r in ib if r["layer"] == layer and r["model"] == model and r["metric"] == metric and r["pair_group"] == group]
@@ -429,6 +431,60 @@ def t_files(cfg, cfg2, bundle):
         shutil.rmtree(tmp, ignore_errors=True)
 
 
+# ------------------------------------------------------------------------------------------------ H. added 2026-11-10 (notes/reviews/005_skeptic.md C1(c), S1, S2)
+def t_skeptic(cfg, cfg2):
+    """Checks only; no change to verdict/metric code. A FAIL here may point at a real defect and is reported, not fixed."""
+    print("H  skeptic review checks (C1(c) OoD D-IB with the 3-level MLP oracle, S2 _vals duplicates, S1 `continue` structure)")
+    if "P" not in _STASH:
+        skip("H checks", "needs D (torch pipeline) output")
+        return
+    from . import stages as S
+    P, T, cc, plan, R, seeds = (_STASH[k] for k in ("P", "T", "cc", "plan", "R", "seeds"))
+    ib = R["ib"]
+    # ---- C1 (c): the oracle is an MLP trained on s of the 3 trained levels only; look at D-IB on OoD-containing pairs
+    ref = {}
+    for g in ("all", "ind", "ood_any", "ood_both"):
+        row = {}
+        for m in ("oracle", "noninf", "const", "ours"):
+            v = [r["raw"] for r in ib if r["layer"] == "state" and r["model"] == m and r["metric"] == "D-IB" and r["pair_group"] == g]
+            row[m] = float(np.nanmean(v)) if v else float("nan")
+        ref[g] = row
+    print("     D-IB raw by pair group (synthetic, layer 'state'):", {g: {k: round(v, 3) for k, v in r.items()} for g, r in ref.items()})
+    check("C1(c)-1: D-IB raw of the 3-level MLP oracle on ood_any is finite and differs from the i.i.d. reference by more than min_gap (score denominator defined)",
+          np.isfinite(ref["ood_any"]["oracle"]) and abs(ref["ood_any"]["oracle"] - ref["ood_any"]["noninf"]) > cc["normalization"]["min_gap"],
+          "(oracle %.3f, noninf %.3f)" % (ref["ood_any"]["oracle"], ref["ood_any"]["noninf"]))
+    sc = [r["score"] for r in ib if r["layer"] == "state" and r["model"] == "noninf" and r["metric"] == "D-IB" and r["pair_group"] == "ood_any"]
+    check("C1(c)-2: score upper bound: an input-independent i.i.d. model must not score >= 1 on OoD-containing pairs (production reference = const)",
+          bool(sc) and float(np.nanmean(sc)) < 1.0, "(noninf D-IB score ood_any %.3f)" % (float(np.nanmean(sc)) if sc else float("nan")))
+    ob = ref["ood_any"]["oracle"]
+    check("C1(c)-3: MLP oracle D-IB raw on ood_any is not larger than on ind (an oracle that is a function of s should not become more input-dependent out of distribution)",
+          ob <= ref["ind"]["oracle"] + 1e-9, "(ood_any %.3f, ind %.3f)" % (ob, ref["ind"]["oracle"]))
+    # ---- S2: duplicates
+    keyf = lambda r: (r["layer"], r["model"], r["metric"], r["pair_group"], r["seed"])
+    check("S2-1: production ib rows have unique (layer, model, metric, pair_group, seed)", len({keyf(r) for r in ib}) == len(ib))
+    ckey = lambda r: (r["layer"], r["model"], r["group"], r["seed"])
+    check("S2-2: production calibration-deviation rows have unique (layer, model, group, seed)", len({ckey(r) for r in R["cal_dev"]}) == len(R["cal_dev"]))
+    d1 = dict(layer="L", model="ours", metric="R-IB", pair_group="all", seed=0, score=0.1)
+    d2 = dict(d1, score=0.9)
+    got = VD._vals([d1, d2], layer="L", model="ours", metric="R-IB", pair_group="all")
+    check("S2-3 (characterization of current behaviour, not a fix): _vals keeps only the LAST of duplicate rows and raises no warning", got.tolist() == [0.9])
+    # ---- S1: `continue` structure: a missing 5-A input for one seed must not drop 5-B / 5-D for that seed
+    P2 = dict(P)
+    lay = "state"
+    P2[(lay, "ours", seeds[0])] = {k: v for k, v in P[(lay, "ours", seeds[0])].items() if k != "A"}
+    R2 = S.compute_metrics(cc, T, P2, plan, seeds)
+    n_ib0 = sum(1 for r in R2["ib"] if r["layer"] == lay and r["seed"] == seeds[0])
+    cal0 = sum(1 for r in R2["cal_dev"] if r["layer"] == lay and r["seed"] == seeds[0] and r["model"] == "ours")
+    law0 = sum(1 for r in R2["law"] if r["layer"] == lay and r["seed"] == seeds[0] and r["model"] == "ours")
+    cal1 = sum(1 for r in R2["cal_dev"] if r["layer"] == lay and r["seed"] == seeds[1] and r["model"] == "ours")
+    law1 = sum(1 for r in R2["law"] if r["layer"] == lay and r["seed"] == seeds[1] and r["model"] == "ours")
+    print("     rows for seed %d after removing the 5-A prediction of 'ours': ib=%d cal_dev(ours)=%d law(ours)=%d ; seed %d: cal_dev(ours)=%d law(ours)=%d" % (seeds[0], n_ib0, cal0, law0, seeds[1], cal1, law1))
+    check("S1-1: other seeds are unaffected", cal1 > 0 and law1 > 0)
+    check("S1-2: no 5-A rows for the seed whose 5-A prediction is missing", n_ib0 == 0)
+    check("S1-3: 5-B rows (calibration) of that seed are still computed when only 5-A is missing", cal0 > 0)
+    check("S1-4: 5-D rows (law fits) of that seed are still computed when only 5-A is missing", law0 > 0)
+
+
 def t_config(cfg, cfg2):
     print("G  config explicitness")
     check("all seeds explicit (head x5, eval, tasks_a, tasks_b, sinus, d, noninf)", cfg["seeds"]["head"] == [0, 1, 2, 3, 4] and all(isinstance(cfg["seeds"][k], int) for k in ("eval", "tasks_a", "tasks_b", "sinus", "d", "noninf")))
@@ -451,6 +507,7 @@ def run(cfg, cfg2):
             out["D"] = t_torch_pipeline(cfg, cfg2)
         steps.append(("D", d))
         steps.append(("F", lambda: t_files(cfg, cfg2, out["D"])))
+        steps.append(("H", lambda: t_skeptic(cfg, cfg2)))
     else:
         skip("D/F torch pipeline and file tests", "no torch")
     for name, fn in steps:

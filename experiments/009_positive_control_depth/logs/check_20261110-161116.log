@@ -1,0 +1,8 @@
+[2026-11-10 16:11:16] log file: /home/jaekyungkim/mylab/experiments/009_positive_control_depth/logs/check_20261110-161116.log
+[2026-11-10 16:11:16] stage=check dry_run=False python=/home/jaekyungkim/miniconda3/envs/lab07/bin/python conda_env=base pilot=True
+cache dir (tmp features, directions): /home/jaekyungkim/dinowm/exp009_cache exists=False
+002 Q1 cache DONE: False
+002 run exp002_multi_60_ind_160_s0 DONE=False
+002 run exp002_multi_60_ind_160_s1 DONE=False
+002 run exp002_multi_60_ind_160_s2 DONE=False
+004 depth_r2.csv (reproduction check input): True

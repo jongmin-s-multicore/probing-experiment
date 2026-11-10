@@ -1,0 +1,315 @@
+{
+  "pilot": true,
+  "encoder_layers": 12,
+  "predictor_layers": 6,
+  "l_best": {
+    "module": "predictor",
+    "depth": 6
+  },
+  "l_best_value": 0.7367609454802249,
+  "l_best_by_module": {
+    "encoder": {
+      "depth": 8,
+      "value": 0.6666208264490409
+    },
+    "predictor": {
+      "depth": 6,
+      "value": 0.7367609454802249
+    }
+  },
+  "l_best_splits": [
+    "interp",
+    "extrap"
+  ],
+  "k_star": null,
+  "m_star": null,
+  "k_star_by_split": {
+    "train": null,
+    "interp": null,
+    "extrap": null
+  },
+  "m_star_by_split": {
+    "train": null,
+    "interp": null,
+    "extrap": null
+  },
+  "loss_ood_only": false,
+  "drop_threshold": 0.2,
+  "overlap_sd_mult": 2.0,
+  "overlap_depth_fraction": 0.8,
+  "primary": {
+    "probe": "linear",
+    "fit": "new",
+    "control": "real",
+    "timepoint": "late"
+  },
+  "vanish_detail": {
+    "encoder": {
+      "train": {
+        "evaluated": true,
+        "n_depths": 7,
+        "vanish": null
+      },
+      "interp": {
+        "evaluated": true,
+        "n_depths": 7,
+        "vanish": null
+      },
+      "extrap": {
+        "evaluated": true,
+        "n_depths": 7,
+        "vanish": null
+      }
+    },
+    "predictor": {
+      "train": {
+        "evaluated": true,
+        "n_depths": 7,
+        "vanish": null
+      },
+      "interp": {
+        "evaluated": true,
+        "n_depths": 7,
+        "vanish": null
+      },
+      "extrap": {
+        "evaluated": true,
+        "n_depths": 7,
+        "vanish": null
+      }
+    }
+  },
+  "ind_ood_gap": {
+    "encoder": {
+      "interp": {
+        "evaluable": true,
+        "fraction_depths_inside_seed_sd": 0.0,
+        "overlap": false,
+        "per_depth": [
+          {
+            "depth": 0,
+            "gap": 0.9630660241124774,
+            "tol": 0.0,
+            "inside_seed_sd": false
+          },
+          {
+            "depth": 2,
+            "gap": 0.4281609110340153,
+            "tol": 0.0,
+            "inside_seed_sd": false
+          },
+          {
+            "depth": 4,
+            "gap": 0.3037892309526521,
+            "tol": 0.0,
+            "inside_seed_sd": false
+          },
+          {
+            "depth": 6,
+            "gap": 0.2442838498057145,
+            "tol": 0.0,
+            "inside_seed_sd": false
+          },
+          {
+            "depth": 8,
+            "gap": 0.24657224554744017,
+            "tol": 0.0,
+            "inside_seed_sd": false
+          },
+          {
+            "depth": 10,
+            "gap": 0.37385955706427404,
+            "tol": 1.2412670766236366e-16,
+            "inside_seed_sd": false
+          },
+          {
+            "depth": 12,
+            "gap": 0.28798123236661344,
+            "tol": 0.0,
+            "inside_seed_sd": false
+          }
+        ]
+      },
+      "extrap": {
+        "evaluable": true,
+        "fraction_depths_inside_seed_sd": 0.0,
+        "overlap": false,
+        "per_depth": [
+          {
+            "depth": 0,
+            "gap": -0.12913155997817927,
+            "tol": 0.0,
+            "inside_seed_sd": false
+          },
+          {
+            "depth": 2,
+            "gap": -0.10112791169264024,
+            "tol": 0.0,
+            "inside_seed_sd": false
+          },
+          {
+            "depth": 4,
+            "gap": -0.05357770900033232,
+            "tol": 0.0,
+            "inside_seed_sd": false
+          },
+          {
+            "depth": 6,
+            "gap": -0.05231618818449124,
+            "tol": 0.0,
+            "inside_seed_sd": false
+          },
+          {
+            "depth": 8,
+            "gap": -0.02512922759671521,
+            "tol": 0.0,
+            "inside_seed_sd": false
+          },
+          {
+            "depth": 10,
+            "gap": -0.02706401423439042,
+            "tol": 0.0,
+            "inside_seed_sd": false
+          },
+          {
+            "depth": 12,
+            "gap": -0.07640445805684759,
+            "tol": 2.482534153247273e-16,
+            "inside_seed_sd": false
+          }
+        ]
+      }
+    },
+    "predictor": {
+      "interp": {
+        "evaluable": true,
+        "fraction_depths_inside_seed_sd": 0.0,
+        "overlap": false,
+        "per_depth": [
+          {
+            "depth": 0,
+            "gap": 0.28794550780907746,
+            "tol": 0.0,
+            "inside_seed_sd": false
+          },
+          {
+            "depth": 1,
+            "gap": 0.26857208131040977,
+            "tol": 0.060531430625179995,
+            "inside_seed_sd": false
+          },
+          {
+            "depth": 2,
+            "gap": 0.26699367780387606,
+            "tol": 0.025446708363452267,
+            "inside_seed_sd": false
+          },
+          {
+            "depth": 3,
+            "gap": 0.2155428277838164,
+            "tol": 0.029146375152188556,
+            "inside_seed_sd": false
+          },
+          {
+            "depth": 4,
+            "gap": 0.1862202159127424,
+            "tol": 0.03645910067829932,
+            "inside_seed_sd": false
+          },
+          {
+            "depth": 5,
+            "gap": 0.16790924133617946,
+            "tol": 0.0,
+            "inside_seed_sd": false
+          },
+          {
+            "depth": 6,
+            "gap": 0.13757903553852924,
+            "tol": 0.0,
+            "inside_seed_sd": false
+          }
+        ]
+      },
+      "extrap": {
+        "evaluable": true,
+        "fraction_depths_inside_seed_sd": 0.5714285714285714,
+        "overlap": false,
+        "per_depth": [
+          {
+            "depth": 0,
+            "gap": -0.07641720431522947,
+            "tol": 0.0,
+            "inside_seed_sd": false
+          },
+          {
+            "depth": 1,
+            "gap": -0.033270132184310075,
+            "tol": 0.038489280191300455,
+            "inside_seed_sd": true
+          },
+          {
+            "depth": 2,
+            "gap": -0.011631917802414127,
+            "tol": 0.025446708363452267,
+            "inside_seed_sd": true
+          },
+          {
+            "depth": 3,
+            "gap": 0.0067984752683456495,
+            "tol": 0.029146375152188556,
+            "inside_seed_sd": true
+          },
+          {
+            "depth": 4,
+            "gap": 0.02261281904861312,
+            "tol": 0.03645910067829932,
+            "inside_seed_sd": true
+          },
+          {
+            "depth": 5,
+            "gap": 0.010188096114370992,
+            "tol": 2.482534153247273e-16,
+            "inside_seed_sd": false
+          },
+          {
+            "depth": 6,
+            "gap": -0.0062390783654243664,
+            "tol": 2.482534153247273e-16,
+            "inside_seed_sd": false
+          }
+        ]
+      }
+    }
+  },
+  "refine_suggestion": {},
+  "verdict_H_d": {
+    "status": "refuted",
+    "reason": "no_drop_ge_threshold_at_any_depth",
+    "per_module": {
+      "encoder": {
+        "any_drop_ge_threshold": false,
+        "ood_vanish_earlier_than_ind": false,
+        "ind_vanish_depth": null,
+        "ood_vanish_depth_min": null,
+        "curves_overlap_within_seed_sd": false,
+        "gap_evaluable": true
+      },
+      "predictor": {
+        "any_drop_ge_threshold": false,
+        "ood_vanish_earlier_than_ind": false,
+        "ind_vanish_depth": null,
+        "ood_vanish_depth_min": null,
+        "curves_overlap_within_seed_sd": false,
+        "gap_evaluable": true
+      }
+    }
+  },
+  "definitions": {
+    "k_star": "earliest vanishing depth over splits train/interp/extrap (encoder)",
+    "m_star": "same for predictor hidden probe (fit=new)",
+    "loss_ood_only": "no vanishing depth in split train (either module) and a vanishing depth in interp or extrap (either module)",
+    "vanishing_depth": "first depth whose split-mean R2 is >= drop_threshold below the running maximum of earlier depths; null if none",
+    "l_best": "argmax over (module, depth) of mean R2 over l_best_splits at the primary setting"
+  },
+  "notes": "values are computed from results/depth_r2.csv (level == ALL rows); pilot=true marks a subset/partial run"
+}

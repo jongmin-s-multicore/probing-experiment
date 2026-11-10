@@ -1,0 +1,5 @@
+[2026-11-09 09:22:40] log file: /content/mylab/experiments/004_depth_truncation/logs/aggregate_20261109-092240.log
+[2026-11-09 09:22:40] stage=aggregate dry_run=False python=/content/venv/bin/python conda_env=None pilot=True
+[2026-11-09 09:22:40] WARNING: CONDA_DEFAULT_ENV is empty - not running inside an activated conda environment (python=/content/venv/bin/python). Continuing.
+[2026-11-09 09:22:40] aggregate: 3 part files (['encoder.csv', 'predictor_s0_random_init.csv', 'predictor_s0_real.csv'])
+[2026-11-09 09:22:44] aggregate done: 16510 rows ; summary k_star=None m_star=None verdict_H_d=refuted pilot=True

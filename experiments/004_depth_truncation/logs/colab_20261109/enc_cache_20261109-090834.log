@@ -1,0 +1,68 @@
+[2026-11-09 09:08:34] log file: /content/mylab/experiments/004_depth_truncation/logs/enc_cache_20261109-090834.log
+[2026-11-09 09:08:34] stage=enc_cache dry_run=False python=/content/venv/bin/python conda_env=None pilot=True
+[2026-11-09 09:08:34] WARNING: CONDA_DEFAULT_ENV is empty - not running inside an activated conda environment (python=/content/venv/bin/python). Continuing.
+[2026-11-09 09:08:34] enc_cache plan: k_grid=[0, 2, 4, 6, 8, 10, 12] frames=[0, 1, 2, 3, 8, 9, 10, 11] episodes=300 random_init_control=True -> /content/pilot/exp004_cache/enc_smoke ; disk {'tokens_per_k_gb': 0.36, 'tokens_total_gb': 5.1, 'pixel_gb': 0.05}
+Using cache found in /root/.cache/torch/hub/facebookresearch_dinov2_85a24602099d397264d5b30461ad7f3bfd726ca1
+/root/.cache/torch/hub/facebookresearch_dinov2_85a24602099d397264d5b30461ad7f3bfd726ca1/dinov2/layers/swiglu_ffn.py:51: UserWarning: xFormers is not available (SwiGLU)
+  warnings.warn("xFormers is not available (SwiGLU)")
+/root/.cache/torch/hub/facebookresearch_dinov2_85a24602099d397264d5b30461ad7f3bfd726ca1/dinov2/layers/attention.py:33: UserWarning: xFormers is not available (Attention)
+  warnings.warn("xFormers is not available (Attention)")
+/root/.cache/torch/hub/facebookresearch_dinov2_85a24602099d397264d5b30461ad7f3bfd726ca1/dinov2/layers/block.py:40: UserWarning: xFormers is not available (Block)
+  warnings.warn("xFormers is not available (Block)")
+num_action_repeat: 1
+num_proprio_repeat: 1
+proprio encoder: ProprioceptiveEmbedding(
+  (patch_embed): Conv1d(1, 10, kernel_size=(1,), stride=(1,))
+)
+action encoder: ProprioceptiveEmbedding(
+  (patch_embed): Conv1d(30, 10, kernel_size=(1,), stride=(1,))
+)
+proprio_dim: 10, after repeat: 10
+action_dim: 10, after repeat: 10
+emb_dim: 404
+Model emb_dim:  404
+[2026-11-09 09:08:37] encoder: 12 blocks, emb_dim 384, patch_size 14
+Using cache found in /root/.cache/torch/hub/facebookresearch_dinov2_85a24602099d397264d5b30461ad7f3bfd726ca1
+/content/venv/lib/python3.9/site-packages/torchvision/transforms/functional.py:1603: UserWarning: The default value of the antialias parameter of all the resizing transforms (Resize(), RandomResizedCrop(), etc.) will change from None to True in v0.17, in order to be consistent across the PIL and Tensor backends. To suppress this warning, directly pass antialias=True (recommended, future default), antialias=None (current default, which means False for Tensors and True for PIL), or antialias=False (only works on Tensors - PIL will still use antialiasing). This also applies if you are using the inference transforms from the models weights: update the call to weights.transforms(antialias=True).
+  warnings.warn(
+[2026-11-09 09:08:39] consistency check k=12 vs 002 tokens_dino: max|diff|/std = 0.006188
+[2026-11-09 09:08:39] consistency check k=12 vs get_intermediate_layers(norm=True): max|diff|/std = 0.003093
+[2026-11-09 09:08:39] consistency check random-init k=12 vs 002 tokens_rand: max|diff|/std = 0.001953
+[2026-11-09 09:08:39] enc_cache 8/300 (2s)
+[2026-11-09 09:08:40] enc_cache 16/300 (3s)
+[2026-11-09 09:08:40] enc_cache 24/300 (3s)
+[2026-11-09 09:08:41] enc_cache 32/300 (4s)
+[2026-11-09 09:08:42] enc_cache 40/300 (5s)
+[2026-11-09 09:08:43] enc_cache 48/300 (5s)
+[2026-11-09 09:08:43] enc_cache 56/300 (6s)
+[2026-11-09 09:08:44] enc_cache 64/300 (7s)
+[2026-11-09 09:08:44] enc_cache 72/300 (7s)
+[2026-11-09 09:08:45] enc_cache 80/300 (8s)
+[2026-11-09 09:08:46] enc_cache 88/300 (9s)
+[2026-11-09 09:08:46] enc_cache 96/300 (9s)
+[2026-11-09 09:08:47] enc_cache 104/300 (10s)
+[2026-11-09 09:08:48] enc_cache 112/300 (10s)
+[2026-11-09 09:08:48] enc_cache 120/300 (11s)
+[2026-11-09 09:08:49] enc_cache 128/300 (12s)
+[2026-11-09 09:08:49] enc_cache 136/300 (12s)
+[2026-11-09 09:08:50] enc_cache 144/300 (13s)
+[2026-11-09 09:08:51] enc_cache 152/300 (14s)
+[2026-11-09 09:08:51] enc_cache 160/300 (14s)
+[2026-11-09 09:08:52] enc_cache 168/300 (15s)
+[2026-11-09 09:08:52] enc_cache 176/300 (15s)
+[2026-11-09 09:08:53] enc_cache 184/300 (16s)
+[2026-11-09 09:08:54] enc_cache 192/300 (17s)
+[2026-11-09 09:08:54] enc_cache 200/300 (17s)
+[2026-11-09 09:08:55] enc_cache 208/300 (18s)
+[2026-11-09 09:08:56] enc_cache 216/300 (19s)
+[2026-11-09 09:08:56] enc_cache 224/300 (19s)
+[2026-11-09 09:08:57] enc_cache 232/300 (20s)
+[2026-11-09 09:08:58] enc_cache 240/300 (21s)
+[2026-11-09 09:08:58] enc_cache 248/300 (21s)
+[2026-11-09 09:08:59] enc_cache 256/300 (22s)
+[2026-11-09 09:08:59] enc_cache 264/300 (22s)
+[2026-11-09 09:09:00] enc_cache 272/300 (23s)
+[2026-11-09 09:09:01] enc_cache 280/300 (24s)
+[2026-11-09 09:09:01] enc_cache 288/300 (24s)
+[2026-11-09 09:09:02] enc_cache 296/300 (25s)
+[2026-11-09 09:09:02] enc_cache 300/300 (25s)

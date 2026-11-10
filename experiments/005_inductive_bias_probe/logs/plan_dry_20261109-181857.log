@@ -1,0 +1,3 @@
+[2026-11-09 18:18:57] log file: /home/jaekyungkim/mylab/experiments/005_inductive_bias_probe/logs/plan_dry_20261109-181857.log
+[2026-11-09 18:18:57] stage=plan dry_run=True python=/home/jaekyungkim/miniconda3/envs/lab07/bin/python conda_env=lab07 pilot=True
+[2026-11-09 18:18:57] plan from /home/jaekyungkim/mylab/experiments/004_depth_truncation/results/summary.json: rows=[] hold=False layers=[] layer_subexps={} unresolved=['exp4_summary_missing'] pilot=True

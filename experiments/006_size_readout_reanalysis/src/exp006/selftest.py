@@ -439,6 +439,7 @@ def t_pipeline(tmp):
     check("results.json: interpretation is null", res_json["interpretation"] is None)
     check("results.json: no pass/fail/p-value/threshold keys", not any(('"%s"' % w) in text for w in ("pass", "fail", "p_value", "threshold", "significant")))
     try:
+        os.environ["MPLBACKEND"] = "Agg"      # unconditional (a kernel-inherited backend is invalid here)
         import matplotlib  # noqa: F401
         made, failed = figs.make_all(json.loads(json.dumps(res_json, default=float)), Path(tmp) / "figs", "(SYNTHETIC)")
         check("figures: 6 PNGs from synthetic results", len(made) == 6 and not failed, "made %d failed %s" % (len(made), failed))

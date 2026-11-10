@@ -1,0 +1,4 @@
+[2026-11-09 09:24:31] log file: /content/mylab/experiments/005_inductive_bias_probe/logs/plan_20261109-092431.log
+[2026-11-09 09:24:31] stage=plan dry_run=False python=/content/venv/bin/python conda_env=None pilot=True
+[2026-11-09 09:24:31] WARNING: CONDA_DEFAULT_ENV is empty - not running inside an activated conda environment (python=/content/venv/bin/python). Continuing.
+[2026-11-09 09:24:31] plan from /content/drive/MyDrive/exp004_work/results_pilot/summary.json: rows=['no_vanishing'] hold=False layers=['pred_out6'] layer_subexps={'pred_out6': ['5-A', '5-B', '5-C', '5-D']} unresolved=[] pilot=True

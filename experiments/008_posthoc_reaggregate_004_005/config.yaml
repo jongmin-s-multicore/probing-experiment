@@ -1,0 +1,14 @@
+name: "008_posthoc_reaggregate_004_005"
+hypothesis: "notes/hypotheses.md 008 (사후 재집계, 가설 아님; 2026-11-10 사용자 실행 지시)"
+seed: 0                      # 난수를 쓰지 않는다(결정적 집계). 규칙상 명시
+inputs:                      # 읽기 전용
+  depth_r2_csv: "../004_depth_truncation/results/depth_r2.csv"
+  summary_json: "../004_depth_truncation/results/summary.json"
+  config004: "../004_depth_truncation/config.yaml"
+  config002: "../002_single_size_sweep/config.yaml"
+primary: {probe: linear, fit: new, timepoint: late, level: ALL}   # 004 config depth.primary 와 같음
+drop_threshold: 0.2          # 008 사전 기준 = 004 config depth.drop_threshold
+overlap_sd_mult: 2.0         # 004 config depth.overlap_sd_mult 그대로
+overlap_depth_fraction: 0.8  # 004 config depth.overlap_depth_fraction 그대로
+delta_gt0_sd_mult: 2.0       # A 보조: 학습 시드 평균 - 2 x 학습 시드 sd > 0
+splits: [train, interp, extrap]

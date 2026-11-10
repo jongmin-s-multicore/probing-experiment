@@ -1,0 +1,41 @@
+[2026-11-09 11:23:08] log file: /content/mylab/experiments/005_inductive_bias_probe/logs/heads_20261109-112308.log
+[2026-11-09 11:23:08] stage=heads dry_run=False python=/content/venv/bin/python conda_env=None pilot=True
+[2026-11-09 11:23:08] WARNING: CONDA_DEFAULT_ENV is empty - not running inside an activated conda environment (python=/content/venv/bin/python). Continuing.
+[2026-11-09 11:23:08] heads plan: layers ['pred_out6'] ; seeds [0, 1, 2, 3, 4] ; attentive heads (ours + random-init) = 2040 ; base heads (oracle linear/MLP, area) = 3060 ; measure the first head (logged) before the full run; estimates are in README (추정)
+[2026-11-09 11:23:11] base/oracle_linear/s0 5-A first head: 1.44s -> projected 144s for 100 tasks
+[2026-11-09 11:24:20] base/oracle_mlp/s0 5-A first head: 0.42s -> projected 42s for 100 tasks
+[2026-11-09 11:25:48] base/area/s0 5-A first head: 1.18s -> projected 118s for 100 tasks
+[2026-11-09 11:29:48] base/oracle_linear/s1 5-A first head: 0.32s -> projected 32s for 100 tasks
+[2026-11-09 11:30:55] base/oracle_mlp/s1 5-A first head: 0.42s -> projected 42s for 100 tasks
+[2026-11-09 11:32:22] base/area/s1 5-A first head: 1.18s -> projected 118s for 100 tasks
+[2026-11-09 11:36:22] base/oracle_linear/s2 5-A first head: 0.33s -> projected 33s for 100 tasks
+[2026-11-09 11:37:29] base/oracle_mlp/s2 5-A first head: 0.42s -> projected 42s for 100 tasks
+[2026-11-09 11:38:57] base/area/s2 5-A first head: 1.18s -> projected 118s for 100 tasks
+[2026-11-09 11:42:56] base/oracle_linear/s3 5-A first head: 0.33s -> projected 33s for 100 tasks
+[2026-11-09 11:44:04] base/oracle_mlp/s3 5-A first head: 0.45s -> projected 45s for 100 tasks
+[2026-11-09 11:45:32] base/area/s3 5-A first head: 1.18s -> projected 118s for 100 tasks
+[2026-11-09 11:49:30] base/oracle_linear/s4 5-A first head: 0.34s -> projected 34s for 100 tasks
+[2026-11-09 11:50:37] base/oracle_mlp/s4 5-A first head: 0.41s -> projected 41s for 100 tasks
+[2026-11-09 11:52:04] base/area/s4 5-A first head: 1.17s -> projected 117s for 100 tasks
+/content/mylab/experiments/005_inductive_bias_probe/src/exp005/stages.py:177: UserWarning: The given NumPy array is not writable, and PyTorch does not support non-writable tensors. This means writing to this tensor will result in undefined behavior. You may want to copy the array to protect its data or make it writable before converting it to a tensor. This type of warning will be suppressed for the rest of this program. (Triggered internally at ../torch/csrc/utils/tensor_numpy.cpp:206.)
+  tr = torch.as_tensor(a).to(dev)
+[2026-11-09 11:56:06] pred_out6/ours/s0 5-A first head: 1.53s -> projected 153s for 100 tasks
+[2026-11-09 12:01:01] heads pred_out6 ours seed 0 done (297s)
+[2026-11-09 12:01:03] pred_out6/ours/s1 5-A first head: 1.51s -> projected 151s for 100 tasks
+[2026-11-09 12:05:57] heads pred_out6 ours seed 1 done (296s)
+[2026-11-09 12:05:59] pred_out6/ours/s2 5-A first head: 1.51s -> projected 151s for 100 tasks
+[2026-11-09 12:10:52] heads pred_out6 ours seed 2 done (294s)
+[2026-11-09 12:10:53] pred_out6/ours/s3 5-A first head: 1.51s -> projected 151s for 100 tasks
+[2026-11-09 12:15:47] heads pred_out6 ours seed 3 done (296s)
+[2026-11-09 12:15:49] pred_out6/ours/s4 5-A first head: 1.45s -> projected 145s for 100 tasks
+[2026-11-09 12:20:44] heads pred_out6 ours seed 4 done (297s)
+[2026-11-09 12:20:46] pred_out6/random/s0 5-A first head: 1.50s -> projected 150s for 100 tasks
+[2026-11-09 12:25:41] heads pred_out6 random seed 0 done (296s)
+[2026-11-09 12:25:42] pred_out6/random/s1 5-A first head: 1.51s -> projected 151s for 100 tasks
+[2026-11-09 12:30:39] heads pred_out6 random seed 1 done (298s)
+[2026-11-09 12:30:41] pred_out6/random/s2 5-A first head: 1.44s -> projected 144s for 100 tasks
+[2026-11-09 12:35:40] heads pred_out6 random seed 2 done (301s)
+[2026-11-09 12:35:41] pred_out6/random/s3 5-A first head: 1.45s -> projected 145s for 100 tasks
+[2026-11-09 12:40:38] heads pred_out6 random seed 3 done (298s)
+[2026-11-09 12:40:39] pred_out6/random/s4 5-A first head: 1.45s -> projected 145s for 100 tasks
+[2026-11-09 12:45:35] heads pred_out6 random seed 4 done (297s)

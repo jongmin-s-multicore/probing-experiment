@@ -135,6 +135,7 @@ experiments/006_size_readout_reanalysis/
 python run.py selftest
 python run.py <stage> --dry-run
 ```
+[2026-11-09] Colab 하위 프로세스에 `MPLBACKEND=Agg` 를 강제하고 그림 코드도 import 전에 Agg 로 설정(004 Colab 파일럿에서 커널의 MPLBACKEND 상속으로 aggregate 실패한 원인).
 Colab(권장): `colab/exp006_colab.ipynb` 를 새 런타임에서 위에서 아래로 실행. 입력 `MyDrive/exp002_work`(읽기 전용), 출력 `MyDrive/exp006_work`. 환경변수: `EXP006_INPUT_ROOT`, `EXP006_WORK_ROOT`, `ACWM_PHYS_SRC`, `DATASET_DIR`, `EXP006_EXP002_DIR`.
 - 셀 1-8: 환경, 코드 스냅샷(006 + 002 소스 읽기 전용 사본, 002 config sha256 대조), 고정 commit 체크아웃(패치 없음), `data_meta`, `check`, `selftest`.
 - 셀 9: **smoke 가 첫 GPU 단계**(`extract --smoke`; 한 run 의 몇 배치로 메모리/시간 추정). 읽고 나서 셀 10 의 `RUN_EXTRACT = True` 로 바꾼다(GPU 사용 확인, 기본 꺼짐).

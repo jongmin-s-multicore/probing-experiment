@@ -1,0 +1,8 @@
+[2026-11-10 16:01:40] log file: /home/jaekyungkim/mylab/experiments/010_source_separation_ib/logs/check_20261110-160140.log
+[2026-11-10 16:01:40] stage=check dry_run=False python=/home/jaekyungkim/miniconda3/envs/lab07/bin/python conda_env=base pilot=True
+  enc_k12    real /home/jaekyungkim/dinowm/exp004_cache/enc/tokens_k12.npy exists=False
+  enc_k12    rand /home/jaekyungkim/dinowm/exp004_cache/enc/rand_k12.npy exists=False
+  pred_out6  real /home/jaekyungkim/dinowm/exp005_cache/feat_pred_out6.npy exists=False
+  pred_out6  rand /home/jaekyungkim/dinowm/exp005_cache/feat_pred_out6_rand.npy exists=False
+002 Q1 cache DONE: False
+head plan: {'attentive_rep_heads': 6000, 'base_heads_attn_area': 1500, 'base_small_oracle_heads': 3000}

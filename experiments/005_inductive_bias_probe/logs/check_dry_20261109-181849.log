@@ -1,0 +1,12 @@
+[2026-11-09 18:18:49] log file: /home/jaekyungkim/mylab/experiments/005_inductive_bias_probe/logs/check_dry_20261109-181849.log
+[2026-11-09 18:18:49] stage=check dry_run=True python=/home/jaekyungkim/miniconda3/envs/lab07/bin/python conda_env=lab07 pilot=True
+python executable : /home/jaekyungkim/miniconda3/envs/lab07/bin/python
+CONDA_DEFAULT_ENV : lab07
+packages          : {'torch': '2.0.1+cpu', 'torchvision': '0.15.2+cpu', 'numpy': '1.26.4', 'scipy': None, 'sklearn': None, 'yaml': '6.0.3', 'cv2': None, 'decord': None, 'hydra': None, 'omegaconf': None, 'einops': '0.8.2'} pysr installed: False
+cuda_available    : False None None
+004 summary.json  : /home/jaekyungkim/mylab/experiments/004_depth_truncation/results/summary.json exists=False pilot=None
+  cache002  /tmp/tmp.yk9LSw5PMt/c2 exists=False
+  cache004  /tmp/tmp.yk9LSw5PMt/c4 exists=False
+  cache     /tmp/tmp.yk9LSw5PMt/c5 exists=False
+002 Q1 cache DONE: False
+results/tasks.npz: False  plan.json: False

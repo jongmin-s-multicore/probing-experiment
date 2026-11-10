@@ -53,3 +53,17 @@
 - 005 전용 노트북 없음: `../004_depth_truncation/colab/exp004_005_colab.ipynb` 가 004 다음에 005 를 실행한다. 004 CHANGES.md 7절 참고(운영 값만 추가, config 의 시드/임계값 변경 없음).
 - **코드 수정(운영, 필수):** `run.py` 의 `exp002.common.attempts_check` import 가 002 커밋 545168e 로 깨져 있어(ImportError) `src/exp005/base.py` 에 같은 동작의 `attempts_check` 를 복사했다. 재시도 상한 3회 동작은 그대로다.
 - config 변경은 8a 항목(확정 기록 12) 뿐이다.
+- MPLBACKEND 수정: 005 그림 코드가 import matplotlib 전에 MPLBACKEND=Agg 를 무조건 설정한다(004 CHANGES.md 7절 참고, Colab 파일럿에서 004 aggregate 가 같은 원인으로 실패).
+
+## 8. 평가 입력 수 변경 (2026-11-10 기록, 사용자 확인)
+- Colab 본 실행에서 사용자가 `eval.n_inputs` 를 2000 -> 900 으로 줄였다(이유: 비용). 저장소 config.yaml 은 2000 그대로다. 결과(tasks_meta.json `n_eval` 900)와 모든 판정은 900 기준이며 사전 등록에서 벗어난 실행이다.
+
+## 9. selftest 보강 (2026-11-10, 보고서 005 7절 2번; notes/reviews/005_skeptic.md C1 (c), S1, S2)
+- 변경 파일: `src/exp005/selftest.py` 만 (새 단계 H `t_skeptic` 추가, `t_torch_pipeline` 이 합성 예측 P 를 모듈 변수 `_STASH` 에 보관). 판정/지표 코드(`verdicts.py`, `ibmetrics.py`, `stages.py`)는 바꾸지 않았다.
+- 추가한 점검 10개: C1(c)-1~3 (3레벨 MLP oracle 의 OoD D-IB), S2-1~3 (`_vals` 중복), S1-1~4 (`continue` 구조).
+- 실행: `~/miniconda3/envs/lab07/bin/python run.py selftest` (CPU), 로그 `logs/selftest_20261110_skeptic.log`. 결과 passed=98 failed=3 skipped=0 (기존 점검 91개 전부 통과, 추가 10개 중 7개 통과, 3개 실패).
+- 실패 3개와 값 (합성 데이터, 결과 아님):
+  - C1(c)-2 "i.i.d. 무작위 모델의 OoD 포함 쌍(ood_any) D-IB 점수가 1 미만": 점수 1.587 (프로덕션 정규화 D=const). 같은 합성 실행의 D-IB raw: oracle(MLP) 0.316, noninf 0.5, const 0.0 (ood_any). ind 그룹 oracle raw 0.409.
+  - S1-3 / S1-4 "5-A 예측만 없는 seed 의 5-B(calibration), 5-D(law) 행이 계산됨": 해당 seed 의 ib 행 0, cal_dev(ours) 0, law(ours) 0 (다른 seed 는 cal_dev 3, law 7). `stages.py` 의 `continue` 가 5-A 예측이 없으면 같은 seed 의 5-B/5-D 까지 건너뛴다는 skeptic S1 서술과 일치.
+- 통과한 것: C1(c)-1 (oracle ood_any raw 0.316 과 noninf 0.5 의 차 > min_gap 0.05), C1(c)-3 (oracle raw ood_any 0.316 <= ind 0.409), S2-1/2 (프로덕션 행 키 중복 없음), S2-3 (`_vals` 가 중복 시 마지막 값만 쓰고 경고 없음: 현재 동작의 특성화), S1-1/2.
+- 이 실패는 selftest 가 가리킨 동작이다. 코드를 고치지 않았다. 사용자 결정 대기: (1) 실패를 의도된 동작으로 보고 점검을 기대값 반전(특성화)으로 바꿀지, (2) `continue` 구조/점수 상한 정의를 수정할지. selftest 종료 코드는 지금 1 이다.

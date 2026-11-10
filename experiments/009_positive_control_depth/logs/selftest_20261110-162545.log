@@ -1,0 +1,77 @@
+[2026-11-10 16:25:45] log file: /home/jaekyungkim/mylab/experiments/009_positive_control_depth/logs/selftest_20261110-162545.log
+[2026-11-10 16:25:45] stage=selftest dry_run=False python=/home/jaekyungkim/miniconda3/envs/lab07/bin/python conda_env=base pilot=True
+A  eraser algebra (numpy)
+  [ok] leace_scalar: after alpha=1 the covariance of every coordinate with the label is ~0 (9.5e-16 vs 1.8 before)
+  [ok] leace_scalar: best linear probe on the erased features explains ~0 of the variance (in-sample R2 < 0.05) (R2 0.000)
+  [ok] leace_scalar: alpha=0.5 is the midpoint of alpha=0 and alpha=1 
+  [ok] leace_scalar: alpha=0 is identity 
+  [ok] probe_direction: component along u is zero after alpha=1 
+  [ok] probe_direction: other coordinates still carry size info (in-sample linear R2 > 0.3) -> weaker than leace (R2 0.390)
+  [ok] probe_direction: alpha=0.5 is the midpoint of alpha=0 and alpha=1 
+  [ok] probe_direction: alpha=0 is identity 
+  [ok] constant labels in the fit set raise 
+  [ok] unknown method raises 
+B  units, resume, shared baseline, override, verdicts
+  [ok] units: 3 baselines (one per train seed, shared by all blocks) + 6 blocks x 3 strengths x 3 seeds = 57 
+  [ok] part file names distinct for every unit 
+  [ok] unit_done recognises finished units only 
+  [ok] a single-block list needs 1/3 of the intervention units 
+  [ok] default m_int [1..6] from config (user decision 2026-11-10), not overridden 
+  [ok] CLI override sorted, recorded as overridden (source cli) 
+  [ok] env override recorded (source env) 
+  [ok] CLI value equal to config is not 'overridden' 
+  [ok] verdict: 2 of 3 seeds with m* <= m_int+1 -> criterion_met 
+  [ok] verdict: m* = m_int+2 does not count 
+  [ok] verdict: no detection -> criterion_not_met 
+  [ok] detect uses 004's first_drop (0.2 below running max) 
+  [ok] m_star = earliest vanishing depth over splits 
+D  config explicitness
+  [ok] m_int is a list default [1,2,3,4,5,6]; strengths include 0 
+  [ok] seeds explicit (train seeds, probe seeds, fit seed, global) 
+  [ok] decision rule equals 004 config (threshold 0.2, primary) 
+  [ok] success rule: strength 1.0, 2 seeds, slack 1 
+C  toy world model: forward with intervention, extraction, probes, per-block verdict end to end
+  [ok] torch erase_stream == numpy reference; action coordinates untouched 
+  [ok] torch probe_direction erase removes the u component 
+  [ok] forward_hidden(no erase) == exp004.deep.ee_forward at every depth; alpha=0 is the same 
+  [ok] intervention at m_int=3 leaves h_0..h_2 unchanged and changes h_3 and later 
+[2026-11-10 16:25:46] s0 base extract 16/138 (0s)
+[2026-11-10 16:25:47] s0 baseline done (546 rows)
+[2026-11-10 16:25:47] s0 m_int 2: direction fitted on 24 fit episodes (192 samples), corr(a.x, y) on fit data 0.998
+[2026-11-10 16:25:47] s0 m2 a0.5 extract 16/138 (0s)
+[2026-11-10 16:25:48] s0 m_int 2 alpha 0.5 done (390 rows)
+[2026-11-10 16:25:48] s0 m2 a1 extract 16/138 (0s)
+[2026-11-10 16:25:48] s0 m_int 2 alpha 1 done (390 rows)
+[2026-11-10 16:25:49] s0 m_int 4: direction fitted on 24 fit episodes (192 samples), corr(a.x, y) on fit data 0.998
+[2026-11-10 16:25:49] s0 m4 a0.5 extract 16/138 (0s)
+[2026-11-10 16:25:49] s0 m_int 4 alpha 0.5 done (234 rows)
+[2026-11-10 16:25:49] s0 m4 a1 extract 16/138 (0s)
+[2026-11-10 16:25:50] s0 m_int 4 alpha 1 done (234 rows)
+[2026-11-10 16:25:50] s0 m_int 6: direction fitted on 24 fit episodes (192 samples), corr(a.x, y) on fit data 0.998
+[2026-11-10 16:25:50] s0 m6 a0.5 extract 16/138 (0s)
+[2026-11-10 16:25:50] s0 m_int 6 alpha 0.5 done (78 rows)
+[2026-11-10 16:25:50] s0 m6 a1 extract 16/138 (0s)
+[2026-11-10 16:25:51] s0 m_int 6 alpha 1 done (78 rows)
+  [ok] run_seed wrote 1 baseline + 3 blocks (incl. last block 6) x 2 strengths = 7 part files (baseline shared across blocks) ['base_s0.csv', 'unit_m2_a0p5_s0.csv', 'unit_m2_a1_s0.csv', 'unit_m4_a0p5_s0.csv', 'unit_m4_a1_s0.csv', 'unit_m6_a0p5_s0.csv', 'unit_m6_a1_s0.csv']
+  [ok] resume: nothing left to do after a full run 
+  [ok] resume: part files untouched on a second call 
+[2026-11-10 16:25:51] s0 m4 a0.5 extract 16/138 (0s)
+[2026-11-10 16:25:51] s0 m_int 4 alpha 0.5 done (234 rows)
+  [ok] resume: only the deleted unit is recomputed 
+[2026-11-10 16:25:51] aggregate: m_int [2, 4, 6] (source config, overridden=False), strengths [0.0, 0.5, 1.0], train seeds [0]
+Traceback (most recent call last):
+  File "/home/jaekyungkim/mylab/experiments/009_positive_control_depth/src/exp009/selftest.py", line 281, in run
+    fn()
+  File "/home/jaekyungkim/mylab/experiments/009_positive_control_depth/src/exp009/selftest.py", line 279, in <lambda>
+    for name, fn in (("A", t_eraser), ("B", lambda: t_bookkeeping(cfg)), ("D", lambda: t_config(cfg, c4)), ("C", lambda: t_torch(cfg, cfg2))):
+  File "/home/jaekyungkim/mylab/experiments/009_positive_control_depth/src/exp009/selftest.py", line 203, in t_torch
+    res = S.aggregate(cfga, None, c2, paths, m_ints, False, "config", strengths, [ts])
+  File "/home/jaekyungkim/mylab/experiments/009_positive_control_depth/src/exp009/stages.py", line 248, in aggregate
+    "aux_B_common_variance_r2": AX.rule_B(AX.combined_rows(brows, ur, ts, prim, mm), cfg2, splits, thr, mm, slack)}
+  File "/home/jaekyungkim/mylab/experiments/009_positive_control_depth/src/exp009/auxrules.py", line 81, in rule_B
+    lab = common_variance(cfg2)
+  File "/home/jaekyungkim/mylab/experiments/009_positive_control_depth/src/exp009/auxrules.py", line 76, in common_variance
+    return {k: math.log(v) for k, v in cfg2["data"]["area_ratio"].items()}
+KeyError: 'area_ratio'
+selftest summary: passed=35 failed=1 skipped=0
+FAILED: ['C (exception)']

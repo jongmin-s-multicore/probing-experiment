@@ -1,0 +1,5 @@
+[2026-11-09 12:45:37] log file: /content/mylab/experiments/005_inductive_bias_probe/logs/metrics_20261109-124537.log
+[2026-11-09 12:45:37] stage=metrics dry_run=False python=/content/venv/bin/python conda_env=None pilot=True
+[2026-11-09 12:45:37] WARNING: CONDA_DEFAULT_ENV is empty - not running inside an activated conda environment (python=/content/venv/bin/python). Continuing.
+[2026-11-09 12:45:37] metrics plan: layers ['pred_out6'] ; seeds [0, 1, 2, 3, 4] ; reads results/predictions/*.npz and results/tasks.npz ; writes ib_scores.csv calibration.csv calibration_dev.csv law_fits.csv
+[2026-11-09 12:45:42] metrics done: ib rows 700, calibration bin rows 1800, law rows 175, figures ['fig_calibration.png', 'fig_dib_decomp.png']

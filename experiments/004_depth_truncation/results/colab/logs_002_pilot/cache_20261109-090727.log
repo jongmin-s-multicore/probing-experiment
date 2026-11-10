@@ -1,0 +1,70 @@
+[2026-11-09 09:07:27] log file: /content/mylab/experiments/002_single_size_sweep/logs/cache_20261109-090727.log
+[2026-11-09 09:07:27] stage=cache dry_run=False python=/content/venv/bin/python conda_env=None
+[2026-11-09 09:07:27] WARNING: CONDA_DEFAULT_ENV is empty - not running inside an activated conda environment (python=/content/venv/bin/python). Continuing.
+[2026-11-09 09:07:27] cache: encoder from run exp002_multi_60_ind_160_s0 ; 300 episodes ; disk estimate {'frames_u8_gb': 0.59, 'tokens_dino_gb': 0.59, 'tokens_rand_gb': 0.59, 'total_gb': 1.76} ; free at cache path 246.3 GB
+Downloading: "https://github.com/facebookresearch/dinov2/zipball/85a24602099d397264d5b30461ad7f3bfd726ca1" to /root/.cache/torch/hub/85a24602099d397264d5b30461ad7f3bfd726ca1.zip
+/root/.cache/torch/hub/facebookresearch_dinov2_85a24602099d397264d5b30461ad7f3bfd726ca1/dinov2/layers/swiglu_ffn.py:51: UserWarning: xFormers is not available (SwiGLU)
+  warnings.warn("xFormers is not available (SwiGLU)")
+/root/.cache/torch/hub/facebookresearch_dinov2_85a24602099d397264d5b30461ad7f3bfd726ca1/dinov2/layers/attention.py:33: UserWarning: xFormers is not available (Attention)
+  warnings.warn("xFormers is not available (Attention)")
+/root/.cache/torch/hub/facebookresearch_dinov2_85a24602099d397264d5b30461ad7f3bfd726ca1/dinov2/layers/block.py:40: UserWarning: xFormers is not available (Block)
+  warnings.warn("xFormers is not available (Block)")
+Downloading: "https://dl.fbaipublicfiles.com/dinov2/dinov2_vits14/dinov2_vits14_pretrain.pth" to /root/.cache/torch/hub/checkpoints/dinov2_vits14_pretrain.pth
+  0%|          | 0.00/84.2M [00:00<?, ?B/s] 35%|###5      | 29.8M/84.2M [00:00<00:00, 309MB/s] 70%|#######   | 59.3M/84.2M [00:00<00:00, 302MB/s]100%|##########| 84.2M/84.2M [00:00<00:00, 286MB/s]
+num_action_repeat: 1
+num_proprio_repeat: 1
+proprio encoder: ProprioceptiveEmbedding(
+  (patch_embed): Conv1d(1, 10, kernel_size=(1,), stride=(1,))
+)
+action encoder: ProprioceptiveEmbedding(
+  (patch_embed): Conv1d(30, 10, kernel_size=(1,), stride=(1,))
+)
+proprio_dim: 10, after repeat: 10
+action_dim: 10, after repeat: 10
+emb_dim: 404
+Model emb_dim:  404
+[2026-11-09 09:07:45] cache from run exp002_multi_60_ind_160_s0 epoch 15; encoder fingerprint 6b2c03b98eae; episodes 300; disk {'frames_u8_gb': 0.5870592, 'tokens_dino_gb': 0.5870592, 'tokens_rand_gb': 0.5870592, 'total_gb': 1.7616564}
+/content/venv/lib/python3.9/site-packages/torch/_utils.py:776: UserWarning: TypedStorage is deprecated. It will be removed in the future and UntypedStorage will be the only storage class. This should only matter to you if you are using storages directly.  To access UntypedStorage directly, use tensor.untyped_storage() instead of tensor.storage()
+  return self.fget.__get__(instance, owner)()
+Using cache found in /root/.cache/torch/hub/facebookresearch_dinov2_85a24602099d397264d5b30461ad7f3bfd726ca1
+/content/venv/lib/python3.9/site-packages/torchvision/transforms/functional.py:1603: UserWarning: The default value of the antialias parameter of all the resizing transforms (Resize(), RandomResizedCrop(), etc.) will change from None to True in v0.17, in order to be consistent across the PIL and Tensor backends. To suppress this warning, directly pass antialias=True (recommended, future default), antialias=None (current default, which means False for Tensors and True for PIL), or antialias=False (only works on Tensors - PIL will still use antialiasing). This also applies if you are using the inference transforms from the models weights: update the call to weights.transforms(antialias=True).
+  warnings.warn(
+[2026-11-09 09:07:50] first batch: vis range [-1.000, 1.000]; u8->float round trip max err 0.0039 (limit 0.0078)
+[2026-11-09 09:07:50] cached 8/300 (3s)
+[2026-11-09 09:07:51] cached 16/300 (4s)
+[2026-11-09 09:07:52] cached 24/300 (5s)
+[2026-11-09 09:07:53] cached 32/300 (6s)
+[2026-11-09 09:07:54] cached 40/300 (7s)
+[2026-11-09 09:07:55] cached 48/300 (8s)
+[2026-11-09 09:07:56] cached 56/300 (9s)
+[2026-11-09 09:07:57] cached 64/300 (10s)
+[2026-11-09 09:07:58] cached 72/300 (12s)
+[2026-11-09 09:08:00] cached 80/300 (13s)
+[2026-11-09 09:08:01] cached 88/300 (14s)
+[2026-11-09 09:08:02] cached 96/300 (15s)
+[2026-11-09 09:08:03] cached 104/300 (16s)
+[2026-11-09 09:08:04] cached 112/300 (17s)
+[2026-11-09 09:08:05] cached 120/300 (18s)
+[2026-11-09 09:08:06] cached 128/300 (19s)
+[2026-11-09 09:08:07] cached 136/300 (20s)
+[2026-11-09 09:08:08] cached 144/300 (21s)
+[2026-11-09 09:08:09] cached 152/300 (22s)
+[2026-11-09 09:08:10] cached 160/300 (24s)
+[2026-11-09 09:08:12] cached 168/300 (25s)
+[2026-11-09 09:08:13] cached 176/300 (26s)
+[2026-11-09 09:08:14] cached 184/300 (27s)
+[2026-11-09 09:08:15] cached 192/300 (28s)
+[2026-11-09 09:08:16] cached 200/300 (29s)
+[2026-11-09 09:08:17] cached 208/300 (30s)
+[2026-11-09 09:08:18] cached 216/300 (32s)
+[2026-11-09 09:08:20] cached 224/300 (33s)
+[2026-11-09 09:08:21] cached 232/300 (34s)
+[2026-11-09 09:08:22] cached 240/300 (35s)
+[2026-11-09 09:08:23] cached 248/300 (36s)
+[2026-11-09 09:08:24] cached 256/300 (37s)
+[2026-11-09 09:08:25] cached 264/300 (39s)
+[2026-11-09 09:08:27] cached 272/300 (40s)
+[2026-11-09 09:08:28] cached 280/300 (41s)
+[2026-11-09 09:08:29] cached 288/300 (42s)
+[2026-11-09 09:08:30] cached 296/300 (44s)
+[2026-11-09 09:08:31] cached 300/300 (44s)

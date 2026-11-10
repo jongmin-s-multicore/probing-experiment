@@ -1,0 +1,6 @@
+{
+  "stage:enc_cache": 0,
+  "stage:enc_probe": 0,
+  "stage:pred": 0,
+  "stage:aggregate": 0
+}

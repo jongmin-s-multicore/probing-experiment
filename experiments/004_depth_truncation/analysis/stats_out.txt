@@ -1,0 +1,285 @@
+== 1. primary curve recompute vs summary.json
+encoder train n/depth 5 mean [0.7329, 0.7925, 0.8256, 0.8404, 0.8373, 0.8462, 0.8342] sd [0.0, 0.0, 0.0004, 0.0, 0.0005, 0.0, 0.0013] maxdrop_from_runmax 0.012 first_drop@0.2 None
+encoder interp n/depth 5 mean [0.2174, 0.4275, 0.4655, 0.4904, 0.5337, 0.5419, 0.5088] sd [0.0, 0.0, 0.0061, 0.0, 0.0039, 0.0, 0.004] maxdrop_from_runmax 0.0331 first_drop@0.2 None
+encoder extrap n/depth 5 mean [0.7879, 0.8238, 0.8218, 0.8398, 0.8359, 0.8407, 0.8516] sd [0.0, 0.0, 0.0006, 0.0, 0.0013, 0.0, 0.0017] maxdrop_from_runmax 0.004 first_drop@0.2 None
+predictor train n/depth 15 mean [0.8342, 0.8419, 0.8453, 0.8471, 0.8507, 0.8555, 0.8594] sd [0.0012, 0.0012, 0.0021, 0.0024, 0.003, 0.0037, 0.0043] maxdrop_from_runmax 0 first_drop@0.2 None
+predictor interp n/depth 15 mean [0.5088, 0.5193, 0.531, 0.5371, 0.5457, 0.543, 0.5526] sd [0.0037, 0.0089, 0.0138, 0.0132, 0.0115, 0.0017, 0.0068] maxdrop_from_runmax 0.0027 first_drop@0.2 None
+predictor extrap n/depth 15 mean [0.8516, 0.8449, 0.842, 0.8426, 0.8437, 0.8466, 0.8518] sd [0.0016, 0.0018, 0.0028, 0.0028, 0.0004, 0.0022, 0.0023] maxdrop_from_runmax 0.0097 first_drop@0.2 None
+== 2. ind_ood_gap recompute vs summary.json
+encoder interp 0 gap 0.5155 tol 0 sd_train 0 sd_ood 0 unique_vals_train 1 unique_ood 1 match True
+encoder interp 2 gap 0.365 tol 1.24e-16 sd_train 0 sd_ood 6.21e-17 unique_vals_train 1 unique_ood 1 match True
+encoder interp 4 gap 0.3601 tol 0.0123 sd_train 0.000401 sd_ood 0.00613 unique_vals_train 2 unique_ood 2 match True
+encoder interp 6 gap 0.3501 tol 2.48e-16 sd_train 1.24e-16 sd_ood 0 unique_vals_train 1 unique_ood 1 match True
+encoder interp 8 gap 0.3036 tol 0.00788 sd_train 0.000496 sd_ood 0.00394 unique_vals_train 2 unique_ood 2 match True
+encoder interp 10 gap 0.3043 tol 0 sd_train 0 sd_ood 0 unique_vals_train 1 unique_ood 1 match True
+encoder interp 12 gap 0.3254 tol 0.00802 sd_train 0.00129 sd_ood 0.00401 unique_vals_train 2 unique_ood 2 match True
+encoder extrap 0 gap -0.055 tol 0 sd_train 0 sd_ood 0 unique_vals_train 1 unique_ood 1 match True
+encoder extrap 2 gap -0.0313 tol 0 sd_train 0 sd_ood 0 unique_vals_train 1 unique_ood 1 match True
+encoder extrap 4 gap 0.0038 tol 0.00113 sd_train 0.000401 sd_ood 0.000567 unique_vals_train 2 unique_ood 2 match True
+encoder extrap 6 gap 0.0006 tol 2.48e-16 sd_train 1.24e-16 sd_ood 0 unique_vals_train 1 unique_ood 1 match True
+encoder extrap 8 gap 0.0014 tol 0.00252 sd_train 0.000496 sd_ood 0.00126 unique_vals_train 2 unique_ood 2 match True
+encoder extrap 10 gap 0.0055 tol 0 sd_train 0 sd_ood 0 unique_vals_train 1 unique_ood 1 match True
+encoder extrap 12 gap -0.0175 tol 0.00338 sd_train 0.00129 sd_ood 0.00169 unique_vals_train 2 unique_ood 2 match True
+predictor interp 0 gap 0.3254 tol 0.00743 sd_train 0.0012 sd_ood 0.00371 unique_vals_train 6 unique_ood 6 match True
+predictor interp 1 gap 0.3225 tol 0.0178 sd_train 0.00124 sd_ood 0.00891 unique_vals_train 3 unique_ood 3 match True
+predictor interp 2 gap 0.3143 tol 0.0276 sd_train 0.0021 sd_ood 0.0138 unique_vals_train 3 unique_ood 3 match True
+predictor interp 3 gap 0.31 tol 0.0265 sd_train 0.00241 sd_ood 0.0132 unique_vals_train 3 unique_ood 3 match True
+predictor interp 4 gap 0.3049 tol 0.023 sd_train 0.00298 sd_ood 0.0115 unique_vals_train 3 unique_ood 3 match True
+predictor interp 5 gap 0.3125 tol 0.00745 sd_train 0.00372 sd_ood 0.00169 unique_vals_train 5 unique_ood 5 match True
+predictor interp 6 gap 0.3068 tol 0.0137 sd_train 0.00433 sd_ood 0.00683 unique_vals_train 3 unique_ood 3 match True
+predictor extrap 0 gap -0.0175 tol 0.00313 sd_train 0.0012 sd_ood 0.00157 unique_vals_train 6 unique_ood 6 match True
+predictor extrap 1 gap -0.003 tol 0.00362 sd_train 0.00124 sd_ood 0.00181 unique_vals_train 3 unique_ood 3 match True
+predictor extrap 2 gap 0.0034 tol 0.00555 sd_train 0.0021 sd_ood 0.00278 unique_vals_train 3 unique_ood 3 match True
+predictor extrap 3 gap 0.0045 tol 0.00563 sd_train 0.00241 sd_ood 0.00281 unique_vals_train 3 unique_ood 3 match True
+predictor extrap 4 gap 0.007 tol 0.00595 sd_train 0.00298 sd_ood 0.000446 unique_vals_train 3 unique_ood 3 match True
+predictor extrap 5 gap 0.0089 tol 0.00745 sd_train 0.00372 sd_ood 0.00223 unique_vals_train 5 unique_ood 5 match True
+predictor extrap 6 gap 0.0076 tol 0.00866 sd_train 0.00433 sd_ood 0.00227 unique_vals_train 3 unique_ood 3 match True
+mismatches 0
+== 3. tol~0 diagnosis: encoder linear/new/real per-seed raw r2 at depth 0 and 2, split train
+enc d 0 train [0.732886284192042, 0.732886284192042, 0.732886284192042, 0.732886284192042, 0.732886284192042] interp [0.21735985854043194, 0.21735985854043194, 0.21735985854043194, 0.21735985854043194, 0.21735985854043194] extrap [0.7878809847091585, 0.7878809847091585, 0.7878809847091585, 0.7878809847091585, 0.7878809847091585]
+enc d 2 train [0.7925125405837341, 0.7925125405837341, 0.7925125405837341, 0.7925125405837341, 0.7925125405837341] interp [0.4275172176130806, 0.4275172176130806, 0.4275172176130806, 0.4275172176130806, 0.4275172176130806] extrap [0.8238050993797336, 0.8238050993797336, 0.8238050993797336, 0.8238050993797336, 0.8238050993797336]
+enc d 4 train [0.8260320483195159, 0.8252999901830051, 0.8260320483195159, 0.8252999901830051, 0.8252999901830051] interp [0.47223957589891075, 0.4610432611594407, 0.47223957589891075, 0.4610432611594407, 0.4610432611594407] extrap [0.8224136175902567, 0.8213786787474773, 0.8224136175902567, 0.8213786787474773, 0.8213786787474773]
+enc d 10 train [0.8461665871991096, 0.8461665871991096, 0.8461665871991096, 0.8461665871991096, 0.8461665871991096] interp [0.5418567552230532, 0.5418567552230532, 0.5418567552230532, 0.5418567552230532, 0.5418567552230532] extrap [0.840663712182746, 0.840663712182746, 0.840663712182746, 0.840663712182746, 0.840663712182746]
+== 3b. sd over probe seeds, by (module, probe, control, tp): fraction of cells with sd<1e-9 (split rows, level ALL)
+encoder linear zero-sd cells 16 / 28
+encoder attentive zero-sd cells 0 / 28
+predictor linear zero-sd cells 0 / 28
+predictor attentive zero-sd cells 0 / 28
+   predictor: sd decomposition (train-seed vs probe-seed) primary, split extrap
+pred train 0 per-train-seed mean [0.8341, 0.8341, 0.8342] between-trainseed sd 0.0 mean within-trainseed(probe) sd 0.00129
+pred train 1 per-train-seed mean [0.8406, 0.8416, 0.8435] between-trainseed sd 0.0015 mean within-trainseed(probe) sd 0.0
+pred train 2 per-train-seed mean [0.8479, 0.8429, 0.8452] between-trainseed sd 0.0025 mean within-trainseed(probe) sd 0.0
+pred train 3 per-train-seed mean [0.8504, 0.8456, 0.8453] between-trainseed sd 0.0029 mean within-trainseed(probe) sd 0.0
+pred train 4 per-train-seed mean [0.8537, 0.8516, 0.8468] between-trainseed sd 0.0035 mean within-trainseed(probe) sd 0.0
+pred train 5 per-train-seed mean [0.8576, 0.8582, 0.8507] between-trainseed sd 0.0042 mean within-trainseed(probe) sd 0.001
+pred train 6 per-train-seed mean [0.8537, 0.8637, 0.8607] between-trainseed sd 0.0051 mean within-trainseed(probe) sd 0.0
+pred interp 0 per-train-seed mean [0.5088, 0.5088, 0.5088] between-trainseed sd 0.0 mean within-trainseed(probe) sd 0.00401
+pred interp 1 per-train-seed mean [0.5132, 0.5315, 0.5133] between-trainseed sd 0.0105 mean within-trainseed(probe) sd 0.0
+pred interp 2 per-train-seed mean [0.5262, 0.5493, 0.5176] between-trainseed sd 0.0164 mean within-trainseed(probe) sd 0.0
+pred interp 3 per-train-seed mean [0.5361, 0.5532, 0.5219] between-trainseed sd 0.0157 mean within-trainseed(probe) sd 0.0
+pred interp 4 per-train-seed mean [0.5451, 0.5597, 0.5325] between-trainseed sd 0.0136 mean within-trainseed(probe) sd 0.0
+pred interp 5 per-train-seed mean [0.542, 0.5446, 0.5425] between-trainseed sd 0.0014 mean within-trainseed(probe) sd 0.00087
+pred interp 6 per-train-seed mean [0.5476, 0.5619, 0.5481] between-trainseed sd 0.0081 mean within-trainseed(probe) sd 0.0
+pred extrap 0 per-train-seed mean [0.8516, 0.8516, 0.8516] between-trainseed sd 0.0 mean within-trainseed(probe) sd 0.00169
+pred extrap 1 per-train-seed mean [0.8426, 0.8452, 0.8468] between-trainseed sd 0.0021 mean within-trainseed(probe) sd 0.0
+pred extrap 2 per-train-seed mean [0.8383, 0.843, 0.8447] between-trainseed sd 0.0033 mean within-trainseed(probe) sd 0.0
+pred extrap 3 per-train-seed mean [0.839, 0.843, 0.8456] between-trainseed sd 0.0033 mean within-trainseed(probe) sd 0.0
+pred extrap 4 per-train-seed mean [0.8431, 0.844, 0.844] between-trainseed sd 0.0005 mean within-trainseed(probe) sd 0.0
+pred extrap 5 per-train-seed mean [0.8446, 0.8482, 0.8471] between-trainseed sd 0.0019 mean within-trainseed(probe) sd 0.00138
+pred extrap 6 per-train-seed mean [0.8487, 0.8536, 0.8531] between-trainseed sd 0.0027 mean within-trainseed(probe) sd 0.0
+== 4. controls vs real, primary linear late, level ALL, per split (mean R2 across seeds)
+encoder train real {0: 0.733, 2: 0.793, 4: 0.826, 6: 0.84, 8: 0.837, 10: 0.846, 12: 0.834}
+encoder train random_init {0: 0.458, 2: 0.642, 4: 0.654, 6: 0.662, 8: 0.661, 10: 0.655, 12: 0.658}
+encoder train label_shuffle {0: -0.002, 2: 0.003, 4: 0.001, 6: -0.001, 8: -0.001, 10: -0.002, 12: -0.001}
+encoder interp real {0: 0.217, 2: 0.428, 4: 0.466, 6: 0.49, 8: 0.534, 10: 0.542, 12: 0.509}
+encoder interp random_init {0: -0.147, 2: 0.161, 4: 0.17, 6: 0.192, 8: 0.2, 10: 0.184, 12: 0.207}
+encoder interp label_shuffle {0: -0.016, 2: -0.013, 4: -0.014, 6: -0.034, 8: -0.029, 10: -0.026, 12: -0.029}
+encoder extrap real {0: 0.788, 2: 0.824, 4: 0.822, 6: 0.84, 8: 0.836, 10: 0.841, 12: 0.852}
+encoder extrap random_init {0: 0.656, 2: 0.756, 4: 0.766, 6: 0.767, 8: 0.77, 10: 0.765, 12: 0.768}
+encoder extrap label_shuffle {0: -0.016, 2: -0.009, 4: -0.009, 6: -0.011, 8: -0.008, 10: -0.011, 12: -0.018}
+predictor train real {0: 0.834, 1: 0.842, 2: 0.845, 3: 0.847, 4: 0.851, 5: 0.856, 6: 0.859}
+predictor train random_init {0: 0.834, 1: 0.834, 2: 0.836, 3: 0.835, 4: 0.835, 5: 0.834, 6: 0.835}
+predictor train label_shuffle {0: -0.001, 1: -0.001, 2: 0.0, 3: -0.001, 4: -0.001, 5: -0.0, 6: 0.0}
+predictor interp real {0: 0.509, 1: 0.519, 2: 0.531, 3: 0.537, 4: 0.546, 5: 0.543, 6: 0.553}
+predictor interp random_init {0: 0.509, 1: 0.51, 2: 0.5, 3: 0.503, 4: 0.505, 5: 0.508, 6: 0.504}
+predictor interp label_shuffle {0: -0.029, 1: -0.033, 2: -0.032, 3: -0.029, 4: -0.023, 5: -0.017, 6: -0.017}
+predictor extrap real {0: 0.852, 1: 0.845, 2: 0.842, 3: 0.843, 4: 0.844, 5: 0.847, 6: 0.852}
+predictor extrap random_init {0: 0.852, 1: 0.851, 2: 0.852, 3: 0.852, 4: 0.852, 5: 0.852, 6: 0.852}
+predictor extrap label_shuffle {0: -0.018, 1: -0.016, 2: -0.013, 3: -0.013, 4: -0.013, 5: -0.013, 6: -0.014}
+baseline linear pixel {'train': {-1: [0.373, 0.0]}, 'interp': {-1: [-0.252, 0.0]}, 'extrap': {-1: [0.628, 0.0]}, 'all': {-1: [0.586, 0.0]}}
+baseline linear mask_area_bbox {'train': {-1: [0.588, 0.0]}, 'interp': {-1: [-0.0, 0.001]}, 'extrap': {-1: [0.817, 0.0]}, 'all': {-1: [0.777, 0.0]}}
+baseline attentive pixel {'train': {-1: [0.626, 0.033]}, 'interp': {-1: [-0.067, 0.076]}, 'extrap': {-1: [0.613, 0.024]}, 'all': {-1: [0.605, 0.023]}}
+   baseline early:
+baseline early linear pixel {'train': {-1: 0.814}, 'interp': {-1: 0.689}, 'extrap': {-1: 0.725}, 'all': {-1: 0.737}}
+baseline early linear mask_area_bbox {'train': {-1: 0.851}, 'interp': {-1: 0.769}, 'extrap': {-1: 0.889}, 'all': {-1: 0.883}}
+baseline early attentive pixel {'train': {-1: 0.867}, 'interp': {-1: 0.496}, 'extrap': {-1: 0.65}, 'all': {-1: 0.674}}
+== 5. real vs mask_area_bbox (extrap, interp, train): Cohen d (pooled) and diff; mask baseline has depth key
+mask baseline train depths [-1] mean 0.5877 sd 0.0002 n 5
+   encoder train 0 real-mask 0.1452 d~ 1172.79 n 5
+   encoder train 2 real-mask 0.2048 d~ 1654.44 n 5
+   encoder train 4 real-mask 0.2379 d~ 768.95 n 5
+   encoder train 6 real-mask 0.2527 d~ 2041.29 n 5
+   encoder train 8 real-mask 0.2496 d~ 670.71 n 5
+   encoder train 10 real-mask 0.2585 d~ 2087.84 n 5
+   encoder train 12 real-mask 0.2465 d~ 267.5 n 5
+   predictor train 0 real-mask 0.2465 d~ 288.47 n 15
+   predictor train 1 real-mask 0.2542 d~ 287.89 n 15
+   predictor train 2 real-mask 0.2576 d~ 172.62 n 15
+   predictor train 3 real-mask 0.2594 d~ 151.81 n 15
+   predictor train 4 real-mask 0.263 d~ 124.73 n 15
+   predictor train 5 real-mask 0.2678 d~ 101.57 n 15
+   predictor train 6 real-mask 0.2717 d~ 88.64 n 15
+mask baseline interp depths [-1] mean -0.0002 sd 0.0012 n 5
+   encoder interp 0 real-mask 0.2175 d~ 259.42 n 5
+   encoder interp 2 real-mask 0.4277 d~ 510.03 n 5
+   encoder interp 4 real-mask 0.4657 d~ 105.44 n 5
+   encoder interp 6 real-mask 0.4905 d~ 584.96 n 5
+   encoder interp 8 real-mask 0.5338 d~ 183.5 n 5
+   encoder interp 10 real-mask 0.542 d~ 646.38 n 5
+   encoder interp 12 real-mask 0.509 d~ 172.12 n 5
+   predictor interp 0 real-mask 0.509 d~ 184.61 n 15
+   predictor interp 1 real-mask 0.5195 d~ 81.71 n 15
+   predictor interp 2 real-mask 0.5312 d~ 54.15 n 15
+   predictor interp 3 real-mask 0.5372 d~ 57.2 n 15
+   predictor interp 4 real-mask 0.5459 d~ 66.67 n 15
+   predictor interp 5 real-mask 0.5432 d~ 371.82 n 15
+   predictor interp 6 real-mask 0.5527 d~ 112.8 n 15
+mask baseline extrap depths [-1] mean 0.8172 sd 0.0002 n 5
+   encoder extrap 0 real-mask -0.0293 d~ -213.47 n 5
+   encoder extrap 2 real-mask 0.0066 d~ 48.33 n 5
+   encoder extrap 4 real-mask 0.0046 d~ 10.9 n 5
+   encoder extrap 6 real-mask 0.0227 d~ 165.18 n 5
+   encoder extrap 8 real-mask 0.0187 d~ 20.74 n 5
+   encoder extrap 10 real-mask 0.0235 d~ 171.19 n 5
+   encoder extrap 12 real-mask 0.0345 d~ 28.61 n 5
+   predictor extrap 0 real-mask 0.0345 d~ 30.88 n 15
+   predictor extrap 1 real-mask 0.0277 d~ 21.54 n 15
+   predictor extrap 2 real-mask 0.0248 d~ 12.6 n 15
+   predictor extrap 3 real-mask 0.0254 d~ 12.73 n 15
+   predictor extrap 4 real-mask 0.0265 d~ 77.06 n 15
+   predictor extrap 5 real-mask 0.0294 d~ 18.61 n 15
+   predictor extrap 6 real-mask 0.0346 d~ 21.49 n 15
+== 6. attentive vs linear primary-style curves
+encoder linear train [0.733, 0.793, 0.826, 0.84, 0.837, 0.846, 0.834] maxdrop 0.012
+encoder linear interp [0.217, 0.428, 0.466, 0.49, 0.534, 0.542, 0.509] maxdrop 0.0331
+encoder linear extrap [0.788, 0.824, 0.822, 0.84, 0.836, 0.841, 0.852] maxdrop 0.004
+encoder attentive train [0.689, 0.804, 0.862, 0.87, 0.883, 0.893, 0.871] maxdrop 0.0218
+encoder attentive interp [-0.181, 0.146, 0.172, 0.189, 0.229, 0.197, 0.161] maxdrop 0.0685
+encoder attentive extrap [0.682, 0.699, 0.702, 0.72, 0.718, 0.712, 0.716] maxdrop 0.0081
+predictor linear train [0.834, 0.842, 0.845, 0.847, 0.851, 0.856, 0.859] maxdrop 0
+predictor linear interp [0.509, 0.519, 0.531, 0.537, 0.546, 0.543, 0.553] maxdrop 0.0027
+predictor linear extrap [0.852, 0.845, 0.842, 0.843, 0.844, 0.847, 0.852] maxdrop 0.0097
+predictor attentive train [0.875, 0.879, 0.881, 0.885, 0.887, 0.886, 0.882] maxdrop 0.0054
+predictor attentive interp [0.156, 0.183, 0.104, 0.154, 0.161, 0.187, 0.203] maxdrop 0.0787
+predictor attentive extrap [0.717, 0.703, 0.704, 0.712, 0.699, 0.714, 0.714] maxdrop 0.0177
+== 7. early vs late (linear/new/real)
+encoder early train [0.936, 0.95, 0.961, 0.963, 0.965, 0.965, 0.965] maxdrop 0
+encoder early interp [0.787, 0.823, 0.856, 0.871, 0.872, 0.881, 0.867] maxdrop 0.0144
+encoder early extrap [0.835, 0.839, 0.851, 0.877, 0.905, 0.903, 0.899] maxdrop 0.0063
+encoder late train [0.733, 0.793, 0.826, 0.84, 0.837, 0.846, 0.834] maxdrop 0.012
+encoder late interp [0.217, 0.428, 0.466, 0.49, 0.534, 0.542, 0.509] maxdrop 0.0331
+encoder late extrap [0.788, 0.824, 0.822, 0.84, 0.836, 0.841, 0.852] maxdrop 0.004
+predictor early train [0.965, 0.967, 0.97, 0.971, 0.974, 0.974, 0.975] maxdrop 0
+predictor early interp [0.867, 0.871, 0.877, 0.879, 0.888, 0.884, 0.893] maxdrop 0.0039
+predictor early extrap [0.899, 0.896, 0.895, 0.895, 0.902, 0.909, 0.913] maxdrop 0.004
+predictor late train [0.834, 0.842, 0.845, 0.847, 0.851, 0.856, 0.859] maxdrop 0
+predictor late interp [0.509, 0.519, 0.531, 0.537, 0.546, 0.543, 0.553] maxdrop 0.0027
+predictor late extrap [0.852, 0.845, 0.842, 0.843, 0.844, 0.847, 0.852] maxdrop 0.0097
+== 8. predictor (ii) exp1_probe, linear and attentive, by timepoint, splits
+(ii) linear early train [-3.849, -3.151, -2.011, -0.714, 0.284, 0.739, 0.955] maxdrop 0 first_drop@0.2 None
+(ii) linear early interp [-15.507, -13.342, -9.407, -4.955, -1.56, 0.022, 0.895] maxdrop 0 first_drop@0.2 None
+(ii) linear early extrap [0.346, 0.506, 0.677, 0.819, 0.901, 0.914, 0.858] maxdrop 0.056 first_drop@0.2 None
+(ii) linear late train [-4.128, -3.138, -1.901, -1.02, -0.08, 0.551, 0.82] maxdrop 0 first_drop@0.2 None
+(ii) linear late interp [-16.208, -12.835, -8.982, -5.932, -2.72, -0.633, 0.513] maxdrop 0 first_drop@0.2 None
+(ii) linear late extrap [0.298, 0.475, 0.664, 0.757, 0.839, 0.864, 0.811] maxdrop 0.053 first_drop@0.2 None
+(ii) linear rollout_t+1 train [-3.897, -3.746, -2.373, -0.904, 0.095, 0.661, 0.969] maxdrop 0 first_drop@0.2 None
+(ii) linear rollout_t+1 interp [-16.272, -15.597, -10.696, -5.654, -2.272, -0.308, 0.955] maxdrop 0 first_drop@0.2 None
+(ii) linear rollout_t+1 extrap [0.363, 0.391, 0.572, 0.744, 0.844, 0.905, 0.853] maxdrop 0.052 first_drop@0.2 None
+(ii) linear rollout_t+4 train [-1.622, -3.992, -4.781, -1.576, 0.155, 0.804, 0.872] maxdrop 3.16 first_drop@0.2 (1, 2.3700557900511403)
+(ii) linear rollout_t+4 interp [-6.626, -16.131, -18.993, -8.658, -2.449, 0.126, 0.719] maxdrop 12.366 first_drop@0.2 (1, 9.504343252976643)
+(ii) linear rollout_t+4 extrap [0.131, 0.12, 0.226, 0.723, 0.905, 0.888, 0.795] maxdrop 0.11 first_drop@0.2 None
+(ii) linear rollout_t+8 train [-0.129, -1.11, -1.928, 0.089, 0.325, 0.765, 0.572] maxdrop 1.8 first_drop@0.2 (1, 0.9809318682516532)
+(ii) linear rollout_t+8 interp [-0.662, -4.805, -8.415, -2.296, -1.6, 0.108, 0.003] maxdrop 7.753 first_drop@0.2 (1, 4.142642687079055)
+(ii) linear rollout_t+8 extrap [0.042, 0.128, 0.344, 0.782, 0.871, 0.832, 0.675] maxdrop 0.196 first_drop@0.2 None
+(ii) attentive early train [0.188, 0.114, 0.282, 0.635, 0.949, 0.992, 0.991] maxdrop 0.074 first_drop@0.2 None
+(ii) attentive early interp [-1.245, -1.879, -1.442, -0.502, 0.021, 0.381, 0.437] maxdrop 0.634 first_drop@0.2 (1, 0.6340387137525256)
+(ii) attentive early extrap [0.654, 0.663, 0.692, 0.712, 0.72, 0.72, 0.718] maxdrop 0.002 first_drop@0.2 None
+(ii) attentive late train [0.087, 0.014, 0.094, 0.393, 0.787, 0.857, 0.846] maxdrop 0.073 first_drop@0.2 None
+(ii) attentive late interp [-2.051, -2.557, -2.519, -1.464, -0.188, 0.148, 0.148] maxdrop 0.507 first_drop@0.2 (1, 0.5069056521870885)
+(ii) attentive late extrap [0.641, 0.645, 0.66, 0.686, 0.701, 0.701, 0.7] maxdrop 0.001 first_drop@0.2 None
+(ii) attentive rollout_t+1 train [0.037, -0.032, 0.218, 0.619, 0.967, 0.998, 0.998] maxdrop 0.069 first_drop@0.2 None
+(ii) attentive rollout_t+1 interp [-2.447, -3.024, -1.65, -0.6, -0.143, 0.372, 0.568] maxdrop 0.577 first_drop@0.2 (1, 0.5767030552416617)
+(ii) attentive rollout_t+1 extrap [0.61, 0.6, 0.666, 0.704, 0.713, 0.715, 0.714] maxdrop 0.01 first_drop@0.2 None
+(ii) attentive rollout_t+4 train [-1.335, -1.292, -0.986, 0.193, 0.925, 0.942, 0.888] maxdrop 0.054 first_drop@0.2 None
+(ii) attentive rollout_t+4 interp [-4.655, -4.882, -4.535, -2.056, -0.204, 0.127, 0.16] maxdrop 0.227 first_drop@0.2 (1, 0.22669352849542168)
+(ii) attentive rollout_t+4 extrap [-0.093, 0.006, 0.216, 0.646, 0.719, 0.72, 0.714] maxdrop 0.006 first_drop@0.2 None
+(ii) attentive rollout_t+8 train [-1.257, -1.004, -0.742, 0.415, 0.814, 0.679, 0.517] maxdrop 0.297 first_drop@0.2 (6, 0.2965987594989693)
+(ii) attentive rollout_t+8 interp [-4.375, -3.863, -3.246, -1.108, -0.311, -0.197, -0.363] maxdrop 0.166 first_drop@0.2 None
+(ii) attentive rollout_t+8 extrap [-0.089, 0.008, 0.13, 0.567, 0.706, 0.694, 0.65] maxdrop 0.055 first_drop@0.2 None
+   reference encoder_tokens
+ref linear late {'train': {-1: 0.818}, 'interp': {-1: 0.446}, 'extrap': {-1: 0.847}}
+ref linear rollout_t+8 {'train': {-1: 0.89}, 'interp': {-1: 0.612}, 'extrap': {-1: 0.878}}
+ref attentive late {'train': {-1: 0.847}, 'interp': {-1: 0.134}, 'extrap': {-1: 0.698}}
+ref attentive rollout_t+8 {'train': {-1: 0.931}, 'interp': {-1: 0.268}, 'extrap': {-1: 0.707}}
+== 9. (iii) next_z_mse
+(iii) real early train [(0, 1.3277), (1, 1.1002), (2, 0.8695), (3, 0.5781), (4, 0.3266), (5, 0.2136), (6, 0.1724)] n 3
+(iii) real early extrap [(0, 1.3461), (1, 1.1356), (2, 0.9221), (3, 0.6405), (4, 0.3887), (5, 0.2733), (6, 0.2301)] n 3
+(iii) real late train [(0, 1.2627), (1, 1.0574), (2, 0.867), (3, 0.6373), (4, 0.4199), (5, 0.3093), (6, 0.2649)] n 3
+(iii) real late extrap [(0, 1.265), (1, 1.0691), (2, 0.8862), (3, 0.6586), (4, 0.4394), (5, 0.3287), (6, 0.2837)] n 3
+(iii) real rollout_t+1 train [(0, 1.1742), (1, 0.9383), (2, 0.7207), (3, 0.4862), (4, 0.2663), (5, 0.1551), (6, 0.115)] n 3
+(iii) real rollout_t+1 extrap [(0, 1.153), (1, 0.941), (2, 0.7457), (3, 0.5266), (4, 0.3219), (5, 0.2216), (6, 0.188)] n 3
+(iii) real rollout_t+4 train [(0, 4.9452), (1, 3.908), (2, 2.6536), (3, 1.5429), (4, 0.779), (5, 0.3927), (6, 0.2804)] n 3
+(iii) real rollout_t+4 extrap [(0, 5.0236), (1, 4.0067), (2, 2.7735), (3, 1.6626), (4, 0.8713), (5, 0.4628), (6, 0.3566)] n 3
+(iii) real rollout_t+8 train [(0, 6.2022), (1, 5.3534), (2, 3.8905), (3, 2.236), (4, 1.2362), (5, 0.6805), (6, 0.4934)] n 3
+(iii) real rollout_t+8 extrap [(0, 6.2843), (1, 5.4464), (2, 4.0066), (3, 2.3641), (4, 1.3553), (5, 0.7641), (6, 0.5795)] n 3
+== 10. threshold sensitivity (SENSITIVITY ONLY, not a verdict change): first_drop on primary and on controls' means, by split
+encoder primary thr 0.05 {'train': None, 'interp': None, 'extrap': None}
+encoder primary thr 0.1 {'train': None, 'interp': None, 'extrap': None}
+encoder primary thr 0.15 {'train': None, 'interp': None, 'extrap': None}
+encoder primary thr 0.2 {'train': None, 'interp': None, 'extrap': None}
+encoder primary thr 0.3 {'train': None, 'interp': None, 'extrap': None}
+encoder attentive late thr 0.05 {'train': None, 'interp': (12, 0.068), 'extrap': None}
+encoder attentive late thr 0.1 {'train': None, 'interp': None, 'extrap': None}
+encoder attentive late thr 0.15 {'train': None, 'interp': None, 'extrap': None}
+encoder attentive late thr 0.2 {'train': None, 'interp': None, 'extrap': None}
+encoder attentive late thr 0.3 {'train': None, 'interp': None, 'extrap': None}
+encoder linear early thr 0.05 {'train': None, 'interp': None, 'extrap': None}
+encoder linear early thr 0.1 {'train': None, 'interp': None, 'extrap': None}
+encoder linear early thr 0.15 {'train': None, 'interp': None, 'extrap': None}
+encoder linear early thr 0.2 {'train': None, 'interp': None, 'extrap': None}
+encoder linear early thr 0.3 {'train': None, 'interp': None, 'extrap': None}
+predictor primary thr 0.05 {'train': None, 'interp': None, 'extrap': None}
+predictor primary thr 0.1 {'train': None, 'interp': None, 'extrap': None}
+predictor primary thr 0.15 {'train': None, 'interp': None, 'extrap': None}
+predictor primary thr 0.2 {'train': None, 'interp': None, 'extrap': None}
+predictor primary thr 0.3 {'train': None, 'interp': None, 'extrap': None}
+predictor attentive late thr 0.05 {'train': None, 'interp': (2, 0.079), 'extrap': None}
+predictor attentive late thr 0.1 {'train': None, 'interp': None, 'extrap': None}
+predictor attentive late thr 0.15 {'train': None, 'interp': None, 'extrap': None}
+predictor attentive late thr 0.2 {'train': None, 'interp': None, 'extrap': None}
+predictor attentive late thr 0.3 {'train': None, 'interp': None, 'extrap': None}
+predictor linear early thr 0.05 {'train': None, 'interp': None, 'extrap': None}
+predictor linear early thr 0.1 {'train': None, 'interp': None, 'extrap': None}
+predictor linear early thr 0.15 {'train': None, 'interp': None, 'extrap': None}
+predictor linear early thr 0.2 {'train': None, 'interp': None, 'extrap': None}
+predictor linear early thr 0.3 {'train': None, 'interp': None, 'extrap': None}
+predictor (ii) linear late exp1 thr 0.05 {'train': None, 'interp': None, 'extrap': (6, 0.053)}
+predictor (ii) linear late exp1 thr 0.1 {'train': None, 'interp': None, 'extrap': None}
+predictor (ii) linear late exp1 thr 0.15 {'train': None, 'interp': None, 'extrap': None}
+predictor (ii) linear late exp1 thr 0.2 {'train': None, 'interp': None, 'extrap': None}
+predictor (ii) linear late exp1 thr 0.3 {'train': None, 'interp': None, 'extrap': None}
+== 11. per-level primary curves (level != ALL) max drop from running max, mean over seeds
+encoder a026 extrap [-0.032, 0.118, 0.067, 0.138, 0.111, 0.152, 0.187] maxdrop 0.051
+encoder a040 extrap [0.636, 0.728, 0.725, 0.746, 0.74, 0.742, 0.764] maxdrop 0.006
+encoder a060 train [0.912, 0.943, 0.948, 0.951, 0.946, 0.947, 0.947] maxdrop 0.005
+encoder a080 interp [0.951, 0.96, 0.962, 0.968, 0.969, 0.966, 0.963] maxdrop 0.006
+encoder ind train [0.931, 0.94, 0.955, 0.955, 0.955, 0.955, 0.949] maxdrop 0.006
+encoder a125 interp [0.894, 0.927, 0.933, 0.932, 0.939, 0.943, 0.94] maxdrop 0.003
+encoder a160 train [0.898, 0.916, 0.929, 0.94, 0.942, 0.95, 0.944] maxdrop 0.006
+encoder a200 extrap [0.893, 0.906, 0.93, 0.946, 0.95, 0.95, 0.952] maxdrop 0
+encoder a248 extrap [0.865, 0.887, 0.901, 0.933, 0.931, 0.925, 0.952] maxdrop 0.008
+predictor a026 extrap [0.187, 0.152, 0.136, 0.135, 0.131, 0.137, 0.164] maxdrop 0.056
+predictor a040 extrap [0.764, 0.749, 0.745, 0.747, 0.746, 0.754, 0.761] maxdrop 0.018
+predictor a060 train [0.947, 0.949, 0.948, 0.948, 0.948, 0.948, 0.95] maxdrop 0.001
+predictor a080 interp [0.963, 0.966, 0.966, 0.966, 0.966, 0.965, 0.965] maxdrop 0.001
+predictor ind train [0.949, 0.954, 0.955, 0.955, 0.955, 0.956, 0.956] maxdrop 0.0
+predictor a125 interp [0.94, 0.94, 0.942, 0.943, 0.944, 0.945, 0.947] maxdrop 0.001
+predictor a160 train [0.944, 0.944, 0.947, 0.949, 0.953, 0.957, 0.958] maxdrop 0
+predictor a200 extrap [0.952, 0.953, 0.952, 0.954, 0.958, 0.962, 0.966] maxdrop 0.001
+predictor a248 extrap [0.952, 0.949, 0.946, 0.949, 0.958, 0.963, 0.963] maxdrop 0.006
+== 12. per-(train_seed,probe_seed) max drop primary (do individual seeds exceed 0.2?)
+encoder train n series 5 max drop min/mean/max 0.01 0.012 0.013 n>=0.2 0
+encoder interp n series 5 max drop min/mean/max 0.031 0.033 0.04 n>=0.2 0
+encoder extrap n series 5 max drop min/mean/max 0.003 0.004 0.006 n>=0.2 0
+predictor train n series 15 max drop min/mean/max 0 0.001 0.005 n>=0.2 0
+predictor interp n series 15 max drop min/mean/max 0 0.006 0.015 n>=0.2 0
+predictor extrap n series 15 max drop min/mean/max 0.005 0.01 0.014 n>=0.2 0
+== 13. extrap: depth gain/loss relative to depth 0 (linear late), bootstrap 95% CI over train-seed x probe-seed (predictor) / probe seeds (encoder)
+encoder interp depth 10 minus depth 0 mean 0.3245 CI [0.3245 0.3245]
+encoder interp depth 12 minus depth 0 mean 0.2914 CI [0.2878 0.2932]
+encoder extrap depth 12 minus depth 0 mean 0.0638 CI [0.0622 0.0645]
+encoder extrap depth 12 minus depth 0 mean 0.0638 CI [0.0622 0.0645]
+predictor interp depth 6 minus depth 0 mean 0.0438 CI [0.0403 0.0477]
+predictor interp depth 6 minus depth 0 mean 0.0438 CI [0.0401 0.0477]
+predictor extrap depth 6 minus depth 0 mean 0.0001 CI [-0.0012  0.0015]
+predictor extrap depth 6 minus depth 0 mean 0.0001 CI [-0.0013  0.0014]

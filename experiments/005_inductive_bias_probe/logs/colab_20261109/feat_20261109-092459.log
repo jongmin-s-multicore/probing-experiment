@@ -1,0 +1,67 @@
+[2026-11-09 09:24:59] log file: /content/mylab/experiments/005_inductive_bias_probe/logs/feat_20261109-092459.log
+[2026-11-09 09:24:59] stage=feat dry_run=False python=/content/venv/bin/python conda_env=None pilot=True
+[2026-11-09 09:24:59] WARNING: CONDA_DEFAULT_ENV is empty - not running inside an activated conda environment (python=/content/venv/bin/python). Continuing.
+[2026-11-09 09:24:59] feat plan: predictor layers ['pred_out6'] (extracted here, real + random-init predictor), encoder layers [] (read from the 004 cache /content/pilot/exp004_cache/enc_smoke)
+Using cache found in /root/.cache/torch/hub/facebookresearch_dinov2_85a24602099d397264d5b30461ad7f3bfd726ca1
+/root/.cache/torch/hub/facebookresearch_dinov2_85a24602099d397264d5b30461ad7f3bfd726ca1/dinov2/layers/swiglu_ffn.py:51: UserWarning: xFormers is not available (SwiGLU)
+  warnings.warn("xFormers is not available (SwiGLU)")
+/root/.cache/torch/hub/facebookresearch_dinov2_85a24602099d397264d5b30461ad7f3bfd726ca1/dinov2/layers/attention.py:33: UserWarning: xFormers is not available (Attention)
+  warnings.warn("xFormers is not available (Attention)")
+/root/.cache/torch/hub/facebookresearch_dinov2_85a24602099d397264d5b30461ad7f3bfd726ca1/dinov2/layers/block.py:40: UserWarning: xFormers is not available (Block)
+  warnings.warn("xFormers is not available (Block)")
+num_action_repeat: 1
+num_proprio_repeat: 1
+proprio encoder: ProprioceptiveEmbedding(
+  (patch_embed): Conv1d(1, 10, kernel_size=(1,), stride=(1,))
+)
+action encoder: ProprioceptiveEmbedding(
+  (patch_embed): Conv1d(30, 10, kernel_size=(1,), stride=(1,))
+)
+proprio_dim: 10, after repeat: 10
+action_dim: 10, after repeat: 10
+emb_dim: 404
+Model emb_dim:  404
+/content/venv/lib/python3.9/site-packages/torch/_utils.py:776: UserWarning: TypedStorage is deprecated. It will be removed in the future and UntypedStorage will be the only storage class. This should only matter to you if you are using storages directly.  To access UntypedStorage directly, use tensor.untyped_storage() instead of tensor.storage()
+  return self.fget.__get__(instance, owner)()
+/content/mylab/experiments/002_single_size_sweep/src/exp002/model_io.py:146: UserWarning: The given NumPy array is not writable, and PyTorch does not support non-writable tensors. This means writing to this tensor will result in undefined behavior. You may want to copy the array to protect its data or make it writable before converting it to a tensor. This type of warning will be suppressed for the rest of this program. (Triggered internally at ../torch/csrc/utils/tensor_numpy.cpp:206.)
+  x = torch.as_tensor(np.asarray(u8)).float()
+/content/venv/lib/python3.9/site-packages/torchvision/transforms/functional.py:1603: UserWarning: The default value of the antialias parameter of all the resizing transforms (Resize(), RandomResizedCrop(), etc.) will change from None to True in v0.17, in order to be consistent across the PIL and Tensor backends. To suppress this warning, directly pass antialias=True (recommended, future default), antialias=None (current default, which means False for Tensors and True for PIL), or antialias=False (only works on Tensors - PIL will still use antialiasing). This also applies if you are using the inference transforms from the models weights: update the call to weights.transforms(antialias=True).
+  warnings.warn(
+[2026-11-09 09:25:04] feat extract_layers 8/300 (2s)
+[2026-11-09 09:25:05] feat extract_layers 16/300 (2s)
+[2026-11-09 09:25:05] feat extract_layers 24/300 (3s)
+[2026-11-09 09:25:06] feat extract_layers 32/300 (3s)
+[2026-11-09 09:25:06] feat extract_layers 40/300 (4s)
+[2026-11-09 09:25:07] feat extract_layers 48/300 (4s)
+[2026-11-09 09:25:07] feat extract_layers 56/300 (5s)
+[2026-11-09 09:25:08] feat extract_layers 64/300 (5s)
+[2026-11-09 09:25:08] feat extract_layers 72/300 (6s)
+[2026-11-09 09:25:09] feat extract_layers 80/300 (6s)
+[2026-11-09 09:25:09] feat extract_layers 88/300 (7s)
+[2026-11-09 09:25:10] feat extract_layers 96/300 (7s)
+[2026-11-09 09:25:10] feat extract_layers 104/300 (8s)
+[2026-11-09 09:25:11] feat extract_layers 112/300 (8s)
+[2026-11-09 09:25:11] feat extract_layers 120/300 (9s)
+[2026-11-09 09:25:12] feat extract_layers 128/300 (9s)
+[2026-11-09 09:25:12] feat extract_layers 136/300 (10s)
+[2026-11-09 09:25:13] feat extract_layers 144/300 (10s)
+[2026-11-09 09:25:13] feat extract_layers 152/300 (11s)
+[2026-11-09 09:25:14] feat extract_layers 160/300 (11s)
+[2026-11-09 09:25:14] feat extract_layers 168/300 (12s)
+[2026-11-09 09:25:15] feat extract_layers 176/300 (12s)
+[2026-11-09 09:25:15] feat extract_layers 184/300 (13s)
+[2026-11-09 09:25:16] feat extract_layers 192/300 (13s)
+[2026-11-09 09:25:16] feat extract_layers 200/300 (14s)
+[2026-11-09 09:25:17] feat extract_layers 208/300 (14s)
+[2026-11-09 09:25:17] feat extract_layers 216/300 (15s)
+[2026-11-09 09:25:18] feat extract_layers 224/300 (15s)
+[2026-11-09 09:25:18] feat extract_layers 232/300 (16s)
+[2026-11-09 09:25:19] feat extract_layers 240/300 (16s)
+[2026-11-09 09:25:19] feat extract_layers 248/300 (17s)
+[2026-11-09 09:25:20] feat extract_layers 256/300 (17s)
+[2026-11-09 09:25:20] feat extract_layers 264/300 (18s)
+[2026-11-09 09:25:21] feat extract_layers 272/300 (18s)
+[2026-11-09 09:25:21] feat extract_layers 280/300 (19s)
+[2026-11-09 09:25:22] feat extract_layers 288/300 (19s)
+[2026-11-09 09:25:22] feat extract_layers 296/300 (20s)
+[2026-11-09 09:25:22] feat extract_layers 300/300 (20s)

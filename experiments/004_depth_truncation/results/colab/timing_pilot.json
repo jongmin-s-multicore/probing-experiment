@@ -1,0 +1,616 @@
+[
+ {
+  "label": "002:download(pilot cache)",
+  "stage": "download",
+  "args": [
+   "--results-dir",
+   "/content/drive/MyDrive/exp004_work/pilot_002_results"
+  ],
+  "rc": 0,
+  "seconds": 27.8,
+  "log": "/content/mylab/experiments/002_single_size_sweep/logs/download_20261109-090659.log",
+  "vram_base_mib": 0,
+  "vram_peak_sampled_mib": 3,
+  "finished_utc": "2026-11-09 09:07:25"
+ },
+ {
+  "label": "002:cache(pilot cache)",
+  "stage": "cache",
+  "args": [
+   "--results-dir",
+   "/content/drive/MyDrive/exp004_work/pilot_002_results",
+   "--max-eps",
+   "25",
+   "--suffix",
+   "_smoke"
+  ],
+  "rc": 0,
+  "seconds": 67.1,
+  "log": "/content/mylab/experiments/002_single_size_sweep/logs/cache_20261109-090727.log",
+  "vram_base_mib": 0,
+  "vram_peak_sampled_mib": 2064,
+  "finished_utc": "2026-11-09 09:08:33"
+ },
+ {
+  "label": "004:enc_cache",
+  "stage": "enc_cache",
+  "args": [
+   "--suffix",
+   "_smoke",
+   "--results-dir",
+   "/content/drive/MyDrive/exp004_work/results_pilot"
+  ],
+  "rc": 0,
+  "seconds": 32.0,
+  "log": "/content/mylab/experiments/004_depth_truncation/logs/enc_cache_20261109-090834.log",
+  "vram_base_mib": 0,
+  "vram_peak_sampled_mib": 1824,
+  "finished_utc": "2026-11-09 09:09:05"
+ },
+ {
+  "label": "004:enc_probe",
+  "stage": "enc_probe",
+  "args": [
+   "--suffix",
+   "_smoke",
+   "--results-dir",
+   "/content/drive/MyDrive/exp004_work/results_pilot"
+  ],
+  "rc": 0,
+  "seconds": 143.6,
+  "log": "/content/mylab/experiments/004_depth_truncation/logs/enc_probe_20261109-090906.log",
+  "vram_base_mib": 0,
+  "vram_peak_sampled_mib": 1560,
+  "finished_utc": "2026-11-09 09:11:28"
+ },
+ {
+  "label": "004:pred",
+  "stage": "pred",
+  "args": [
+   "--suffix",
+   "_smoke",
+   "--results-dir",
+   "/content/drive/MyDrive/exp004_work/results_pilot",
+   "--train-seeds",
+   "0"
+  ],
+  "rc": 0,
+  "seconds": 225.4,
+  "log": "/content/mylab/experiments/004_depth_truncation/logs/pred_20261109-091130.log",
+  "vram_base_mib": 0,
+  "vram_peak_sampled_mib": 2522,
+  "finished_utc": "2026-11-09 09:15:14"
+ },
+ {
+  "label": "004:aggregate",
+  "stage": "aggregate",
+  "args": [
+   "--results-dir",
+   "/content/drive/MyDrive/exp004_work/results_pilot"
+  ],
+  "rc": 1,
+  "seconds": 2.6,
+  "log": "/content/mylab/experiments/004_depth_truncation/logs/aggregate_20261109-091515.log",
+  "vram_base_mib": 0,
+  "vram_peak_sampled_mib": 3,
+  "finished_utc": "2026-11-09 09:15:16"
+ },
+ {
+  "label": "004:enc_cache",
+  "stage": "enc_cache",
+  "args": [
+   "--suffix",
+   "_smoke",
+   "--results-dir",
+   "/content/drive/MyDrive/exp004_work/results_pilot"
+  ],
+  "rc": 0,
+  "seconds": 2.0,
+  "log": "/content/mylab/experiments/004_depth_truncation/logs/enc_cache_20261109-091816.log",
+  "vram_base_mib": 0,
+  "vram_peak_sampled_mib": 0,
+  "finished_utc": "2026-11-09 09:18:16"
+ },
+ {
+  "label": "004:enc_probe",
+  "stage": "enc_probe",
+  "args": [
+   "--suffix",
+   "_smoke",
+   "--results-dir",
+   "/content/drive/MyDrive/exp004_work/results_pilot"
+  ],
+  "rc": 0,
+  "seconds": 2.1,
+  "log": "/content/mylab/experiments/004_depth_truncation/logs/enc_probe_20261109-091818.log",
+  "vram_base_mib": 0,
+  "vram_peak_sampled_mib": 3,
+  "finished_utc": "2026-11-09 09:18:19"
+ },
+ {
+  "label": "004:pred",
+  "stage": "pred",
+  "args": [
+   "--suffix",
+   "_smoke",
+   "--results-dir",
+   "/content/drive/MyDrive/exp004_work/results_pilot",
+   "--train-seeds",
+   "0"
+  ],
+  "rc": 0,
+  "seconds": 5.8,
+  "log": "/content/mylab/experiments/004_depth_truncation/logs/pred_20261109-091820.log",
+  "vram_base_mib": 0,
+  "vram_peak_sampled_mib": 762,
+  "finished_utc": "2026-11-09 09:18:24"
+ },
+ {
+  "label": "004:aggregate",
+  "stage": "aggregate",
+  "args": [
+   "--results-dir",
+   "/content/drive/MyDrive/exp004_work/results_pilot"
+  ],
+  "rc": 1,
+  "seconds": 2.5,
+  "log": "/content/mylab/experiments/004_depth_truncation/logs/aggregate_20261109-091826.log",
+  "vram_base_mib": 0,
+  "vram_peak_sampled_mib": 3,
+  "finished_utc": "2026-11-09 09:18:27"
+ },
+ {
+  "label": "004:enc_cache",
+  "stage": "enc_cache",
+  "args": [
+   "--suffix",
+   "_smoke",
+   "--results-dir",
+   "/content/drive/MyDrive/exp004_work/results_pilot"
+  ],
+  "rc": 0,
+  "seconds": 1.9,
+  "log": "/content/mylab/experiments/004_depth_truncation/logs/enc_cache_20261109-091910.log",
+  "vram_base_mib": 0,
+  "vram_peak_sampled_mib": 0,
+  "finished_utc": "2026-11-09 09:19:10"
+ },
+ {
+  "label": "004:enc_probe",
+  "stage": "enc_probe",
+  "args": [
+   "--suffix",
+   "_smoke",
+   "--results-dir",
+   "/content/drive/MyDrive/exp004_work/results_pilot"
+  ],
+  "rc": 0,
+  "seconds": 2.1,
+  "log": "/content/mylab/experiments/004_depth_truncation/logs/enc_probe_20261109-091912.log",
+  "vram_base_mib": 0,
+  "vram_peak_sampled_mib": 0,
+  "finished_utc": "2026-11-09 09:19:12"
+ },
+ {
+  "label": "004:pred",
+  "stage": "pred",
+  "args": [
+   "--suffix",
+   "_smoke",
+   "--results-dir",
+   "/content/drive/MyDrive/exp004_work/results_pilot",
+   "--train-seeds",
+   "0"
+  ],
+  "rc": 0,
+  "seconds": 5.9,
+  "log": "/content/mylab/experiments/004_depth_truncation/logs/pred_20261109-091914.log",
+  "vram_base_mib": 0,
+  "vram_peak_sampled_mib": 762,
+  "finished_utc": "2026-11-09 09:19:18"
+ },
+ {
+  "label": "004:aggregate",
+  "stage": "aggregate",
+  "args": [
+   "--results-dir",
+   "/content/drive/MyDrive/exp004_work/results_pilot"
+  ],
+  "rc": 1,
+  "seconds": 2.4,
+  "log": "/content/mylab/experiments/004_depth_truncation/logs/aggregate_20261109-091920.log",
+  "vram_base_mib": 0,
+  "vram_peak_sampled_mib": 3,
+  "finished_utc": "2026-11-09 09:19:21"
+ },
+ {
+  "label": "004:enc_cache",
+  "stage": "enc_cache",
+  "args": [
+   "--suffix",
+   "_smoke",
+   "--results-dir",
+   "/content/drive/MyDrive/exp004_work/results_pilot"
+  ],
+  "rc": 0,
+  "seconds": 2.0,
+  "log": "/content/mylab/experiments/004_depth_truncation/logs/enc_cache_20261109-092025.log",
+  "vram_base_mib": 0,
+  "vram_peak_sampled_mib": 0,
+  "finished_utc": "2026-11-09 09:20:25"
+ },
+ {
+  "label": "004:enc_probe",
+  "stage": "enc_probe",
+  "args": [
+   "--suffix",
+   "_smoke",
+   "--results-dir",
+   "/content/drive/MyDrive/exp004_work/results_pilot"
+  ],
+  "rc": 0,
+  "seconds": 2.1,
+  "log": "/content/mylab/experiments/004_depth_truncation/logs/enc_probe_20261109-092027.log",
+  "vram_base_mib": 0,
+  "vram_peak_sampled_mib": 0,
+  "finished_utc": "2026-11-09 09:20:27"
+ },
+ {
+  "label": "004:pred",
+  "stage": "pred",
+  "args": [
+   "--suffix",
+   "_smoke",
+   "--results-dir",
+   "/content/drive/MyDrive/exp004_work/results_pilot",
+   "--train-seeds",
+   "0"
+  ],
+  "rc": 0,
+  "seconds": 5.8,
+  "log": "/content/mylab/experiments/004_depth_truncation/logs/pred_20261109-092029.log",
+  "vram_base_mib": 0,
+  "vram_peak_sampled_mib": 762,
+  "finished_utc": "2026-11-09 09:20:33"
+ },
+ {
+  "label": "004:aggregate",
+  "stage": "aggregate",
+  "args": [
+   "--results-dir",
+   "/content/drive/MyDrive/exp004_work/results_pilot"
+  ],
+  "rc": 1,
+  "seconds": 1.9,
+  "log": "/content/mylab/experiments/004_depth_truncation/logs/aggregate_20261109-092035.log",
+  "vram_base_mib": 0,
+  "vram_peak_sampled_mib": 0,
+  "finished_utc": "2026-11-09 09:20:35"
+ },
+ {
+  "label": "004:enc_cache",
+  "stage": "enc_cache",
+  "args": [
+   "--suffix",
+   "_smoke",
+   "--results-dir",
+   "/content/drive/MyDrive/exp004_work/results_pilot"
+  ],
+  "rc": 0,
+  "seconds": 1.9,
+  "log": "/content/mylab/experiments/004_depth_truncation/logs/enc_cache_20261109-092154.log",
+  "vram_base_mib": 0,
+  "vram_peak_sampled_mib": 0,
+  "finished_utc": "2026-11-09 09:21:55"
+ },
+ {
+  "label": "004:enc_probe",
+  "stage": "enc_probe",
+  "args": [
+   "--suffix",
+   "_smoke",
+   "--results-dir",
+   "/content/drive/MyDrive/exp004_work/results_pilot"
+  ],
+  "rc": 0,
+  "seconds": 2.1,
+  "log": "/content/mylab/experiments/004_depth_truncation/logs/enc_probe_20261109-092156.log",
+  "vram_base_mib": 0,
+  "vram_peak_sampled_mib": 3,
+  "finished_utc": "2026-11-09 09:21:57"
+ },
+ {
+  "label": "004:pred",
+  "stage": "pred",
+  "args": [
+   "--suffix",
+   "_smoke",
+   "--results-dir",
+   "/content/drive/MyDrive/exp004_work/results_pilot",
+   "--train-seeds",
+   "0"
+  ],
+  "rc": 0,
+  "seconds": 5.8,
+  "log": "/content/mylab/experiments/004_depth_truncation/logs/pred_20261109-092158.log",
+  "vram_base_mib": 0,
+  "vram_peak_sampled_mib": 762,
+  "finished_utc": "2026-11-09 09:22:03"
+ },
+ {
+  "label": "004:aggregate",
+  "stage": "aggregate",
+  "args": [
+   "--results-dir",
+   "/content/drive/MyDrive/exp004_work/results_pilot"
+  ],
+  "rc": 1,
+  "seconds": 2.5,
+  "log": "/content/mylab/experiments/004_depth_truncation/logs/aggregate_20261109-092204.log",
+  "vram_base_mib": 0,
+  "vram_peak_sampled_mib": 3,
+  "finished_utc": "2026-11-09 09:22:05"
+ },
+ {
+  "label": "004:enc_cache",
+  "stage": "enc_cache",
+  "args": [
+   "--suffix",
+   "_smoke",
+   "--results-dir",
+   "/content/drive/MyDrive/exp004_work/results_pilot"
+  ],
+  "rc": 0,
+  "seconds": 2.0,
+  "log": "/content/mylab/experiments/004_depth_truncation/logs/enc_cache_20261109-092217.log",
+  "vram_base_mib": 0,
+  "vram_peak_sampled_mib": 0,
+  "finished_utc": "2026-11-09 09:22:17"
+ },
+ {
+  "label": "004:enc_probe",
+  "stage": "enc_probe",
+  "args": [
+   "--suffix",
+   "_smoke",
+   "--results-dir",
+   "/content/drive/MyDrive/exp004_work/results_pilot"
+  ],
+  "rc": 0,
+  "seconds": 2.1,
+  "log": "/content/mylab/experiments/004_depth_truncation/logs/enc_probe_20261109-092218.log",
+  "vram_base_mib": 0,
+  "vram_peak_sampled_mib": 3,
+  "finished_utc": "2026-11-09 09:22:19"
+ },
+ {
+  "label": "004:pred",
+  "stage": "pred",
+  "args": [
+   "--suffix",
+   "_smoke",
+   "--results-dir",
+   "/content/drive/MyDrive/exp004_work/results_pilot",
+   "--train-seeds",
+   "0"
+  ],
+  "rc": 0,
+  "seconds": 5.9,
+  "log": "/content/mylab/experiments/004_depth_truncation/logs/pred_20261109-092221.log",
+  "vram_base_mib": 0,
+  "vram_peak_sampled_mib": 762,
+  "finished_utc": "2026-11-09 09:22:25"
+ },
+ {
+  "label": "004:aggregate",
+  "stage": "aggregate",
+  "args": [
+   "--results-dir",
+   "/content/drive/MyDrive/exp004_work/results_pilot"
+  ],
+  "rc": 1,
+  "seconds": 2.4,
+  "log": "/content/mylab/experiments/004_depth_truncation/logs/aggregate_20261109-092226.log",
+  "vram_base_mib": 0,
+  "vram_peak_sampled_mib": 3,
+  "finished_utc": "2026-11-09 09:22:27"
+ },
+ {
+  "label": "004:enc_cache",
+  "stage": "enc_cache",
+  "args": [
+   "--suffix",
+   "_smoke",
+   "--results-dir",
+   "/content/drive/MyDrive/exp004_work/results_pilot"
+  ],
+  "rc": 0,
+  "seconds": 2.0,
+  "log": "/content/mylab/experiments/004_depth_truncation/logs/enc_cache_20261109-092230.log",
+  "vram_base_mib": 0,
+  "vram_peak_sampled_mib": 0,
+  "finished_utc": "2026-11-09 09:22:30"
+ },
+ {
+  "label": "004:enc_probe",
+  "stage": "enc_probe",
+  "args": [
+   "--suffix",
+   "_smoke",
+   "--results-dir",
+   "/content/drive/MyDrive/exp004_work/results_pilot"
+  ],
+  "rc": 0,
+  "seconds": 2.1,
+  "log": "/content/mylab/experiments/004_depth_truncation/logs/enc_probe_20261109-092232.log",
+  "vram_base_mib": 0,
+  "vram_peak_sampled_mib": 3,
+  "finished_utc": "2026-11-09 09:22:32"
+ },
+ {
+  "label": "004:pred",
+  "stage": "pred",
+  "args": [
+   "--suffix",
+   "_smoke",
+   "--results-dir",
+   "/content/drive/MyDrive/exp004_work/results_pilot",
+   "--train-seeds",
+   "0"
+  ],
+  "rc": 0,
+  "seconds": 6.0,
+  "log": "/content/mylab/experiments/004_depth_truncation/logs/pred_20261109-092234.log",
+  "vram_base_mib": 0,
+  "vram_peak_sampled_mib": 762,
+  "finished_utc": "2026-11-09 09:22:38"
+ },
+ {
+  "label": "004:aggregate",
+  "stage": "aggregate",
+  "args": [
+   "--results-dir",
+   "/content/drive/MyDrive/exp004_work/results_pilot"
+  ],
+  "rc": 0,
+  "seconds": 6.0,
+  "log": "/content/mylab/experiments/004_depth_truncation/logs/aggregate_20261109-092240.log",
+  "vram_base_mib": 0,
+  "vram_peak_sampled_mib": 3,
+  "finished_utc": "2026-11-09 09:22:44"
+ },
+ {
+  "label": "005:plan",
+  "stage": "plan",
+  "args": [
+   "--results-dir",
+   "/content/drive/MyDrive/exp005_work/results_pilot",
+   "--summary",
+   "/content/drive/MyDrive/exp004_work/results_pilot/summary.json"
+  ],
+  "rc": 0,
+  "seconds": 2.0,
+  "log": "/content/mylab/experiments/005_inductive_bias_probe/logs/plan_20261109-092258.log",
+  "vram_base_mib": 0,
+  "vram_peak_sampled_mib": 0,
+  "finished_utc": "2026-11-09 09:22:58"
+ },
+ {
+  "label": "005:tasks",
+  "stage": "tasks",
+  "args": [
+   "--suffix",
+   "_smoke",
+   "--results-dir",
+   "/content/drive/MyDrive/exp005_work/results_pilot"
+  ],
+  "rc": 1,
+  "seconds": 2.0,
+  "log": "/content/mylab/experiments/005_inductive_bias_probe/logs/tasks_20261109-092300.log",
+  "vram_base_mib": 0,
+  "vram_peak_sampled_mib": 0,
+  "finished_utc": "2026-11-09 09:23:00"
+ },
+ {
+  "label": "005:plan",
+  "stage": "plan",
+  "args": [
+   "--results-dir",
+   "/content/drive/MyDrive/exp005_work/results_pilot",
+   "--summary",
+   "/content/drive/MyDrive/exp004_work/results_pilot/summary.json"
+  ],
+  "rc": 0,
+  "seconds": 2.0,
+  "log": "/content/mylab/experiments/005_inductive_bias_probe/logs/plan_20261109-092431.log",
+  "vram_base_mib": 0,
+  "vram_peak_sampled_mib": 0,
+  "finished_utc": "2026-11-09 09:24:31"
+ },
+ {
+  "label": "005:tasks",
+  "stage": "tasks",
+  "args": [
+   "--suffix",
+   "_smoke",
+   "--results-dir",
+   "/content/drive/MyDrive/exp005_work/results_pilot"
+  ],
+  "rc": 1,
+  "seconds": 2.0,
+  "log": "/content/mylab/experiments/005_inductive_bias_probe/logs/tasks_20261109-092433.log",
+  "vram_base_mib": 0,
+  "vram_peak_sampled_mib": 0,
+  "finished_utc": "2026-11-09 09:24:33"
+ },
+ {
+  "label": "005:plan",
+  "stage": "plan",
+  "args": [
+   "--results-dir",
+   "/content/drive/MyDrive/exp005_work/results_pilot",
+   "--summary",
+   "/content/drive/MyDrive/exp004_work/results_pilot/summary.json"
+  ],
+  "rc": 0,
+  "seconds": 2.0,
+  "log": "/content/mylab/experiments/005_inductive_bias_probe/logs/plan_20261109-092454.log",
+  "vram_base_mib": 0,
+  "vram_peak_sampled_mib": 0,
+  "finished_utc": "2026-11-09 09:24:55"
+ },
+ {
+  "label": "005:tasks",
+  "stage": "tasks",
+  "args": [
+   "--suffix",
+   "_smoke",
+   "--results-dir",
+   "/content/drive/MyDrive/exp005_work/results_pilot"
+  ],
+  "rc": 0,
+  "seconds": 2.2,
+  "log": "/content/mylab/experiments/005_inductive_bias_probe/logs/tasks_20261109-092456.log",
+  "vram_base_mib": 0,
+  "vram_peak_sampled_mib": 3,
+  "finished_utc": "2026-11-09 09:24:57"
+ },
+ {
+  "label": "005:feat",
+  "stage": "feat",
+  "args": [
+   "--suffix",
+   "_smoke",
+   "--results-dir",
+   "/content/drive/MyDrive/exp005_work/results_pilot"
+  ],
+  "rc": 0,
+  "seconds": 27.5,
+  "log": "/content/mylab/experiments/005_inductive_bias_probe/logs/feat_20261109-092459.log",
+  "vram_base_mib": 0,
+  "vram_peak_sampled_mib": 2508,
+  "finished_utc": "2026-11-09 09:25:24"
+ },
+ {
+  "label": "005:heads",
+  "stage": "heads",
+  "args": [
+   "--suffix",
+   "_smoke",
+   "--results-dir",
+   "/content/drive/MyDrive/exp005_work/results_pilot",
+   "--max-tasks",
+   "3",
+   "--seeds",
+   "0",
+   "--layers",
+   "pred_out6"
+  ],
+  "rc": 0,
+  "seconds": 39.8,
+  "log": "/content/mylab/experiments/005_inductive_bias_probe/logs/heads_20261109-092526.log",
+  "vram_base_mib": 0,
+  "vram_peak_sampled_mib": 1410,
+  "finished_utc": "2026-11-09 09:26:04"
+ }
+]

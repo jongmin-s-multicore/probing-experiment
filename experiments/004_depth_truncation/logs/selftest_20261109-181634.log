@@ -1,0 +1,112 @@
+[2026-11-09 18:16:34] log file: /home/jaekyungkim/mylab/experiments/004_depth_truncation/logs/selftest_20261109-181634.log
+[2026-11-09 18:16:34] stage=selftest dry_run=False python=/home/jaekyungkim/miniconda3/envs/lab07/bin/python conda_env=lab07 pilot=True
+A1 vanishing point (first depth >= threshold below the running max)
+  [ok] planted drop at depth 8 is found {'depth': 8, 'value': 0.4, 'running_max_before': 0.92, 'drop': 0.52}
+  [ok] no drop -> None 
+  [ok] slow decline: each step < 0.2 but 0.2 below the running max -> found at the first depth that reaches it 
+  [ok] boundary: drop exactly 0.2 counts, 0.199 does not 
+  [ok] NaN depths are skipped 
+  [ok] increase after a dip does not reset the running max 
+  [ok] null threshold raises ConfigNull 
+  [ok] config drop_threshold is 0.2 
+A2 summary.json: k*/m*, loss_ood_only, l_best, H-d verdicts
+  [ok] k_star = 6 (earliest over splits), per split {train:None, interp:8, extrap:6} {'train': None, 'interp': 8, 'extrap': 6}
+  [ok] m_star = 4 
+  [ok] loss_ood_only False because the predictor also loses InD 
+  [ok] pilot field carried; layers carried 
+  [ok] refine_suggestion names the interval before the drop 
+  [ok] verdict H-d supported (OoD earlier, curves separate) drop_ge_threshold_and_ood_vanish_earlier_and_curves_separate
+  [ok] encoder only: loss_ood_only True, m_star None 
+  [ok] l_best: argmax of mean(interp, extrap) R2 -> encoder depth <= 4 
+  [ok] no drop anywhere -> k*/m* null and verdict refuted(no_drop) 
+  [ok] InD and OoD curves identical -> refuted (overlap within seed sd) ind_ood_curves_overlap_within_seed_sd
+  [ok] single seed -> sd undefined -> not_evaluable {'status': 'not_evaluable', 'reason': 'seed_sd_undefined_single_seed', 'per_module': {'encoder': {'any_drop_ge_threshold': True, 'ood_vanish_earlier_than_ind': True, 'ind_vanish_depth': None, 'ood_vanish_depth_min': 6, 'curves_overlap_within_seed_sd': None, 'gap_evaluable': False}, 'predictor': {'any_drop_ge_threshold': True, 'ood_vanish_earlier_than_ind': False, 'ind_vanish_depth': 4, 'ood_vanish_depth_min': 4, 'curves_overlap_within_seed_sd': None, 'gap_evaluable': False}}}
+  [ok] null drop_threshold in config -> ConfigNull (not silently defaulted) 
+  [ok] null overlap_sd_mult -> verdict not_evaluable 
+  [ok] OoD vanishes later than InD -> refuted(ood_not_earlier) ood_vanish_not_earlier_than_ind
+  [ok] fewer than min_depths -> not_evaluable 
+A3 cell_rows (level rows use pooled-variance R2), csv round trip
+  [ok] ALL/all R2 equals direct 
+  [ok] level row R2 = 1 - MSE_level / Var_all 
+  [ok] one row per probe seed x group; seed carried 
+  [ok] csv round trip keeps r2 and empty pearson as NaN 
+  [ok] spec column names present in order ['module', 'depth', 'probe', 'fit', 'level', 'split', 'timepoint', 'seed', 'r2', 'mae', 'pearson']
+A4 pixel tokens
+  [ok] shape (n, 196, q*q*3) with q reduced to the patch size 
+  [ok] constant white image -> all ones 
+B1 planted encoder depth structure -> probes -> rows -> summary (k* recovered)
+  [ok] planted: extrap info lost after k=4 -> k_star_by_split.extrap == 6 {'train': None, 'interp': None, 'extrap': 6}
+  [ok] planted: train/interp keep info at every k -> None 
+  [ok] k_star == 6 and loss_ood_only True (only OoD loses) 
+  [ok] attentive rows also produced (probe name 'attentive', 3 seeds x 7 depths) 
+  [ok] planted: all splits lose info after k=8 -> k_star == 10 for every split, loss_ood_only False {'train': 10, 'interp': 10, 'extrap': 10}
+  [ok] label-shuffle control has lower R2 than the real probe (-0.48 vs 0.89)
+D  Part resume, config explicitness
+  [ok] Part.done sees rows written by an earlier run (resume) 
+  [ok] fresh=True ignores old rows 
+  [ok] probe seeds explicit, 5 
+  [ok] 002 config loaded with 004 seeds/kinds override and sha recorded 
+  [ok] predictor feature_part is z_only (spec 3.2 (i)) 
+  [ok] 002 num_hist=1, frameskip=5 (확정 기록 8) 
+C1 torch: encoder truncation and early exit against reference implementations
+  [ok] tokens_by_k(k=L) == forward_features patch tokens (regs=0 chunked=False) 
+  [ok] tokens_by_k(k=3) == get_intermediate_layers(n=[2], norm=True) (regs=0 chunked=False) 
+  [ok] tokens_by_k(k=0) == norm(patch embedding + pos) without cls/registers (regs=0 chunked=False) 
+  [ok] tokens_by_k(k=L) == forward_features patch tokens (regs=4 chunked=False) 
+  [ok] tokens_by_k(k=3) == get_intermediate_layers(n=[2], norm=True) (regs=4 chunked=False) 
+  [ok] tokens_by_k(k=0) == norm(patch embedding + pos) without cls/registers (regs=4 chunked=False) 
+  [ok] tokens_by_k(k=L) == forward_features patch tokens (regs=0 chunked=True) 
+  [ok] tokens_by_k(k=3) == get_intermediate_layers(n=[2], norm=True) (regs=0 chunked=True) 
+  [ok] tokens_by_k(k=0) == norm(patch embedding + pos) without cls/registers (regs=0 chunked=True) 
+  [ok] k > number of blocks raises 
+  [ok] early exit at m=L equals model.predict 
+  [ok] hidden after m blocks equals exp002 StreamHooks capture at layer index m (all m) 
+  [ok] early exit at m<L differs from the full output 
+  [ok] random_init_predictor leaves the original predictor untouched 
+  [ok] random_init_predictor weights differ from the original 
+  [ok] random_init_predictor reproducible for a fixed seed 
+C2 torch: toy world model with the size state erased after block 4 -> extraction -> probes (i)(ii)(iii) -> m* recovered
+[2026-11-09 18:16:47] toy check: early-exit(m=L) vs model.predict max abs diff 0 (scale 3.67)
+[2026-11-09 18:16:47] toy extract 16/108 (0s)
+[2026-11-09 18:16:47] toy extract 32/108 (0s)
+[2026-11-09 18:16:47] toy extract 48/108 (0s)
+[2026-11-09 18:16:47] toy extract 64/108 (0s)
+[2026-11-09 18:16:47] toy extract 80/108 (0s)
+[2026-11-09 18:16:47] toy extract 96/108 (0s)
+[2026-11-09 18:16:47] toy extract 108/108 (0s)
+  [ok] extract returns n_blocks read from the model (6) and files for every m 
+/home/jaekyungkim/mylab/experiments/002_single_size_sweep/src/exp002/probes.py:108: UserWarning: The given NumPy array is not writable, and PyTorch does not support non-writable tensors. This means writing to this tensor will result in undefined behavior. You may want to copy the array to protect its data or make it writable before converting it to a tensor. This type of warning will be suppressed for the rest of this program. (Triggered internally at ../torch/csrc/utils/tensor_numpy.cpp:206.)
+  xb = torch.as_tensor(np.asarray(X[i:i + bs])).to(device).float()
+  [ok] (i) hidden z-part probe: R2 high for m=0..3 and low for m>=4 (planted) {0: 0.99, 1: 0.99, 2: 0.99, 3: 0.99, 4: 0.0, 5: -0.0, 6: 0.0}
+  [ok] summary m_star == 4 recovered from the pipeline rows (train split) {'train': 4, 'interp': 4, 'extrap': 4}
+  [ok] (ii) exp1 probe on early-exit z: present for every m, reference (encoder tokens) high ref 0.99
+  [ok] (ii) exp1 probe on early-exit z: m>=4 output has lower R2 than m<=3 (visual part erased) {0: 0.99, 1: 0.98, 2: 0.95, 3: 0.96, 4: -0.0, 5: 0.01, 6: -0.03}
+  [ok] (ii) rollout timepoints t+1, t+4, t+8 exist 
+  [ok] (iii) next-z MSE rows for all depths/timepoints/levels 
+[2026-11-09 18:17:04] toy-rand extract 16/108 (0s)
+[2026-11-09 18:17:04] toy-rand extract 32/108 (0s)
+[2026-11-09 18:17:04] toy-rand extract 48/108 (0s)
+[2026-11-09 18:17:04] toy-rand extract 64/108 (0s)
+[2026-11-09 18:17:04] toy-rand extract 80/108 (0s)
+[2026-11-09 18:17:04] toy-rand extract 96/108 (0s)
+[2026-11-09 18:17:04] toy-rand extract 108/108 (0s)
+  [ok] random-init predictor rows produced with control name and no exp1-probe rows 
+[2026-11-09 18:17:10] toy-full extract 16/108 (0s)
+[2026-11-09 18:17:10] toy-full extract 32/108 (0s)
+[2026-11-09 18:17:10] toy-full extract 48/108 (0s)
+[2026-11-09 18:17:10] toy-full extract 64/108 (0s)
+[2026-11-09 18:17:10] toy-full extract 80/108 (0s)
+[2026-11-09 18:17:10] toy-full extract 96/108 (0s)
+[2026-11-09 18:17:10] toy-full extract 108/108 (0s)
+  [ok] feature_part full keeps action coordinates (dpart = nvis + nact) 
+[2026-11-09 18:17:10] toy-bad check: early-exit(m=L) vs model.predict max abs diff 1 (scale 4.5)
+  [ok] early-exit/predict mismatch is detected 
+[2026-11-09 18:17:10] aggregate: 1 part files (['predictor_s0_real.csv'])
+[2026-11-09 18:17:12] aggregate done: 5304 rows ; summary k_star=None m_star=4 verdict_H_d=refuted pilot=False
+  [ok] aggregate writes depth_r2.csv, summary.json, next_z_mse.csv, results.json 
+  [ok] summary.json has pilot field (false from config; true if any part is partial) 
+[2026-11-09 18:17:12] aggregate: 1 part files (['predictor_s0_real.csv'])
+[2026-11-09 18:17:13] aggregate done: 5304 rows ; summary k_star=None m_star=4 verdict_H_d=refuted pilot=True
+  [ok] partial cache forces pilot true 
+  [ok] figures written (heatmap, curves) 
+selftest summary: passed=72 failed=0 skipped=0

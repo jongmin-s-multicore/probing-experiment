@@ -1,0 +1,58 @@
+{
+  "levels": [
+    "a026",
+    "a040",
+    "a060",
+    "a080",
+    "ind",
+    "a125",
+    "a160",
+    "a200",
+    "a248"
+  ],
+  "pool_levels_used_5A": [
+    "a060",
+    "ind",
+    "a160"
+  ],
+  "n_pool_train_inputs": 7200,
+  "n_labels_5D": 72,
+  "names_d": [
+    "labels_a060+ind+a160",
+    "labels_a060+ind",
+    "labels_ind+a160",
+    "labels_a060+a160"
+  ],
+  "n_eval": 900,
+  "eval_per_level": {
+    "a026": 104,
+    "a040": 109,
+    "a060": 105,
+    "a080": 108,
+    "ind": 95,
+    "a125": 91,
+    "a160": 94,
+    "a200": 86,
+    "a248": 108
+  },
+  "eval_kind_counts": {
+    "early": 450,
+    "late": 450
+  },
+  "n_q_bins": 10,
+  "ood_roles": [
+    "interp",
+    "extrap"
+  ],
+  "frames": [
+    0,
+    1,
+    2,
+    3,
+    8,
+    9,
+    10,
+    11
+  ],
+  "config_sha256": "2fd84b30cd8f8e20612f86675f81202d71a6e3ec6b8aa906aca035a74c57e578"
+}

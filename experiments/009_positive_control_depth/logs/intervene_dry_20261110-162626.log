@@ -1,0 +1,3 @@
+[2026-11-10 16:26:26] log file: /home/jaekyungkim/mylab/experiments/009_positive_control_depth/logs/intervene_dry_20261110-162626.log
+[2026-11-10 16:26:26] stage=intervene dry_run=True python=/home/jaekyungkim/miniconda3/envs/lab07/bin/python conda_env=base pilot=True
+[2026-11-10 16:26:26] intervene plan: m_int [1, 2, 3, 4, 5, 6], strengths [0.0, 0.25, 0.5, 1.0] (0 = shared baseline), train seeds [0, 1, 2], method leace_scalar ; units total 57 (baseline 3 + intervention 54), already done 0 -> to run 57 ; probe kinds ['linear_pooled'] seeds [0, 1, 2, 3, 4]

@@ -440,6 +440,8 @@ def metrics_stage(cfg, cfg2, paths, plan, seeds, dry_run=False):
 
 def make_figs(R, cfg, out):
     try:
+        import os
+        os.environ["MPLBACKEND"] = "Agg"      # unconditional (see 004 figs.py); figures are only saved to files
         import matplotlib
         matplotlib.use("Agg")
         import matplotlib.pyplot as plt

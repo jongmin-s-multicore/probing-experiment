@@ -1,0 +1,18 @@
+[2026-11-09 18:17:18] log file: /home/jaekyungkim/mylab/experiments/004_depth_truncation/logs/check_dry_20261109-181718.log
+[2026-11-09 18:17:18] stage=check dry_run=True python=/home/jaekyungkim/miniconda3/envs/lab07/bin/python conda_env=lab07 pilot=True
+python executable : /home/jaekyungkim/miniconda3/envs/lab07/bin/python
+CONDA_DEFAULT_ENV : lab07
+packages          : {"torch": "2.0.1+cpu", "torchvision": "0.15.2+cpu", "numpy": "1.26.4", "scipy": null, "sklearn": null, "yaml": "6.0.3", "cv2": null, "decord": null, "hydra": null, "omegaconf": null, "einops": "0.8.2"}
+cuda_available    : False None None
+  work       /tmp/tmp.T8yQonY64j/dw exists=False
+  acwm_src   /tmp/tmp.T8yQonY64j/src exists=False
+  train_base /tmp/tmp.T8yQonY64j/tr exists=False
+  cache002   /tmp/tmp.T8yQonY64j/c2 exists=False
+  cache      /tmp/tmp.T8yQonY64j/c4 exists=False
+002 Q1 cache        DONE=False
+002 Q1 cache_smoke  DONE=False
+002 run exp002_multi_60_ind_160_s0 DONE=False
+002 run exp002_multi_60_ind_160_s1 DONE=False
+002 run exp002_multi_60_ind_160_s2 DONE=False
+config002 sha256  : 4d5261d68a5d7270d845bab6ef30f924bad31fd46f0b252b802303a3823fd1ce
+train.num_hist (002) = 1 ; frameskip = 5

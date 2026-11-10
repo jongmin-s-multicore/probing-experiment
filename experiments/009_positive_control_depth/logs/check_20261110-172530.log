@@ -1,0 +1,12 @@
+[2026-11-10 17:25:30] log file: /home/jaekyungkim/mylab/experiments/009_positive_control_depth/logs/check_20261110-172530.log
+[2026-11-10 17:25:30] stage=check dry_run=False python=/home/jaekyungkim/miniconda3/envs/lab07/bin/python conda_env=base pilot=True
+cache dir (tmp features, directions): /home/jaekyungkim/dinowm/exp009_cache exists=False
+002 Q1 cache DONE: False
+002 run exp002_multi_60_ind_160_s0 DONE=False
+002 run exp002_multi_60_ind_160_s1 DONE=False
+002 run exp002_multi_60_ind_160_s2 DONE=False
+004 depth_r2.csv (reproduction check input): True
+train_manifest episode dirs with metadata.pt (needed for action mean/std; mp4 files are NOT needed): MISSING 3
+  !! train seed 0: train_manifest.json missing (/home/jaekyungkim/dinowm/train_runs/outputs/exp002_multi_60_ind_160_s0/train_manifest.json)
+  !! train seed 1: train_manifest.json missing (/home/jaekyungkim/dinowm/train_runs/outputs/exp002_multi_60_ind_160_s1/train_manifest.json)
+  !! train seed 2: train_manifest.json missing (/home/jaekyungkim/dinowm/train_runs/outputs/exp002_multi_60_ind_160_s2/train_manifest.json)

@@ -1,0 +1,5 @@
+[2026-11-09 09:24:56] log file: /content/mylab/experiments/005_inductive_bias_probe/logs/tasks_20261109-092456.log
+[2026-11-09 09:24:56] stage=tasks dry_run=False python=/content/venv/bin/python conda_env=None pilot=True
+[2026-11-09 09:24:56] WARNING: CONDA_DEFAULT_ENV is empty - not running inside an activated conda environment (python=/content/venv/bin/python). Continuing.
+[2026-11-09 09:24:56] tasks plan: eval inputs 900 (half early / half late), 5-A tasks 100 x 100 inputs, 5-B tasks 100 x 100 inputs (sum of 3 sinusoids, f in [0.3, 1.5] cycles per unit log-area), 5-D heads 4 (labels fraction 0.01 (min 30))
+[2026-11-09 09:24:57] tasks done: {'n_eval': 900, 'pool_levels_used_5A': ['a060', 'ind', 'a160'], 'n_pool_train_inputs': 600, 'n_labels_5D': 30}

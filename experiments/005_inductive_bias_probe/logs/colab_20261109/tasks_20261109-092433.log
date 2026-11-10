@@ -1,0 +1,17 @@
+[2026-11-09 09:24:33] log file: /content/mylab/experiments/005_inductive_bias_probe/logs/tasks_20261109-092433.log
+[2026-11-09 09:24:33] stage=tasks dry_run=False python=/content/venv/bin/python conda_env=None pilot=True
+[2026-11-09 09:24:33] WARNING: CONDA_DEFAULT_ENV is empty - not running inside an activated conda environment (python=/content/venv/bin/python). Continuing.
+[2026-11-09 09:24:33] tasks plan: eval inputs 2000 (half early / half late), 5-A tasks 100 x 100 inputs, 5-B tasks 100 x 100 inputs (sum of 3 sinusoids, f in [0.3, 1.5] cycles per unit log-area), 5-D heads 4 (labels fraction 0.01 (min 30))
+ERROR ValueError: only 900 candidate inputs for kind 0, 1000 requested
+Traceback (most recent call last):
+  File "/content/mylab/experiments/005_inductive_bias_probe/run.py", line 73, in main
+    S.tasks_stage(cfg, cfg2, paths, suffix, dry_run=args.dry_run)
+  File "/content/mylab/experiments/005_inductive_bias_probe/src/exp005/stages.py", line 118, in tasks_stage
+    T, meta = build_tasks(cfg, cfg2, C["rows"], np.asarray(C["mask_feat"]), frames, [frames.index(f) for f in W["early"]], [frames.index(f) for f in W["late"]])
+  File "/content/mylab/experiments/005_inductive_bias_probe/src/exp005/stages.py", line 64, in build_tasks
+    ev = TK.eval_inputs(rows, frames, early_pos, late_pos, cfg["eval"]["n_inputs"], sd["eval"])
+  File "/content/mylab/experiments/005_inductive_bias_probe/src/exp005/tasks.py", line 20, in eval_inputs
+    raise ValueError("only %d candidate inputs for kind %d, %d requested" % (len(cand), kind, n))
+ValueError: only 900 candidate inputs for kind 0, 1000 requested
+
+FAILED. Paste the log file shown at the top (logs/).

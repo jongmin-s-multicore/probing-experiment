@@ -1,0 +1,5 @@
+[2026-11-09 09:18:18] log file: /content/mylab/experiments/004_depth_truncation/logs/enc_probe_20261109-091818.log
+[2026-11-09 09:18:18] stage=enc_probe dry_run=False python=/content/venv/bin/python conda_env=None pilot=True
+[2026-11-09 09:18:18] WARNING: CONDA_DEFAULT_ENV is empty - not running inside an activated conda environment (python=/content/venv/bin/python). Continuing.
+[2026-11-09 09:18:18] enc_probe plan: k=[0, 2, 4, 6, 8, 10, 12] controls=['real', 'random_init', 'label_shuffle'] kinds=['linear_pooled', 'attentive'] probe seeds=[0, 1, 2, 3, 4] ; probe fits (linear+attentive) = 225 (+ pixel baseline, mask baseline included)
+[2026-11-09 09:18:18] enc_probe done: 5850 rows -> /content/drive/MyDrive/exp004_work/results_pilot/parts/encoder.csv

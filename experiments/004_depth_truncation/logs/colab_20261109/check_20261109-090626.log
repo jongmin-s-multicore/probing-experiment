@@ -1,0 +1,19 @@
+[2026-11-09 09:06:26] log file: /content/mylab/experiments/004_depth_truncation/logs/check_20261109-090626.log
+[2026-11-09 09:06:26] stage=check dry_run=False python=/content/venv/bin/python conda_env=None pilot=True
+[2026-11-09 09:06:26] WARNING: CONDA_DEFAULT_ENV is empty - not running inside an activated conda environment (python=/content/venv/bin/python). Continuing.
+python executable : /content/venv/bin/python
+CONDA_DEFAULT_ENV : None
+packages          : {"torch": "2.0.1+cu117", "torchvision": "0.15.2+cu117", "numpy": "1.26.4", "scipy": "1.13.1", "sklearn": null, "yaml": "6.0.3", "cv2": "4.6.0", "decord": "0.6.0", "hydra": "1.2.0", "omegaconf": "2.3.0", "einops": "0.4.1"}
+cuda_available    : True NVIDIA L4 23.66
+  work       /content/dinowm exists=True
+  acwm_src   /content/dinowm/acwm_phys_src exists=True
+  train_base /content/drive/MyDrive/exp002_work/train_runs exists=True
+  cache002   /content/drive/MyDrive/exp002_work/exp002_cache exists=True
+  cache      /content/main/exp004_cache exists=True
+002 Q1 cache        DONE=True
+002 Q1 cache_smoke  DONE=False
+002 run exp002_multi_60_ind_160_s0 DONE=True
+002 run exp002_multi_60_ind_160_s1 DONE=True
+002 run exp002_multi_60_ind_160_s2 DONE=True
+config002 sha256  : 4d5261d68a5d7270d845bab6ef30f924bad31fd46f0b252b802303a3823fd1ce
+train.num_hist (002) = 1 ; frameskip = 5

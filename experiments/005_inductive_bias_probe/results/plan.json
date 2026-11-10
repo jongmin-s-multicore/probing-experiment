@@ -1,0 +1,32 @@
+{
+  "rows_matched": [
+    "no_vanishing"
+  ],
+  "layers": [
+    {
+      "name": "pred_out6",
+      "module": "predictor",
+      "depth": 6,
+      "kind": "output"
+    }
+  ],
+  "layer_subexps": {
+    "pred_out6": [
+      "5-A",
+      "5-B",
+      "5-C",
+      "5-D"
+    ]
+  },
+  "subexps": [
+    "5-A",
+    "5-B",
+    "5-C",
+    "5-D"
+  ],
+  "hold": false,
+  "pilot": true,
+  "unresolved": [],
+  "notes": [],
+  "summary_path": "/content/drive/MyDrive/exp004_work/results/summary.json"
+}

@@ -1,0 +1,4 @@
+[2026-11-09 09:26:06] log file: /content/mylab/experiments/005_inductive_bias_probe/logs/heads_dry_20261109-092606.log
+[2026-11-09 09:26:06] stage=heads dry_run=True python=/content/venv/bin/python conda_env=None pilot=True
+[2026-11-09 09:26:06] WARNING: CONDA_DEFAULT_ENV is empty - not running inside an activated conda environment (python=/content/venv/bin/python). Continuing.
+[2026-11-09 09:26:06] heads plan: layers ['pred_out6'] ; seeds [0, 1, 2, 3, 4] ; attentive heads (ours + random-init) = 2040 ; base heads (oracle linear/MLP, area) = 3060 ; measure the first head (logged) before the full run; estimates are in README (추정)

@@ -1,0 +1,4 @@
+[2026-11-09 23:38:52] log file: /home/jaekyungkim/mylab/experiments/004_depth_truncation/logs/aggregate_20261109-233852.log
+[2026-11-09 23:38:52] stage=aggregate dry_run=False python=/home/jaekyungkim/miniconda3/envs/lab07/bin/python conda_env=lab07 pilot=True
+[2026-11-09 23:38:52] aggregate: 7 part files (['encoder.csv', 'predictor_s0_random_init.csv', 'predictor_s0_real.csv', 'predictor_s1_random_init.csv', 'predictor_s1_real.csv', 'predictor_s2_random_init.csv', 'predictor_s2_real.csv'])
+[2026-11-09 23:39:10] aggregate done: 37830 rows ; summary k_star=None m_star=None verdict_H_d=refuted pilot=True

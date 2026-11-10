@@ -1,0 +1,91 @@
+[2026-11-09 18:17:40] log file: /home/jaekyungkim/mylab/experiments/005_inductive_bias_probe/logs/selftest_20261109-181740.log
+[2026-11-09 18:17:40] stage=selftest dry_run=False python=/home/jaekyungkim/miniconda3/envs/lab07/bin/python conda_env=lab07 pilot=True
+A  4.6 branch table (each row, combinations, priority, missing fields)
+  [ok] row 1 (k_star set): layers [enc_k9 (l_best encoder), enc_k12], sub-experiments 5-A, 5-B ['k_star']
+  [ok] row 2 (only m_star): enc_k12, pred_h3, pred_h4; 5-A, 5-C 
+  [ok] rows 2+3 (spec example summary): rows added in table order, l_best layer gets 5-B and 5-D only {'enc_k12': ['5-A', '5-C'], 'pred_h3': ['5-A', '5-C'], 'pred_h4': ['5-A', '5-C'], 'enc_k9': ['5-B', '5-D']}
+  [ok] row 4 (no vanishing): predictor output (pred_out6) with 5-A..5-D 
+  [ok] rows 1+3: upper row first, l_best encoder layer (enc_k9) already present gets 5-D added 
+  [ok] exp1 negative: hold, only enc_k12 with 5-C 
+  [ok] summary missing -> unresolved, no layers 
+  [ok] m_star = 1 -> pred_h0 and pred_h1 
+  [ok] row 1 without an encoder l_best -> recorded as unresolved, final layer still planned 
+  [ok] row 1 uses the encoder entry of l_best_by_module even if the global l_best is a predictor layer 
+  [ok] pilot flag read from the summary 
+  [ok] integration: summary built by experiment 4's code (k*=6, loss_ood_only) drives the plan ['enc_k0', 'enc_k12']
+B  evaluation inputs and tasks
+  [ok] 270 eval inputs, all from test rows, no duplicate (row, fpos) 
+  [ok] half early / half late frames, recorded 
+  [ok] all 9 levels present in the evaluation set 
+  [ok] 5-A labels: Bernoulli per level, never constant 
+  [ok] 5-A D_k: 60 distinct train-pool ids, >=1 per available level, pool restricted to levels present in the cache's train part 
+  [ok] 5-A D_k never touches test rows 
+  [ok] 5-B D_k from trained levels only 
+  [ok] sinusoid targets: zero mean, unit std over the s range, band-limited components 
+  [ok] g_k normalized: mean 0, std 1 on the grid for every task 
+  [ok] frequencies inside [freq_min, freq_max] 
+  [ok] 5-D: n_labels = max(30, ceil(1% of pool)); 1 + 3 label sets; combos use only their levels 
+  [ok] area deciles q in 0..9, all used 
+  [ok] deterministic given the config seeds 
+G  config explicitness
+  [ok] all seeds explicit (head x5, eval, tasks_a, tasks_b, sinus, d, noninf) 
+  [ok] spec numbers: 100 tasks x 100 inputs (5-A and 5-B), 2000 eval inputs, 20 bins, 10 deciles, 1% / min 30 labels 
+  [ok] verdict thresholds 0.1 / 0.8-1.2 
+  [ok] 002 config loaded, head seeds override, sha recorded 
+E  verdict rules (supported / refuted / not_evaluable), thresholds from config
+  [ok] H-e supported: above area, outside random's seed sd, calibration dev 0.05 <= 0.1 None
+  [ok] H-e refuted when the 45-degree deviation is 0.15 > 0.1 
+  [ok] H-e: area baseline score >= saturation (0.95) -> not_evaluable; 0.9 above ours -> refuted 
+  [ok] H-e: area saturated -> not_evaluable 
+  [ok] H-e: ours not outside random's seed sd -> refuted 
+  [ok] H-e: NaN score (oracle not separated from the reference) -> not_evaluable 
+  [ok] H-e: single seed -> not_evaluable 
+  [ok] H-e: null threshold -> not_evaluable 
+  [ok] H-e: missing calibration rows -> not_evaluable 
+  [ok] H-f supported: area= equals area!= within seed sd 
+  [ok] H-f refuted: area= far below area!= 
+  [ok] H-f: missing rows -> not_evaluable 
+  [ok] H-g supported: every slice slope in [0.8, 1.2] 
+  [ok] H-g refuted: one slice at 0.55 
+  [ok] H-g: NaN slope in a slice -> not_evaluable 
+  [ok] H-g: null threshold -> not_evaluable 
+C  IB metrics vs brute force, pair groups, planted models
+  [ok] eq_mean_per_task == brute force (R-IB, all) 
+  [ok] eq_mean_per_task == brute force (D-IB, ood_any) 
+  [ok] eq_mean_per_task == brute force (D-IB_area=, all) 
+  [ok] eq_mean_per_task == brute force (R-IB_fold, ind) 
+  [ok] eq_mean_per_task == brute force (D-IB_area≠, ood_both) 
+  [ok] pair group ind: both inputs from trained levels; diagonal excluded 
+  [ok] pair group ood_both: both OoD and different level 
+  [ok] pair group ood_any: at least one OoD 
+  [ok] perfect-state model: R-IB raw == 1 and R-IB_fold raw == 1 
+  [ok] non-informative (i.i.d.) model: R-IB raw ~ 0.5 and D-IB raw ~ 0.5 
+  [ok] constant model: R-IB raw == 1, D-IB raw == 0 
+  [ok] score vs i.i.d. reference: perfect model R-IB score == 1, noninf score == 0 
+  [ok] FINDING: with random binary labels the perfect-state D-IB raw (~0.5) is not separated from the i.i.d. reference (gap < min_gap) -> score NaN, not noise (gap -0.017)
+  [ok] with the constant-model reference the perfect model D-IB score == 1 
+  [ok] area-only model: D-IB_area= raw == 0 exactly (same decile -> same prediction), D-IB_area!= raw > 0.3 (0.496)
+  [ok] area-only model: R-IB_fold raw < 0.7 while the perfect model has 1.0 (fold = same level, different decile) 
+  [ok] perfect-state model: D-IB_area= ~ D-IB_area!= (state model is indifferent to the decile) 
+  [ok] dist_matrix == brute force 
+  [ok] calibration: model == oracle -> mean abs deviation 0, 20 bins, counts add up to all pairs 
+  [ok] calibration: constant model deviates 
+  [ok] calibration: model with half amplitude -> distances scaled by 0.25 -> deviation > 0 
+  [ok] ols_line recovers slope/intercept 
+  [ok] ols_line on a constant s -> NaN 
+D  heads (real code) + metrics (real code) on planted tokens: perfect state / area-only / random
+  [ok] area head: input LayerNorm replaced by Identity (scale of the 5 features is kept) 
+[2026-11-09 18:17:41]  5-A first head: 0.20s -> projected 2s for 8 tasks
+[2026-11-09 18:17:43]  5-A first head: 0.14s -> projected 1s for 8 tasks
+[2026-11-09 18:17:47]  5-A first head: 0.27s -> projected 2s for 8 tasks
+[2026-11-09 18:17:53]  5-A first head: 0.55s -> projected 4s for 8 tasks
+[2026-11-09 18:18:02]  5-A first head: 0.59s -> projected 5s for 8 tasks
+[2026-11-09 18:18:10]  5-A first head: 0.69s -> projected 6s for 8 tasks
+[2026-11-09 18:18:21]  5-A first head: 0.39s -> projected 3s for 8 tasks
+[2026-11-09 18:18:29]  5-A first head: 0.51s -> projected 4s for 8 tasks
+[2026-11-09 18:18:37]  5-A first head: 0.33s -> projected 3s for 8 tasks
+[2026-11-09 18:18:45]  5-A first head: 0.20s -> projected 2s for 8 tasks
+[2026-11-09 18:18:52]  5-A first head: 0.35s -> projected 3s for 8 tasks
+[2026-11-09 18:18:59]  5-A first head: 0.40s -> projected 3s for 8 tasks
+[2026-11-09 18:19:08]  5-A first head: 0.61s -> projected 5s for 8 tasks
+[2026-11-09 18:19:19]  5-A first head: 0.59s -> projected 5s for 8 tasks

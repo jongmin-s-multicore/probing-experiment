@@ -1,0 +1,43 @@
+name: "009_positive_control_depth"
+hypothesis: "notes/hypotheses.md 009 (양성 대조: 004 파이프라인의 검정력). 설정 사용자 확정 2026-11-10 (소거 방식, 강도, 주 성공 기준, m_int). GPU 실행 승인은 별도(미실행)"
+seed: 0                          # 전역 시드. 아래 fit/probe 시드도 명시
+pilot: true                      # 본 실행 전까지 true (사람이 바꾼다)
+
+base:
+  config004: "../004_depth_truncation/config.yaml"   # 004 config 를 읽기만 한다 (판정 규칙, probe, 002 경로). 수정 안 함
+  condition: "multi_60_ind_160"                       # 조건 (b) 체크포인트 (002 run), 004 와 같음
+
+paths:
+  cache_env: "EXP009_CACHE"      # 임시 hidden 특징과 방향 캐시 위치 (기본 $DINO_WORK/exp009_cache). 002 Q1 캐시는 EXP002_CACHE, 체크포인트는 DINO_TRAIN 을 그대로 읽는다(읽기 전용)
+
+predictor:
+  train_seeds: [0, 1, 2]         # 002 조건 (b) 학습 seed (004 와 같음)
+  feature_part: "z_only"         # 004 와 같음 (앞 384)
+  batch_episodes: 8
+
+intervention:
+  m_int: [1, 2, 3, 4, 5, 6]     # 사용자 확정 2026-11-10 (가능한 모든 블록). 1..6 의 임의 부분집합으로 덮어쓰기 가능. 블록 번호 m = hidden h_m (m 개 블록 통과 직후) 에서 개입. 블록 6 은 뒤에 블록이 없어 회복 관측은 "해당 없음", 검출 판정만. CLI --m-int 또는 환경변수 EXP009_M_INT 로 덮어쓰면 results.json 의 m_int_used / m_int_overridden 에 기록된다
+  strengths: [0, 1.0]            # 사용자 확정 2026-11-10 (0.25, 0.5 제거); 0 = 무개입 기준선 (블록과 무관하게 학습 seed 당 한 번 계산해 공유)
+  method: "leace_scalar"         # 사용자 확정 2026-11-10; 소거 방식. leace_scalar = 크기 레이블에 대한 선형 소거 (소거 후 pooled 특징과 레이블 공분산 0), probe_direction = 선형 probe 가중치 방향 하나만 직교 제거 (더 약함)
+  ridge_rel: 0.001               # 방향 적합 ridge: lambda = ridge_rel * trace(Sigma)/d
+  fit_fraction: 0.5              # 방향 적합에 쓰는 학습 episode 비율 (학습 분할 안에서만 뽑음). 평가 episode(test)는 방향 적합에 쓰지 않는다
+  fit_seed: 9000                 # 방향 적합 episode 선택 seed
+  apply_to: "z_part_all_tokens"  # 스트림의 z 부분(앞 384) 모든 토큰 (모든 context frame, 196 패치). 행동 좌표는 건드리지 않음
+
+probe:                           # 004 의 probe 와 같은 코드 (exp004.stages.probe_hidden). 주 곡선은 linear 만. attentive 는 비용 때문에 기본 제외
+  kinds: [linear_pooled]
+  seeds: [0, 1, 2, 3, 4]         # 004 와 같음
+
+depth:                           # 004 판정 규칙 재사용. 값은 004 config 와 같아야 한다 (run 시작 시 일치 검사)
+  drop_threshold: 0.2
+  primary: {probe: linear, fit: new, control: real, timepoint: late}
+  splits: [train, interp, extrap]
+
+success:                         # 사용자 확정 2026-11-10 (주 성공 기준). 블록마다 따로 판정
+  strength: 1.0                  # 이 강도에서 판정
+  min_seeds: 2                   # 학습 시드 3개 중 2개 이상
+  slack: 1                       # m* <= m_int + 1 이면 검출 (m* = split 별 첫 하락 깊이의 최솟값)
+
+run:
+  max_attempts: 3
+  keep_tmp: false

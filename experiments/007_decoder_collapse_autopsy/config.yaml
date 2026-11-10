@@ -1,0 +1,38 @@
+name: "007_decoder_collapse_autopsy"
+hypothesis: "007 진단 질문 (notes/hypotheses.md; 가설 확정 아님)"
+seed: 0                      # torch/numpy 시드. 추론만 하며 eval 모드(dropout 꺼짐)라 결과는 시드에 의존하지 않는다. 그래도 명시.
+code:
+  repo_commit: "5a640bed66002eca7bdb31d10b2bde59ad944551"   # thread0 의 branch hanbin5/acwm-phys 고정 commit (git archive 로 scratchpad 에 풀어서 읽음; thread0 작업 트리 불변)
+  thread0_dir: "/home/jaekyungkim/mylab/thread0"
+paths:
+  scratch: "/tmp/claude-1000/-home-jaekyungkim-mylab/846c4eba-20e0-460a-b41f-b7478e6e10c6/scratchpad"
+  ckpt_dir: "/tmp/claude-1000/-home-jaekyungkim-mylab/846c4eba-20e0-460a-b41f-b7478e6e10c6/scratchpad/exp007_ckpts"
+  code_dir: "/tmp/claude-1000/-home-jaekyungkim-mylab/846c4eba-20e0-460a-b41f-b7478e6e10c6/scratchpad/code5a"
+  hub_dir: "/tmp/claude-1000/-home-jaekyungkim-mylab/846c4eba-20e0-460a-b41f-b7478e6e10c6/scratchpad/hubcache"
+  common_npz: "/tmp/claude-1000/-home-jaekyungkim-mylab/846c4eba-20e0-460a-b41f-b7478e6e10c6/scratchpad/npz_ma_s0/s.npz"   # exp003_mix_adjacent_s0 의 frames_sample.npz (공통 입력 집합)
+drive:
+  remote_root: "gdrive:exp003_work"
+  trashed_ckpt_subdir: "train_runs/outputs/{run}/checkpoints"   # --drive-trashed-only 로 읽기 전용
+  cache_subdir: "exp003_cache/{run}"
+runs:
+  collapsed:
+    exp003_mix_adjacent_s0:  [2, 3]
+    exp003_single_a026_s1:   [2, 3, 4]
+  control:
+    exp003_mix_adjacent_s1:  [2, 3]
+    exp003_mix_adjacent_s2:  [2, 3]
+    exp003_single_a026_s2:   [2, 3]
+  control_same_distribution:       # 같은 분포 짝
+    exp003_mix_adjacent_s0: [exp003_mix_adjacent_s1, exp003_mix_adjacent_s2]
+    exp003_single_a026_s1:  [exp003_single_a026_s2]
+inputs:
+  episodes: [1, 2]               # 크기당 에피소드 번호 (frames_sample.npz 키 <size>/<n>/real)
+  time_idx: [0, 6, 12]           # 13 프레임 중 시점 3개
+  dino: {name: "dinov2_vits14", hub: "facebookresearch/dinov2:85a24602099d397264d5b30461ad7f3bfd726ca1", encoder_input: 196}   # 학습 코드 models/dino.py 와 models/visual_world_model.py 와 동일
+  proprio_value: 0.0             # 예측기 입력용. frames_sample 에는 행동이 없어 proprio, action 을 0 벡터로 고정(둘 다 모든 입력에 같은 값). 데이터는 내려받지 않는다.
+  action_value: 0.0
+criteria:                         # notes/hypotheses.md "007 진단 질문" 의 사전 기록과 같음
+  dependence_lost_ratio: 0.01     # 층 출력 입력간 std < 대조 평균 std 의 1/100
+  weight_change_ratio: 10.0       # 붕괴 run 의 ||W3-W2||/||W2|| >= 대조 3개 최댓값의 10배
+smoke:
+  n_frames: 6

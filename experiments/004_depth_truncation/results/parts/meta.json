@@ -1,0 +1,5 @@
+{
+  "encoder_layers": 12,
+  "partial": false,
+  "predictor_layers": 6
+}

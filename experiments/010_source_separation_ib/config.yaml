@@ -1,0 +1,38 @@
+name: "010_source_separation_ib"
+hypothesis: "notes/hypotheses.md 010 (원천 분리 대조: 005 의 ours ~ random 의 원인 위치). 2단계 초안, 승인 대기. 코드 작성만 허용, 미실행"
+seed: 0
+pilot: true                      # 본 실행 전까지 true (사람이 바꾼다)
+
+base:
+  config005: "../005_inductive_bias_probe/config.yaml"   # head/과제/지표/정규화/판정 임계값은 005 config 를 그대로 읽는다(수정 안 함). 아래 항목만 덮어쓴다
+  condition: "multi_60_ind_160"
+
+paths:
+  cache_env: "EXP005_CACHE"      # 005 feat 결과 (feat_pred_out6.npy, feat_pred_out6_rand.npy) 읽기 전용
+  cache004_env: "EXP004_CACHE"   # 004 enc 캐시 (tokens_k12.npy, rand_k12.npy) 읽기 전용
+
+eval:
+  n_inputs: 900                  # 005 실행과 같음 (005 CHANGES.md 8절; 005 저장소 config 는 2000 그대로, Colab 본 실행에서 900)
+
+representations:                 # 네 표현. name 은 compute_metrics 의 layer 이름, control real/rand = ours/random 칸
+  - {name: enc_k12,    module: encoder,   depth: 12, kind: hidden, ours: "학습된 인코더 최종 층 (004 캐시 tokens_k12)", random: "random-init 인코더 (004 캐시 rand_k12)"}
+  - {name: pred_out6,  module: predictor, depth: 6,  kind: output, ours: "pred_out6 ours (005 feat)", random: "pred_out6 random-init predictor (005 feat)"}
+
+seeds:                           # 모든 시드 명시
+  head: [0, 1, 2, 3, 4]          # head 학습 seed (005 와 같음)
+  task_a: [2000, 2001, 2002]     # 초안, 승인 대기: 과제/라벨(5-A 레벨 라벨, D_k) 시드 3개 이상. 첫 값 2000 = 005 의 seeds.tasks_a
+  eval: 1000                     # 005 와 같음 (평가 입력 고정)
+  # 5-D 라벨 부분집합(seeds.d)은 쓰지 않는다: 5-A, 5-C 만 실행
+
+subexps: ["5-A", "5-C"]          # R-IB, D-IB, D-IB_area=, D-IB_area!=, R-IB_fold
+
+tost:                            # H-f 동등성 검정 (초안, 승인 대기)
+  delta: 0.05                    # 초안, 승인 대기: 동등성 여유 Δ (점수 단위)
+  alpha: 0.05                    # TOST 각 단측 검정 수준 (= 90% 신뢰구간이 (-Δ, Δ) 안)
+  unit: task_seed                # 검정 단위 = 과제 시드별 (head 시드 평균). 단위 수 < 3 이면 not_evaluable
+  pair_group_hf: all             # 005 verdict.h_f.pair_group 과 같음
+  pair_group_cmp: [all, ood_any]  # 표현 간 비교에 보고할 쌍 그룹
+  cmp_metrics: [R-IB, D-IB]
+
+run:
+  max_attempts: 3

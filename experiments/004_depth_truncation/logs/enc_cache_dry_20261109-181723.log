@@ -1,0 +1,4 @@
+[2026-11-09 18:17:23] log file: /home/jaekyungkim/mylab/experiments/004_depth_truncation/logs/enc_cache_dry_20261109-181723.log
+[2026-11-09 18:17:23] stage=enc_cache dry_run=True python=/home/jaekyungkim/miniconda3/envs/lab07/bin/python conda_env=lab07 pilot=True
+[2026-11-09 18:17:23] DRY-RUN: 002 Q1 cache not found (/tmp/tmp.T8yQonY64j/c2/q1_tokens/DONE missing - run `python run.py cache` first); using config sizes for the estimate
+[2026-11-09 18:17:23] enc_cache plan: k_grid=[0, 2, 4, 6, 8, 10, 12] frames=[0, 1, 2, 3, 8, 9, 10, 11] episodes=1800 random_init_control=True -> /tmp/tmp.T8yQonY64j/c4/enc ; disk {'tokens_per_k_gb': 2.17, 'tokens_total_gb': 30.3, 'pixel_gb': 0.27}

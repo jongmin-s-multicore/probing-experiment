@@ -1,0 +1,33 @@
+[2026-11-09 09:06:59] log file: /content/mylab/experiments/002_single_size_sweep/logs/download_20261109-090659.log
+[2026-11-09 09:06:59] stage=download dry_run=False python=/content/venv/bin/python conda_env=None
+[2026-11-09 09:06:59] WARNING: CONDA_DEFAULT_ENV is empty - not running inside an activated conda environment (python=/content/venv/bin/python). Continuing.
+[2026-11-09 09:06:59] data source: archive /content/drive/MyDrive/exp002_work/cloth_sim_data.tar (one file; fast path)
+[2026-11-09 09:06:59] extract_archive: /content/drive/MyDrive/exp002_work/cloth_sim_data.tar -> /content/dinowm/data/cloth_sim splits to extract=['a060_train', 'ind_train', 'a160_train', 'a026_test', 'a040_test', 'a060_test', 'a080_test', 'ind_test', 'a125_test', 'a160_test', 'a200_test', 'a248_test']
+[2026-11-09 09:07:11]     archive copy: 0.47/0.67 GB, 12 s
+[2026-11-09 09:07:21]     a060_train: 2001/2001 files, 0.15 GB, 1 s (finished)
+/content/venv/lib/python3.9/site-packages/torch/_utils.py:776: UserWarning: TypedStorage is deprecated. It will be removed in the future and UntypedStorage will be the only storage class. This should only matter to you if you are using storages directly.  To access UntypedStorage directly, use tensor.untyped_storage() instead of tensor.storage()
+  return self.fget.__get__(instance, owner)()
+[2026-11-09 09:07:21]   [a060_train] done: 2000 episodes, 0.15 GB (source: archive)
+[2026-11-09 09:07:22]     ind_train: 2001/2001 files, 0.19 GB, 1 s (finished)
+[2026-11-09 09:07:22]   [ind_train] done: 2000 episodes, 0.19 GB (source: archive)
+[2026-11-09 09:07:23]     a160_train: 2001/2001 files, 0.24 GB, 1 s (finished)
+[2026-11-09 09:07:23]   [a160_train] done: 2000 episodes, 0.24 GB (source: archive)
+[2026-11-09 09:07:23]     a026_test: 101/101 files, 0.01 GB, 0 s (finished)
+[2026-11-09 09:07:23]   [a026_test] done: 100 episodes, 0.01 GB (source: archive)
+[2026-11-09 09:07:23]     a040_test: 101/101 files, 0.01 GB, 0 s (finished)
+[2026-11-09 09:07:24]   [a040_test] done: 100 episodes, 0.01 GB (source: archive)
+[2026-11-09 09:07:24]     a060_test: 101/101 files, 0.01 GB, 0 s (finished)
+[2026-11-09 09:07:24]   [a060_test] done: 100 episodes, 0.01 GB (source: archive)
+[2026-11-09 09:07:24]     a080_test: 101/101 files, 0.01 GB, 0 s (finished)
+[2026-11-09 09:07:24]   [a080_test] done: 100 episodes, 0.01 GB (source: archive)
+[2026-11-09 09:07:24]     ind_test: 101/101 files, 0.01 GB, 0 s (finished)
+[2026-11-09 09:07:24]   [ind_test] done: 100 episodes, 0.01 GB (source: archive)
+[2026-11-09 09:07:24]     a125_test: 101/101 files, 0.01 GB, 0 s (finished)
+[2026-11-09 09:07:24]   [a125_test] done: 100 episodes, 0.01 GB (source: archive)
+[2026-11-09 09:07:24]     a160_test: 101/101 files, 0.01 GB, 0 s (finished)
+[2026-11-09 09:07:24]   [a160_test] done: 100 episodes, 0.01 GB (source: archive)
+[2026-11-09 09:07:24]     a200_test: 101/101 files, 0.01 GB, 0 s (finished)
+[2026-11-09 09:07:24]   [a200_test] done: 100 episodes, 0.01 GB (source: archive)
+[2026-11-09 09:07:24]     a248_test: 101/101 files, 0.02 GB, 0 s (finished)
+[2026-11-09 09:07:24]   [a248_test] done: 100 episodes, 0.02 GB (source: archive)
+[2026-11-09 09:07:25] download check: 12 splits, 0 warnings -> /content/drive/MyDrive/exp004_work/pilot_002_results/download_check.json

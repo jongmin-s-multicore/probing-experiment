@@ -74,6 +74,7 @@ def bg(cmd, log, cwd=None, env=None, every=20):
     if os.path.exists(rcfile):
         os.remove(rcfile)
     full = '(%s) >> %s 2>&1; echo $? > %s' % (cmd, log, rcfile)
+    env = dict(os.environ if env is None else env, MPLBACKEND='Agg')
     subprocess.Popen(['nohup', 'bash', '-c', full], cwd=cwd, env=env, start_new_session=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     shown = 0
     try:
@@ -177,7 +178,7 @@ os.environ.update({
     'EXP006_INPUT_ROOT': INPUT_ROOT, 'EXP006_WORK_ROOT': WORK_ROOT,
     'EXP006_EXP002_DIR': E002,                       # local read-only copy of the 002 source files
     'ACWM_PHYS_SRC': SRC, 'DATASET_DIR': '/content/dinowm/data', 'WANDB_MODE': 'disabled',
-    'PYTHONDONTWRITEBYTECODE': '1',
+    'PYTHONDONTWRITEBYTECODE': '1', 'MPLBACKEND': 'Agg',      # the kernel's MPLBACKEND (module://matplotlib_inline...) is invalid in the venv subprocesses (hit in 004)
     'PATH': os.path.dirname(PY) + os.pathsep + os.environ['PATH'], 'VIRTUAL_ENV': VENV,
 })
 tgt, lnk = WORK_ROOT + '/logs', EXP + '/logs'

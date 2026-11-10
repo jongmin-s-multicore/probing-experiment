@@ -1,0 +1,12 @@
+[2026-11-09 09:20:35] log file: /content/mylab/experiments/004_depth_truncation/logs/aggregate_20261109-092035.log
+[2026-11-09 09:20:35] stage=aggregate dry_run=False python=/content/venv/bin/python conda_env=None pilot=True
+[2026-11-09 09:20:35] WARNING: CONDA_DEFAULT_ENV is empty - not running inside an activated conda environment (python=/content/venv/bin/python). Continuing.
+ERROR RuntimeError: stage:aggregate failed 3 times in a row (limit 3, CLAUDE.md). Stop and report the cause from logs/. A human may delete the entry in /content/drive/MyDrive/exp004_work/results_pilot/attempts.json to allow another try.
+Traceback (most recent call last):
+  File "/content/mylab/experiments/004_depth_truncation/run.py", line 55, in main
+    attempts_check(cfg, paths, key)
+  File "/content/mylab/experiments/004_depth_truncation/src/exp004/base.py", line 35, in attempts_check
+    raise RuntimeError("%s failed %d times in a row (limit %d, CLAUDE.md). Stop and report the cause from logs/. "
+RuntimeError: stage:aggregate failed 3 times in a row (limit 3, CLAUDE.md). Stop and report the cause from logs/. A human may delete the entry in /content/drive/MyDrive/exp004_work/results_pilot/attempts.json to allow another try.
+
+FAILED. Paste the log file shown at the top (logs/).

@@ -1,0 +1,170 @@
+[
+ {
+  "label": "004:check",
+  "stage": "check",
+  "args": [
+   "--results-dir",
+   "/content/drive/MyDrive/exp004_work/results"
+  ],
+  "rc": 0,
+  "seconds": 2.3,
+  "log": "/content/mylab/experiments/004_depth_truncation/logs/check_20261109-090626.log",
+  "vram_base_mib": 0,
+  "vram_peak_sampled_mib": 3,
+  "finished_utc": "2026-11-09 09:06:27"
+ },
+ {
+  "label": "005:check",
+  "stage": "check",
+  "args": [
+   "--results-dir",
+   "/content/drive/MyDrive/exp005_work/results"
+  ],
+  "rc": 0,
+  "seconds": 2.3,
+  "log": "/content/mylab/experiments/005_inductive_bias_probe/logs/check_20261109-090641.log",
+  "vram_base_mib": 0,
+  "vram_peak_sampled_mib": 3,
+  "finished_utc": "2026-11-09 09:06:41"
+ },
+ {
+  "label": "004:enc_cache",
+  "stage": "enc_cache",
+  "args": [
+   "--results-dir",
+   "/content/drive/MyDrive/exp004_work/results"
+  ],
+  "rc": 0,
+  "seconds": 176.6,
+  "log": "/content/mylab/experiments/004_depth_truncation/logs/enc_cache_20261109-092707.log",
+  "vram_base_mib": 0,
+  "vram_peak_sampled_mib": 1824,
+  "finished_utc": "2026-11-09 09:30:02"
+ },
+ {
+  "label": "004:enc_probe",
+  "stage": "enc_probe",
+  "args": [
+   "--results-dir",
+   "/content/drive/MyDrive/exp004_work/results"
+  ],
+  "rc": 0,
+  "seconds": 1286.8,
+  "log": "/content/mylab/experiments/004_depth_truncation/logs/enc_probe_20261109-093004.log",
+  "vram_base_mib": 0,
+  "vram_peak_sampled_mib": 2112,
+  "finished_utc": "2026-11-09 09:51:29"
+ },
+ {
+  "label": "004:pred",
+  "stage": "pred",
+  "args": [
+   "--results-dir",
+   "/content/drive/MyDrive/exp004_work/results"
+  ],
+  "rc": 0,
+  "seconds": 5345.3,
+  "log": "/content/mylab/experiments/004_depth_truncation/logs/pred_20261109-095131.log",
+  "vram_base_mib": 0,
+  "vram_peak_sampled_mib": 5118,
+  "finished_utc": "2026-11-09 11:20:34"
+ },
+ {
+  "label": "004:aggregate",
+  "stage": "aggregate",
+  "args": [
+   "--results-dir",
+   "/content/drive/MyDrive/exp004_work/results"
+  ],
+  "rc": 0,
+  "seconds": 10.1,
+  "log": "/content/mylab/experiments/004_depth_truncation/logs/aggregate_20261109-112037.log",
+  "vram_base_mib": 0,
+  "vram_peak_sampled_mib": 3,
+  "finished_utc": "2026-11-09 11:20:44"
+ },
+ {
+  "label": "005:plan",
+  "stage": "plan",
+  "args": [
+   "--results-dir",
+   "/content/drive/MyDrive/exp005_work/results"
+  ],
+  "rc": 0,
+  "seconds": 2.0,
+  "log": "/content/mylab/experiments/005_inductive_bias_probe/logs/plan_20261109-112046.log",
+  "vram_base_mib": 0,
+  "vram_peak_sampled_mib": 0,
+  "finished_utc": "2026-11-09 11:20:46"
+ },
+ {
+  "label": "005:tasks",
+  "stage": "tasks",
+  "args": [
+   "--results-dir",
+   "/content/drive/MyDrive/exp005_work/results"
+  ],
+  "rc": 0,
+  "seconds": 3.0,
+  "log": "/content/mylab/experiments/005_inductive_bias_probe/logs/tasks_20261109-112048.log",
+  "vram_base_mib": 0,
+  "vram_peak_sampled_mib": 3,
+  "finished_utc": "2026-11-09 11:20:49"
+ },
+ {
+  "label": "005:feat",
+  "stage": "feat",
+  "args": [
+   "--results-dir",
+   "/content/drive/MyDrive/exp005_work/results"
+  ],
+  "rc": 0,
+  "seconds": 136.9,
+  "log": "/content/mylab/experiments/005_inductive_bias_probe/logs/feat_20261109-112051.log",
+  "vram_base_mib": 0,
+  "vram_peak_sampled_mib": 2508,
+  "finished_utc": "2026-11-09 11:23:06"
+ },
+ {
+  "label": "005:heads",
+  "stage": "heads",
+  "args": [
+   "--results-dir",
+   "/content/drive/MyDrive/exp005_work/results"
+  ],
+  "rc": 0,
+  "seconds": 4949.2,
+  "log": "/content/mylab/experiments/005_inductive_bias_probe/logs/heads_20261109-112308.log",
+  "vram_base_mib": 0,
+  "vram_peak_sampled_mib": 2356,
+  "finished_utc": "2026-11-09 12:45:35"
+ },
+ {
+  "label": "005:metrics",
+  "stage": "metrics",
+  "args": [
+   "--results-dir",
+   "/content/drive/MyDrive/exp005_work/results"
+  ],
+  "rc": 0,
+  "seconds": 7.4,
+  "log": "/content/mylab/experiments/005_inductive_bias_probe/logs/metrics_20261109-124537.log",
+  "vram_base_mib": 0,
+  "vram_peak_sampled_mib": 3,
+  "finished_utc": "2026-11-09 12:45:43"
+ },
+ {
+  "label": "005:report",
+  "stage": "report",
+  "args": [
+   "--results-dir",
+   "/content/drive/MyDrive/exp005_work/results"
+  ],
+  "rc": 0,
+  "seconds": 2.5,
+  "log": "/content/mylab/experiments/005_inductive_bias_probe/logs/report_20261109-124544.log",
+  "vram_base_mib": 0,
+  "vram_peak_sampled_mib": 3,
+  "finished_utc": "2026-11-09 12:45:45"
+ }
+]

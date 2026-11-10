@@ -1,0 +1,29 @@
+== 최대 관측 낙폭(러닝맥스 - 이후 최솟값), Δ 곡선 평균 기준
+encoder train: max Δ=0.275, max drawdown=0.125 (임계 0.2)
+encoder interp: max Δ=0.365, max drawdown=0.099 (임계 0.2)
+encoder extrap: max Δ=0.132, max drawdown=0.076 (임계 0.2)
+predictor train: max Δ=0.025, max drawdown=0.000 (임계 0.2)
+predictor interp: max Δ=0.048, max drawdown=0.005 (임계 0.2)
+predictor extrap: max Δ=-0.000, max drawdown=0.010 (임계 0.2)
+
+== predictor Δ: 학습시드 3개 단위 t 구간 (df=2)
+train d=3: units=[0.0151 0.009  0.0107] mean=0.0116 sd=0.0031 95%CI=[0.0038,0.0194] t=6.41 p2=0.023 dz=3.70
+train d=6: units=[0.0218 0.0282 0.0243] mean=0.0248 sd=0.0032 95%CI=[0.0168,0.0327] t=13.41 p2=0.006 dz=7.74
+interp d=3: units=[0.0319 0.0628 0.0085] mean=0.0344 sd=0.0272 95%CI=[-0.0333,0.1020] t=2.19 p2=0.160 dz=1.26
+interp d=6: units=[0.0393 0.0671 0.039 ] mean=0.0484 sd=0.0161 95%CI=[0.0084,0.0885] t=5.20 p2=0.035 dz=3.00
+extrap d=3: units=[-0.0143 -0.0073 -0.0078] mean=-0.0098 sd=0.0039 95%CI=[-0.0195,-0.0001] t=-4.35 p2=0.049 dz=-2.51
+extrap d=6: units=[-0.0038  0.0014  0.0014] mean=-0.0003 sd=0.0030 95%CI=[-0.0078,0.0071] t=-0.19 p2=0.866 dz=-0.11
+
+2sd 규칙 등가: mean-2sd>0 <=> t>2*sqrt3 = 3.46 ; df=2 단측 p=0.037 ; 양측 p=0.074
+Bonferroni 21 비교(7깊이x3 split) 단측 95pct 요구 t df=2: 14.44
+
+== 임계 0.2 의 MSE 환산(log 면적비^2): split R² 기준 0.2*Var_split, 공통 R² 기준 0.2*Var_all
+train split R² 0.2 ->ΔMSE 0.0322 | 공통 R² 0.2 -> ΔMSE 0.1
+interp split R² 0.2 ->ΔMSE 0.0099 | 공통 R² 0.2 -> ΔMSE 0.1
+extrap split R² 0.2 ->ΔMSE 0.1931 | 공통 R² 0.2 -> ΔMSE 0.1
+
+== C: n=3 sd 추정의 95pct 신뢰구간 배율 (chi2 df=2): sd 참값/표본sd ∈ [0.52, 6.28]
+
+== C 대안: 고정 동등 여유 ±0.05 (R² 단위) 안에 드는 깊이 수, predictor
+interp [0.325 0.323 0.314 0.31  0.305 0.312 0.307] inside ±0.05: 0 /7
+extrap [-0.017 -0.003  0.003  0.005  0.007  0.009  0.008] inside ±0.05: 7 /7

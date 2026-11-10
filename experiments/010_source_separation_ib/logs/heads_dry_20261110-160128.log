@@ -1,0 +1,3 @@
+[2026-11-10 16:01:28] log file: /home/jaekyungkim/mylab/experiments/010_source_separation_ib/logs/heads_dry_20261110-160128.log
+[2026-11-10 16:01:28] stage=heads dry_run=True python=/home/jaekyungkim/miniconda3/envs/lab07/bin/python conda_env=base pilot=True
+[2026-11-10 16:01:28] heads plan: reps ['enc_k12', 'pred_out6'] x (ours, random) ; task seeds [2000, 2001, 2002] ; head seeds [0, 1, 2, 3, 4] ; head counts {'attentive_rep_heads': 6000, 'base_heads_attn_area': 1500, 'base_small_oracle_heads': 3000} ; eval n_inputs 900 ; sub-experiments ['5-A', '5-C'] (5-A tasks only)

@@ -1,6 +1,6 @@
 # 실험 설명: 004_depth_truncation
 
-- 상태: **코드 작성 완료, Colab 노트북 작성, 미실행.** 이 머신(GPU/데이터/체크포인트 없음)에서는 문법 검사, `--dry-run`, 합성 데이터 CPU 셀프테스트만 했다. 학습, 데이터 다운로드, GPU 실행, 서버 접속은 하지 않았다. 이 문서에 실험 결과 수치는 없다. 명세와 달라진 점은 전부 CHANGES.md 에 있다.
+- 상태: **코드 작성 완료, Colab 본 실행 완료(2026-11-09), 결과 복사, 리뷰 전.** 이 머신(GPU/데이터/체크포인트 없음)에서는 문법 검사, `--dry-run`, 합성 데이터 CPU 셀프테스트만 했다. 학습, 데이터 다운로드, GPU 실행, 서버 접속은 하지 않았다. 이 문서에 실험 결과 수치는 없다. 명세와 달라진 점은 전부 CHANGES.md 에 있다.
 - 검증할 가설: notes/hypotheses.md 후보 I (확정 기록 9), **H-d**. 천 크기 R²(log 명목 면적비)는 어떤 깊이 L* 이후 급격히 줄고, OoD 크기에서 L* 가 InD 보다 앞선다. 반증: 모든 깊이에서 하락 < 0.2, 또는 InD/OoD 곡선이 seed 편차 안에서 겹침. 임계값 0.2 는 명세의 제안값(파일럿 후 확정, 바꾸면 결과보다 먼저 기록). 명세: notes/specs/exp4_5_spec.md 3절.
 - 방법: DINO-WM(조건 (b) `multi_60_ind_160`, 002 가 학습)의 **인코더(4-A)와 predictor(4-B)를 앞에서부터 일부만** 써서 각 깊이에서 크기 probe 를 새로 학습하고, 소실 지점(R² 가 직전 최고값보다 0.2 이상 처음 떨어지는 깊이)을 찾는다.
   - 4-A: DINOv2 block 1..k 통과 + 최종 LayerNorm 한 패치 토큰, k ∈ `encoder.k_grid` (기본 {0,2,...,12}). k=0 은 패치 임베딩(+위치 임베딩). 같은 표에 raw pixel probe, mask 면적/bbox baseline, random-init 인코더, 라벨 셔플.
@@ -86,3 +86,9 @@ python run.py aggregate                       # summary.json pilot=true
 - 순서: A 설정+check -> B 004 파일럿(`--suffix _smoke`, 학습 시드 0, 단계별 시간/최대 VRAM 기록, 본 실행 비용 재추정) -> C 005 파일럿 -> D 004 본 실행(`APPROVED_MAIN_004`) -> E 005 본 실행(`APPROVED_MAIN_005`) -> F sha256 과 복사 안내. 두 플래그는 기본 False 이고, False 이면 셀이 아무것도 하지 않는다. 파일럿은 002 의 `_smoke` Q1 캐시가 필요해 없으면 002 `download` + `cache --max-eps 25 --suffix _smoke` 를 실행한다(002 의 attempts/results 는 건드리지 않음: `--results-dir` 분리).
 - 본 실행은 config `pilot: false`(사람이 바꿈)를 요구하고 `true` 이면 거부한다(`ALLOW_MAIN_WITH_PILOT_TRUE` 로 해제).
 - 미검증: 노트북 전체가 Colab 에서 실행된 적 없음. CPU 검증은 CHANGES.md 7절.
+
+## 7. results.json 의 pilot 표기에 대한 기록 (2026-11-10, 문서 정정만; results.json 은 수정하지 않음)
+- `results.json` 의 `pilot: true` 는 config 의 `pilot: true` 플래그 때문이다(본 실행 후 사람이 false 로 바꾸기로 한 항목이 바뀌지 않았다).
+- 실행 범위는 본 실행이다: 학습 시드 3개(0, 1, 2) x probe 시드 5개(0..4). depth_r2.csv 에서 확인: predictor 행은 train_seed 0,1,2, probe seed 0..4 가 모두 있고 encoder 는 probe seed 0..4.
+- `results.json` 과 `results/summary.json` 의 `notes` 에 있는 "pilot=true marks a subset/partial run" 문구는 이 실행에 맞지 않는다(부분 실행이 아니다).
+- log.md 의 재시도 횟수 정정은 하지 않았다(사용자 결정 대기).

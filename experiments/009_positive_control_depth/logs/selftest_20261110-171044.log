@@ -1,0 +1,99 @@
+[2026-11-10 17:10:44] log file: /home/jaekyungkim/mylab/experiments/009_positive_control_depth/logs/selftest_20261110-171044.log
+[2026-11-10 17:10:44] stage=selftest dry_run=False python=/home/jaekyungkim/miniconda3/envs/lab07/bin/python conda_env=base pilot=True
+A  eraser algebra (numpy)
+  [ok] leace_scalar: after alpha=1 the covariance of every coordinate with the label is ~0 (9.5e-16 vs 1.8 before)
+  [ok] leace_scalar: best linear probe on the erased features explains ~0 of the variance (in-sample R2 < 0.05) (R2 0.000)
+  [ok] leace_scalar: alpha=0.5 is the midpoint of alpha=0 and alpha=1 
+  [ok] leace_scalar: alpha=0 is identity 
+  [ok] probe_direction: component along u is zero after alpha=1 
+  [ok] probe_direction: other coordinates still carry size info (in-sample linear R2 > 0.3) -> weaker than leace (R2 0.390)
+  [ok] probe_direction: alpha=0.5 is the midpoint of alpha=0 and alpha=1 
+  [ok] probe_direction: alpha=0 is identity 
+  [ok] constant labels in the fit set raise 
+  [ok] unknown method raises 
+B  units, resume, shared baseline, override, verdicts
+  [ok] units: 3 baselines (one per train seed, shared by all blocks) + 6 blocks x 1 strength (1.0) x 3 seeds = 21 
+  [ok] part file names distinct for every unit 
+  [ok] unit_done recognises finished units only 
+  [ok] a single-block list needs 1/6 of the intervention units 
+  [ok] default m_int [1..6] from config (user decision 2026-11-10), not overridden 
+  [ok] CLI override sorted, recorded as overridden (source cli) 
+  [ok] env override recorded (source env) 
+  [ok] CLI value equal to config is not 'overridden' 
+  [ok] verdict: 2 of 3 seeds with m* <= m_int+1 -> criterion_met 
+  [ok] verdict: m* = m_int+2 does not count 
+  [ok] verdict: no detection -> criterion_not_met 
+  [ok] detect uses 004's first_drop (0.2 below running max) 
+  [ok] m_star = earliest vanishing depth over splits 
+D  config explicitness
+  [ok] m_int is a list default [1,2,3,4,5,6]; strengths include 0 
+  [ok] seeds explicit (train seeds, probe seeds, fit seed, global) 
+  [ok] decision rule equals 004 config (threshold 0.2, primary) 
+  [ok] confirmed 2026-11-10: method leace_scalar, strengths [0, 1.0] 
+  [ok] success rule: strength 1.0, 2 seeds, slack 1 
+C  toy world model: forward with intervention, extraction, probes, per-block verdict end to end
+  [ok] torch erase_stream == numpy reference; action coordinates untouched 
+  [ok] torch probe_direction erase removes the u component 
+  [ok] forward_hidden(no erase) == exp004.deep.ee_forward at every depth; alpha=0 is the same 
+  [ok] intervention at m_int=3 leaves h_0..h_2 unchanged and changes h_3 and later 
+[2026-11-10 17:10:44] s0 base extract 16/138 (0s)
+[2026-11-10 17:10:44] s0 baseline done (546 rows)
+[2026-11-10 17:10:44] s0 m_int 2: direction fitted on 24 fit episodes (192 samples), corr(a.x, y) on fit data 0.998
+[2026-11-10 17:10:44] s0 m2 a0.5 extract 16/138 (0s)
+[2026-11-10 17:10:44] s0 m_int 2 alpha 0.5 done (390 rows)
+[2026-11-10 17:10:44] s0 m2 a1 extract 16/138 (0s)
+[2026-11-10 17:10:44] s0 m_int 2 alpha 1 done (390 rows)
+[2026-11-10 17:10:44] s0 m_int 4: direction fitted on 24 fit episodes (192 samples), corr(a.x, y) on fit data 0.998
+[2026-11-10 17:10:44] s0 m4 a0.5 extract 16/138 (0s)
+[2026-11-10 17:10:45] s0 m_int 4 alpha 0.5 done (234 rows)
+[2026-11-10 17:10:45] s0 m4 a1 extract 16/138 (0s)
+[2026-11-10 17:10:45] s0 m_int 4 alpha 1 done (234 rows)
+[2026-11-10 17:10:45] s0 m_int 6: direction fitted on 24 fit episodes (192 samples), corr(a.x, y) on fit data 0.998
+[2026-11-10 17:10:45] s0 m6 a0.5 extract 16/138 (0s)
+[2026-11-10 17:10:45] s0 m_int 6 alpha 0.5 done (78 rows)
+[2026-11-10 17:10:45] s0 m6 a1 extract 16/138 (0s)
+[2026-11-10 17:10:45] s0 m_int 6 alpha 1 done (78 rows)
+  [ok] run_seed wrote 1 baseline + 3 blocks (incl. last block 6) x 2 strengths = 7 part files (baseline shared across blocks) ['base_s0.csv', 'unit_m2_a0p5_s0.csv', 'unit_m2_a1_s0.csv', 'unit_m4_a0p5_s0.csv', 'unit_m4_a1_s0.csv', 'unit_m6_a0p5_s0.csv', 'unit_m6_a1_s0.csv']
+  [ok] resume: nothing left to do after a full run 
+  [ok] resume: part files untouched on a second call 
+[2026-11-10 17:10:45] s0 m4 a0.5 extract 16/138 (0s)
+[2026-11-10 17:10:45] s0 m_int 4 alpha 0.5 done (234 rows)
+  [ok] resume: only the deleted unit is recomputed 
+[2026-11-10 17:10:45] aggregate: m_int [2, 4, 6] (source config, overridden=False), strengths [0.0, 0.5, 1.0], train seeds [0]
+[2026-11-10 17:10:45] aggregate done: {'2': 'criterion_met', '4': 'criterion_met', '6': 'criterion_met'}
+  [ok] aux A without 004 random-init rows -> 계산 불가 (no guess) 
+  [ok] aux B computable on the toy (self-check vs ALL rows < 1e-6) {'status': '관측됨', 'm_star': 2, 'selfcheck_max_abs_diff': 1.5543122344752192e-15}
+  [ok] block 6: verdict computed (curve has depths 0..6; intervention only at depth 6) {'0': 6}
+  [ok] block 6: recovery observation is '해당 없음' (no later block) 
+  [ok] block 2: recovery observation is still computed (dict) 
+  [ok] block 6 curve: depth 0..5 equal the baseline, depth 6 from the unit 
+  [ok] aux summary per block at success strength recorded for A and B 
+[2026-11-10 17:10:45] aggregate: m_int [2, 4, 6] (source config, overridden=False), strengths [0.0, 0.5, 1.0], train seeds [0]
+[2026-11-10 17:10:45] aggregate done: {'2': 'criterion_met', '4': 'criterion_met', '6': 'criterion_met'}
+  [ok] aux A (stand-in random-init 0.05) block 2: computed, delta = real - 0.05, same m* as main rule when constant offset ('관측됨', 2, '관측됨', 2, 'criterion_met')
+  [ok] aux A/B block 2: within_m_int_plus_slack reported as bool when observed 
+  [ok] aux A (stand-in random-init 0.05) block 4: computed, delta = real - 0.05, same m* as main rule when constant offset ('관측됨', 4, '관측됨', 4, 'criterion_met')
+  [ok] aux A/B block 4: within_m_int_plus_slack reported as bool when observed 
+  [ok] aux A (stand-in random-init 0.05) block 6: computed, delta = real - 0.05, same m* as main rule when constant offset ('관측됨', 6, '관측됨', 6, 'criterion_met')
+  [ok] aux A/B block 6: within_m_int_plus_slack reported as bool when observed 
+[2026-11-10 17:10:45] aggregate: m_int [2, 4, 6] (source config, overridden=False), strengths [0.0, 0.5, 1.0], train seeds [0]
+[2026-11-10 17:10:45] aggregate done: {'2': 'criterion_met', '4': 'criterion_met', '6': 'criterion_met'}
+  [ok] aux A with mismatching random-init keys -> 계산 불가 
+  [ok] primary verdict unchanged by aux rules 
+  [ok] toy: erasing at block 2 with alpha=1 -> 004 rule fires at m* <= 3 (criterion_met) {'0': 2}
+  [ok] toy: baseline (alpha=0) shows no 0.2 drop (m* None) 
+  [ok] toy: erasing at block 4 with alpha=1 -> 004 rule fires at m* <= 5 (criterion_met) {'0': 4}
+  [ok] toy: baseline (alpha=0) shows no 0.2 drop (m* None) 
+  [ok] toy: erasing at block 6 with alpha=1 -> 004 rule fires at m* <= 7 (criterion_met) {'0': 6}
+  [ok] toy: baseline (alpha=0) shows no 0.2 drop (m* None) 
+  [ok] toy: R2 at depth m_int with the full-strength erasure is far below the baseline (-0.02 vs 1.00)
+  [ok] toy FINDING (characterization): partial strength 0.5 only rescales the size component, a re-fitted linear probe is scale invariant -> R2 at m_int stays within 0.05 of the baseline (0: 0.996, 0.5: 0.996, 1: -0.022)
+  [ok] toy: depths below m_int are identical to the baseline at every strength 
+  [ok] results.json records m_int_config / m_int_used / m_int_overridden and interpretation null 
+  [ok] diagnostic: the fitted readout has ~no variance after full-strength erasure (std ratio < 0.05 on held-out train and on test episodes) {'corr_readout_fit_episodes_pre': 0.9982, 'readout_std_ratio_after_over_fit_pre_train_heldout': 0.0, 'readout_std_ratio_after_over_fit_pre_test': 0.0}
+[2026-11-10 17:10:45] aggregate: m_int [2, 4, 6] (source config, overridden=False), strengths [0.0, 0.5, 1.0], train seeds [0]
+[2026-11-10 17:10:46] aggregate done: {'2': 'not_evaluable', '4': 'criterion_met', '6': 'criterion_met'}
+  [ok] missing unit at the success strength -> that block not_evaluable (other block unaffected) 
+  [ok] auxrules.common_variance = log(area_ratio) of the 002 config 
+  [ok] direction-fit episodes are a subset of the train split (evaluation episodes never used) 
+selftest summary: passed=65 failed=0 skipped=0

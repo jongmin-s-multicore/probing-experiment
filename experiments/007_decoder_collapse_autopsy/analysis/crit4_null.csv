@@ -1,0 +1,8 @@
+run,comparison,max_ratio,param,n_params_ratio_gt1,n_params_ratio_gt2
+exp003_mix_adjacent_s1/2->3,LOO control,1.4661009513285281,dec.blocks.8.bias,14,0
+exp003_mix_adjacent_s2/2->3,LOO control,1.229727002099868,upsample_b.blocks.0.bias,16,0
+exp003_single_a026_s2/2->3,LOO control,1.5778497697696294,upsample_b.blocks.6.bias,14,0
+exp003_mix_adjacent_s0/2->3,collapsed vs 3 ctl max,6.09920046479812,upsample_b.blocks.0.bias,44,16
+exp003_mix_adjacent_s0/2->3,collapsed vs same-dist ctl max,6.09920046479812,upsample_b.blocks.0.bias,44,18
+exp003_single_a026_s1/2->3,collapsed vs 3 ctl max,6.0926833289105415,upsample_b.blocks.0.bias,38,23
+exp003_single_a026_s1/2->3,collapsed vs same-dist ctl max,7.493338199332597,upsample_b.blocks.0.bias,43,25

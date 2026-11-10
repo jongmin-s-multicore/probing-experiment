@@ -1,0 +1,67 @@
+[2026-11-10 16:01:47] log file: /home/jaekyungkim/mylab/experiments/010_source_separation_ib/logs/selftest_20261110-160147.log
+[2026-11-10 16:01:47] stage=selftest dry_run=False python=/home/jaekyungkim/miniconda3/envs/lab07/bin/python conda_env=base pilot=True
+A  TOST and tables on planted data
+  [ok] equivalence supported when diffs ~ 0 with small sd 0.0037..0.0108
+  [ok] refuted when the whole 90% CI is outside +-delta 
+  [ok] inconclusive when the CI straddles delta 
+  [ok] fewer than 3 units -> not_evaluable 
+  [ok] delta null -> not_evaluable 
+  [ok] identical diffs (sd 0) inside delta -> supported 
+  [ok] duplicate (key, task_seed, head seed) rows raise 
+C  config explicitness
+  [ok] task seeds >= 3, head seeds explicit, eval n_inputs 900, delta present 
+  [ok] four representations (2 layers x ours/random) defined 
+  [ok] 005 normalization read from 005 config (D const / R iid) 
+  [ok] first task seed equals 005 seeds.tasks_a (replicates 005 tasks) 
+B  per-task-seed metrics + analysis on planted representations (005 code re-used)
+[2026-11-10 16:01:48]  5-A first head: 0.66s -> projected 5s for 8 tasks
+[2026-11-10 16:01:52]  5-A first head: 0.71s -> projected 6s for 8 tasks
+[2026-11-10 16:01:59]  5-A first head: 1.90s -> projected 15s for 8 tasks
+[2026-11-10 16:02:18]  5-A first head: 2.62s -> projected 21s for 8 tasks
+[2026-11-10 16:02:37]  5-A first head: 2.87s -> projected 23s for 8 tasks
+[2026-11-10 16:02:58]  5-A first head: 3.01s -> projected 24s for 8 tasks
+[2026-11-10 16:03:18]  5-A first head: 3.66s -> projected 29s for 8 tasks
+[2026-11-10 16:03:35]  5-A first head: 0.46s -> projected 4s for 8 tasks
+[2026-11-10 16:03:40]  5-A first head: 0.75s -> projected 6s for 8 tasks
+[2026-11-10 16:03:48]  5-A first head: 2.26s -> projected 18s for 8 tasks
+[2026-11-10 16:04:06]  5-A first head: 2.33s -> projected 19s for 8 tasks
+[2026-11-10 16:04:25]  5-A first head: 2.18s -> projected 17s for 8 tasks
+[2026-11-10 16:04:43]  5-A first head: 2.44s -> projected 20s for 8 tasks
+[2026-11-10 16:05:02]  5-A first head: 1.35s -> projected 11s for 8 tasks
+[2026-11-10 16:05:11]  5-A first head: 0.58s -> projected 5s for 8 tasks
+[2026-11-10 16:05:15]  5-A first head: 0.83s -> projected 7s for 8 tasks
+[2026-11-10 16:05:22]  5-A first head: 1.05s -> projected 8s for 8 tasks
+[2026-11-10 16:05:33]  5-A first head: 1.65s -> projected 13s for 8 tasks
+[2026-11-10 16:05:51]  5-A first head: 4.56s -> projected 37s for 8 tasks
+[2026-11-10 16:06:44]  5-A first head: 6.49s -> projected 52s for 8 tasks
+[2026-11-10 16:07:24]  5-A first head: 2.81s -> projected 22s for 8 tasks
+[2026-11-10 16:07:55]  5-A first head: 0.68s -> projected 5s for 8 tasks
+[2026-11-10 16:08:01]  5-A first head: 0.80s -> projected 6s for 8 tasks
+[2026-11-10 16:08:10]  5-A first head: 2.66s -> projected 21s for 8 tasks
+[2026-11-10 16:08:38]  5-A first head: 2.68s -> projected 21s for 8 tasks
+[2026-11-10 16:08:55]  5-A first head: 1.81s -> projected 14s for 8 tasks
+[2026-11-10 16:09:10]  5-A first head: 1.54s -> projected 12s for 8 tasks
+[2026-11-10 16:09:24]  5-A first head: 1.41s -> projected 11s for 8 tasks
+[2026-11-10 16:09:38]  5-A first head: 0.53s -> projected 4s for 8 tasks
+[2026-11-10 16:09:43]  5-A first head: 0.72s -> projected 6s for 8 tasks
+[2026-11-10 16:09:49]  5-A first head: 1.62s -> projected 13s for 8 tasks
+[2026-11-10 16:09:59]  5-A first head: 0.85s -> projected 7s for 8 tasks
+[2026-11-10 16:10:05]  5-A first head: 0.35s -> projected 3s for 8 tasks
+[2026-11-10 16:10:08]  5-A first head: 0.28s -> projected 2s for 8 tasks
+[2026-11-10 16:10:10]  5-A first head: 0.28s -> projected 2s for 8 tasks
+[2026-11-10 16:10:12]  5-A first head: 0.12s -> projected 1s for 8 tasks
+[2026-11-10 16:10:13]  5-A first head: 0.15s -> projected 1s for 8 tasks
+[2026-11-10 16:10:14]  5-A first head: 0.26s -> projected 2s for 8 tasks
+[2026-11-10 16:10:16]  5-A first head: 0.28s -> projected 2s for 8 tasks
+[2026-11-10 16:10:19]  5-A first head: 0.30s -> projected 2s for 8 tasks
+[2026-11-10 16:10:21]  5-A first head: 0.30s -> projected 2s for 8 tasks
+[2026-11-10 16:10:23]  5-A first head: 0.27s -> projected 2s for 8 tasks
+  [ok] task seeds give different tasks (labels / D_k differ) but identical evaluation inputs 
+  [ok] only 5-A/5-C metrics are produced (no calibration / law rows needed) ['D-IB', 'D-IB_area=', 'D-IB_area≠', 'R-IB', 'R-IB_fold']
+  [ok] rows tagged with all 3 task seeds, unique per (task seed, layer, model, metric, group, head seed) 
+  [ok] analysis has representation scores, H-f TOST for the 4 layer/model cells, pairwise table 
+  [ok] planted state tokens score higher D-IB than noise tokens (all pairs) (state 0.936 noise 0.825)
+  [ok] identical planted representations in two layers -> difference exactly 0 and TOST supported 
+  [ok] state vs noise -> TOST does not claim equivalence inconclusive
+  [ok] analysis deterministic 
+selftest summary: passed=19 failed=0 skipped=0

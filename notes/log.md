@@ -141,3 +141,136 @@
 - 변경점: notes/reviews/002_prior.md, 002_stats.md, 002_skeptic.md 완료. reports/002_single_size_sweep.md 작성(코드와 실험 파일 수정 없음).
 - 결과(results.json 값): 세 분석가 모두 판정 14행의 status 와 Holm 계산이 규칙대로임을 확인. H_b:last_rollout_step 시드별 drop 0.2913/0.2953/0.3205(평균 0.3024, 임계 0.2 초과), (a) 대 (b) rollout drop 차이 0.4221, 조건 (a) drop 0.7385/0.7059/0.7289. H_c:steering 6칸 모두 무작위 100방향 95 백분위 밖(p_rank 0.0099 = 하한). cond_a_vs_b:last_block 차이 -0.00817. 4c: single_ind medium(a060 최대 이동비 4.912/4.662/4.657), multi large(a060 5.037/5.054/5.301).
 - 해석(보고서 5, 6절, 추정 포함): 분석가가 갈린 곳은 H-a 보간 pass 의 의미(stats 강한 지지, skeptic 근거 아님, prior 부분), steering/last_block 을 무효로 볼지 약한 증거로 볼지. rollout 하락이 정보 소실인지 판독기 전이 실패인지는 세 명 모두 구분 불가. H_c:subspace_removal 은 사용자 결정대로 not_evaluable, 제거 효과값은 근거로 쓰지 않음. Drive 전용 파일(q3.json, cells.npz 등)로 재계산하지 못한 항목이 있음(보고서 7절). 사람 결정 5건은 보고서 10절.
+
+## 2026-11-07 / 003_train_dist_dependence / single_a248 s2 런타임 끊김과 재개 (운영 기록, 결과 아님)
+- 경과(UTC): 07:45 s2 시작, 08:04 epoch 1 저장. 08:12 쯤 이후 Drive 기록이 끊겨 런타임 종료로 추정(원인 미확인). 사용자가 셀을 다시 실행해 08:52:12 train.log 에 `Resuming from epoch 1`, 옵티마이저 3종 상태 로드 기록. 13:15 epoch 15 저장, DONE 생성. 뒤이어 mix_adjacent s0, s1, s2 진행.
+- 영향: 저장 안 된 epoch 2 진행분만 다시 학습했고 저장된 epoch 은 잃지 않았다. 약 40분 지연.
+- 재개 전후 손실(운영 점검용 값, train.log): epoch 1 train 1.9258 / val 1.5090, epoch 2 train 1.2400 / val 0.9679.
+- 리뷰 때 볼 것: s2 는 epoch 1 과 2 사이에 재개가 들어간 run 이다. 데이터 순서와 난수 상태는 복원되지 않아 중단 없는 run 과 bit 단위로 같지 않을 수 있다(추정).
+- 결과: 없음. 해석 없음.
+
+## 2026-11-07 / 003_train_dist_dependence / Colab 실행 완료, results.json 확보 (결과 기록, 해석 전)
+- 변경점: 12개 run 의 학습, 추출, metrics 와 baseline, aggregate 완료(03:21 UTC). Drive `exp003_work/results/results.json` 을 experiments/003_train_dist_dependence/results.json 으로 복사(sha256 4b86c6de..., 500290 바이트). missing_runs 없음.
+- 결과(results.json verdict): H-H1 not_evaluable(single_a026, single_a248 모두 not_evaluable). H-H2 not_evaluable(mix_wide pass, mix_adjacent not_evaluable, pattern mixed_or_opposite).
+- 데이터 문제(확인됨): exp003_mix_adjacent_s0, exp003_single_a026_s1 은 900 에피소드 전부 area_ol 0 이고 slope_ol 0.0. 표본 18 에피소드의 frames_sample `ol` 은 에피소드와 시점에 관계없이 같은 이미지였다(픽셀 표준편차 mix_adjacent_s0 0, single_a026_s1 최대 0.5). 천, 공, 바닥이 없다. 두 run 의 epoch_logs 에서 val_img_mse_reconstructed 가 epoch 2 에서 3 사이에 뛰어올라 epoch 15 까지 유지된다(mix_adjacent_s0 0.0030 -> 0.0787, single_a026_s1 0.0015 -> 0.0333, 운영 점검용 값). 따라서 추출 전, 학습 중 decoder 에서 발생한 것으로 보인다(추정). 원인 미확인. 최종 val_loss 는 같은 분포 시드보다 높다(mix_adjacent 0.2658 대 0.1894, 0.1890; single_a026 0.1608 대 0.1274, 0.1275).
+- 추가 확인: 003 나머지 10개, 002 6개 run 은 같은 지표가 끝까지 0.0012~0.0028 이고, 001 3개 run 은 마지막 epoch train 지표만 있으며 0.0007 수준이다. epoch 별 값은 experiments/003_train_dist_dependence/analysis/decoder_recon_by_epoch.json.
+- 리뷰 때 볼 것: (1) 위 두 run 의 slope 0.0 과 c null 은 측정 실패일 수 있다. (2) 재개 run: single_a026_s0(A100, L4 혼합), single_a248_s2. mix_wide 3개는 train_env 기록 없음.
+- 해석: 하지 않음. /review-experiment 대기, 재학습 여부는 사람 결정.
+
+## 2026-11-07 / 003_train_dist_dependence / 리뷰 3건 완료, 보고서 작성 (reporter)
+- 변경점: notes/reviews/003_prior.md, 003_stats.md, 003_skeptic.md 완료. reports/003_train_dist_dependence.md 작성(코드와 실험 파일 수정 없음). 사용자 결정(리드 전달): 붕괴 2개 run 은 재학습하지 않고 문제를 명시한 채 리뷰한다.
+- 결과(results.json 값): H-H1 not_evaluable, H-H2 not_evaluable(mix_wide pass: 9쌍 차이 0.3406~0.6542, mix_adjacent not_evaluable). 붕괴 run(mix_adjacent_s0, single_a026_s1)은 기울기 0.0, CI [0,0] 측정 실패. 정상 run 기울기: single_a248 0.5269/0.5774/0.5518, mix_wide 0.8042/0.6508/0.8005, mix_adjacent(s1, s2) 0.5023/0.4153, single_a026(s0, s2) 0.0022/0.1447, baseline(001) 0.2366/0.3102/0.1500.
+- 해석(보고서 5, 6절, 추정 포함): 세 분석가 일치: 판정 계산은 규칙대로, 붕괴 run 수치는 쓰면 안 됨, 두 run 을 어떤 값으로 바꿔도 전체 판정 불변(stats 민감도, skeptic 규칙 계산), baseline 이 001 값이라 교란. 갈린 곳: mix_wide pass 의 의미(prior 문헌 방향 일치지만 약함 / stats 규칙 통과이지 유의 검정 아님 / skeptic 혼합 없는 single_a248 도 기준 통과, 지표 효과), 낮은 a026 기울기가 실제 신호인가(stats 신호 / skeptic 해석 미정), 붕괴 원인 후보(모두 미확인). 표시만 한 불일치: hypotheses.md:250 대 verdict.py:125(외삽 포함 9점 기울기), stats 의 2 대 3 순열 p 문장, prior 의 val_z_pred 범위 서술 대 csv, single_a026_s0 이력 기록.
+- 추가 사실(리드가 Drive 검색으로 확인): 삭제된 model_2.pth, model_3.pth 가 Drive 휴지통에 있음(mix_adjacent_s0 폴더로 보이는 파일 포함). 일반 보존 30일은 추정, 붕괴 부검이 필요하면 기한 전 복원. 사람 결정 3건은 보고서 8절.
+
+## 2026-11-07 / 007_decoder_collapse_autopsy / 체크포인트 검사 실행 완료 (결과 기록, 해석 전)
+- 변경점: notes/hypotheses.md 에 "007 진단 질문"(검사와 판단 기준을 결과 보기 전에 기록) 추가. experiments/007_decoder_collapse_autopsy/{config.yaml, run.py, README.md, results.json, smoke_results.json, figures/} 작성. CPU 만 사용(conda `lab07`, torch 2.0.1+cpu), 재학습 없음. Drive 는 `rclone copy/lsf --drive-trashed-only` 로 읽기만 했다(복원, 삭제, 쓰기 없음). 체크포인트 11개(붕괴 5: mix_adjacent_s0 model_2/3, single_a026_s1 model_2/3/4. 대조 6: mix_adjacent_s1/s2, single_a026_s2 의 model_2/3)를 저장소 밖 scratchpad 로 내려받았고, /tmp 가 tmpfs 3.8 GB 라 원본은 predictor, decoder, action/proprio encoder 모듈과 optimizer 요약만 담은 slim 으로 바꾸고 로컬 원본은 지웠다(sha256 은 results.json). 소요: 분석 1691 초. git commit 안 함.
+- 코드 사실(5a640bed): 디코더 VQVAE(Conv + ResBlock x4 + ConvT 2단 x2, ReLU, BatchNorm 없음, quantize False). AMP, grad clip, lr scheduler 코드 없음. decoder Adam lr 3e-4. 디코더 입력 z.detach() 라 재구성 손실은 predictor 로 역전파되지 않음. val 의 이미지 지표는 첫 valid 배치 1개. 상세와 줄 번호는 results.json `A_code_facts`.
+- 결과(results.json `criteria_table`, 입력 54 프레임 = 9 크기 x 에피소드 2 x 시점 3. 5개 run 의 frames_sample.npz 의 real 이 모두 같아 `own` 과 `common` 집합 값이 동일):
+  - (1) NaN/Inf: 비해당. 붕괴 5개, 대조 6개 모두 가중치, optimizer 상태, 활성화, 출력에서 0개.
+  - (2) 입력 의존성 소실 층: 해당. 세 체크포인트(mix_adjacent_s0 model_3, single_a026_s1 model_3, model_4)에서 가장 처음 기준 미만이 되는 층은 `upsample_b.blocks.7`(upsample_b 의 첫 ConvTranspose 다음 ReLU). 입력 간 std: mix_adjacent_s0 model_3 0.0, single_a026_s1 model_3 4.4e-6, model_4 4.2e-6, 대조 3개 평균(epoch 3) 4.9e-2. 이 층 이후 27개 층이 기준 미만. 바로 앞 ConvTranspose(`upsample_b.blocks.6`) 출력 std 는 mix_adjacent_s0 7.59, single_a026_s1 11.68 이고 대조 평균 0.266. epoch 2 두 run 은 기준 미만인 층 없음. single_a026_s1 model_4 는 대조 epoch 3 값과 비교(대조에 model_4 없음).
+  - (3) 전부 비활성 ReLU: 부분 해당. mix_adjacent_s0 model_3 의 `upsample_b.blocks.7` 입력이 모든 입력, 위치에서 <= 0 (비율 1.0, 채널 전부 비활성). 대조 0.825, 0.847, 0.832. single_a026_s1 model_3, model_4 는 정의(전부 <= 0) 엄격 적용 시 비해당: 비율 0.99998647, 채널 단위 비활성 0.9896 (같은 층, 대조 같은 값).
+  - (4) epoch 3 가중치 변화 10배 이상: 비해당. 디코더 최대 비율 6.10 (mix_adjacent_s0), 6.09 (single_a026_s1), 둘 다 `upsample_b.blocks.0.bias`(상대 변화 0.753, 0.752 대 대조 0.100, 0.123, 0.100). predictor 최대 1.17, 1.10, action_encoder 0.85, 0.90, proprio_encoder 1.00. 같은 분포 대조만 써도 해당 층 없음.
+  - (5) 어느 것도 해당 없음: 비해당((2), (3)이 해당).
+  - 체크포인트로 구분 불가: epoch 3 도중 정확한 시점, 단일 큰 gradient 여부.
+- 추가 관측(판단 기준 외): 출력 이미지 입력 간 std (common 54프레임; 실제 프레임 0.1003): mix_adjacent_s0 epoch 2 0.0998 -> epoch 3 0.0000, single_a026_s1 0.0862 -> 0.0002 (epoch 4 0.0003). 실제 프레임 대비 MSE([-1,1] 스케일): mix_adjacent_s0 0.0031 -> 0.0855, single_a026_s1 0.0129 -> 0.0892 (epoch 4 0.0892), 대조 mix_adjacent_s1/s2 epoch 3 0.0029/0.0028, single_a026_s2 epoch 3 0.0112. predictor 출력 입력 간 std(proprio, action 은 0 벡터 고정): epoch 3 mix_adjacent_s0 0.4793 대 대조 0.4793/0.4814, single_a026_s1 0.4140 대 single_a026_s2 0.4118. decoder_optimizer step 은 모든 체크포인트에서 epoch x 4125 (붕괴와 대조 같음), lr 3e-4. mix_adjacent_s0 model_3 의 decoder_optimizer exp_avg 가 21개 파라미터에서 정확히 0 (대조 및 single_a026_s1 은 0개). exp_avg_sq 평균의 대조 대비 배율(epoch 3) 최대: mix_adjacent_s0 `upsample_b.blocks.6.weight` 1861배, single_a026_s1 같은 파라미터 50271배. 두 run 모두 `upsample_b.blocks.6.weight` norm: epoch 2 -> 3 이 15.8 -> 18.2, 15.4 -> 17.1 (대조 s1 15.97 -> 18.07).
+- 이상한 점/한계: (a) 두 붕괴 run 의 train_env 는 n_resumes 0, A100, patched train.py. 대조 3개도 같음. (b) 첫 fetch 실행이 lsf 형식 문자열 오타(`pstit`)로 실패해 수정 후 재실행(코드 버그, 3회 재시도 소진 아님). 처음 smoke 용으로 만든 mix_adjacent_s1 model_2 slim 은 메타가 없어 지우고 다시 만들었다. (c) predictor 검사는 행동, proprio 를 0 으로 고정해 실제 행동 입력 결과가 아니다. (d) smoke_results.json 은 smoke(체크포인트 1개, 프레임 6장) 기록으로 남김. (e) hub 캐시를 처음 한 번 잘못된 경로에 받아 DINOv2 가중치를 두 번 내려받음(영향 없음).
+- 해석: 하지 않음. /review-experiment 대기.
+
+## 2026-11-07 / 007_decoder_collapse_autopsy / 리뷰 3건 완료, 보고서 작성 (reporter)
+- 변경점: notes/reviews/007_prior.md, 007_stats.md, 007_skeptic.md 완료. reports/007_decoder_collapse_autopsy.md 작성(코드와 실험 파일 수정 없음). 진단 질문이며 가설 확정 아님.
+- 결과(results.json criteria_table): (1) 비해당, (2) 해당(첫 층 upsample_b.blocks.7), (3) 부분 해당(mix_adjacent_s0 엄격 해당, single_a026_s1 비해당), (4) 비해당(최대 비 6.10, 6.09), (5) 비해당. 체크포인트로 구분 불가: epoch 3 도중 시점, 단일 큰 gradient 여부.
+- 해석(보고서 5, 6절, 추정 포함): 리드의 잠정 해석 4문장은 검토 대상이었고 분석가 판정은 갈린다. 일치: 표 재현, ReLU 사멸 관측, (4) 비해당은 큰 gradient 반증 아님, 디코더 손실은 predictor 로 역전파 안 됨, 원인 미확인. 갈림: 큰 gradient 지지 강도(prior 부분 / stats 구분 불가 / skeptic 일시적 사건 강함), blocks.7 원인 대 증상, 디코더만 재학습 타당성(prior 구조상 타당 / skeptic 근거 없음 / stats 판정 없음), 예방책과 비교 가능성. 사람 결정 3건은 보고서 8절.
+- 정정(위 007 결과 기록의 176행 "exp_avg 가 21개 파라미터에서 정확히 0" 은 지우지 않고 아래로 정정): results.json 6991-7458행에서 해당 21개 항목의 exp_avg 는 norm 필드만 0.0 이고 absmax 5.605193857299268e-45(float32 최소 비정규수의 4배), zero_frac 0.0 이다. 실제 값은 0 이 아닌 비정규수다(stats, skeptic 지적, 리포터가 results.json 에서 확인). criteria_table 판정은 불변.
+- 표시만 한 불일치(수정 안 함): results.json drive_meta 의 modtime_utc/modtime_kst 표기(modtime_kst 17:35:22 가 분석 실행 meta.date_kst 14:47:17 보다 미래이므로 필드 이름이 맞지 않음; 시각을 쓰는 서술에만 영향), action/proprio encoder optimizer 요약의 이름 충돌(n_state 4 대 per_param 2개; C 섹션 action/proprio 수치 사용 불가, criteria_table 영향 없음).
+
+## 2026-11-09 / 004_depth_truncation, 005_inductive_bias_probe / Colab 노트북 작성 (미실행)
+- 변경점: experiments/004_depth_truncation/colab/{exp004_005_colab.ipynb, build_notebook.py, exp045_tools.py, requirements_colab_extra.txt}, 005/colab/README.md 추가. 004/005 README 상태 문구와 Colab 절, CHANGES.md 7절 추가. 노트북은 004 -> 005 순서(설정+check, 004 파일럿, 005 파일럿, 004 본 실행, 005 본 실행, 결과 복사). 본 실행은 `APPROVED_MAIN_004/005 = False` 기본이며 False 이면 아무것도 하지 않는다. 파일럿/본 실행은 폴더, 캐시 루트, suffix 분리. 002 파일은 수정하지 않았고 Drive `exp002_work` 에는 쓰지 않는다(파일럿의 002 `_smoke` 캐시는 로컬 기본, 002 attempts 는 `--results-dir` 로 분리).
+- 코드 수정(필수): 004/005 `run.py` 가 import 하던 `exp002.common.attempts_check` 가 002 커밋 545168e 에서 삭제되어 004/005 가 ImportError 로 시작하지 못했다. 002 는 건드리지 않고 `src/exp004/base.py`, `src/exp005/base.py` 에 같은 동작의 함수를 복사했다(재시도 상한 3회 동작 동일).
+- config 변경(사용자 결정, 확정 기록 12, 결과 보기 전): 005 `branch.exp1_negative` null -> false, `normalization.noninf` {R: iid, D: iid} -> {R: iid, D: const}. 임계값 변경 없음. 005 CHANGES.md 8a. 노트북 005 경고 셀은 "결정됨(확정 기록 12)"과 현재 값을 출력하고, 값이 다르면 경고한다.
+- 검증(이 머신, CPU, conda lab07, torch 2.0.1+cpu): 노트북 nbformat 유효, 코드 셀 23개 문법 오류 0. exp045_tools selftest 18 통과 0 실패. 004 selftest 72 통과 0 실패. 005 selftest(확정 기록 12 반영 config) 91 통과 0 실패. 004 `--dry-run` 5/5, 005 `--dry-run` 7/7 단계 통과. 노트북 내장 스냅샷을 풀어 단독 실행한 004 dry-run 5/5, 005 dry-run 7/7, 004 selftest 72/0, tools selftest 18/0.
+- 미검증: Colab 에서 노트북 실행 전부, 002 `download`/`cache` 호출 경로, nvidia-smi VRAM 샘플링, tar 보관 셀 대용량, 002 cache_episodes.json 행의 데이터 경로가 `/content/dinowm/data` 와 일치하는지, 시간/디스크 수치(전부 추정).
+- 해석: 하지 않음.
+- 2026-11-09 추가(Colab 파일럿 후): 004 aggregate 가 MPLBACKEND(커널 값 상속) ValueError 로 실패(attempts aggregate 1). exp045_tools 실행기가 하위 프로세스에 MPLBACKEND=Agg 를 강제하고 004 figs.py, 005 그림 코드도 무조건 Agg 설정. 노트북 재생성, CPU 검증 재실행. 해석 없음.
+  - 정정(2026-11-10, 사용자 지시; 위 "attempts aggregate 1" 은 지우지 않고 정정): 004 파일럿 aggregate 는 실제로 **ValueError 실패 5회 + 재시도 상한 거부 1회** 뒤 성공했다. 로그(experiments/004_depth_truncation/logs/colab_20261109/): 09:15:15, 09:18:26, 09:19:20 ValueError(MPLBACKEND) -> 09:20:35 RuntimeError "stage:aggregate failed 3 times in a row (limit 3, CLAUDE.md)" 거부 -> 09:22:04, 09:22:26 ValueError -> 09:22:40 성공(16510 rows). 거부 뒤 재실행은 results_pilot/attempts.json 의 항목이 지워져(누가 지웠는지 기록 없음) 가능했다. CLAUDE.md 재시도 상한(3회)을 넘긴 실행이며 원인은 코드가 아닌 환경 변수 상속(위 수정으로 해결). 파일럿 summary 는 그림 단계 전에 쓰여 수치 영향 없음으로 추정(skeptic I3). 본 실행 aggregate(11:20:37)는 1회 rc=0. 출처: reports/004_depth_truncation.md 5.4절, notes/reviews/004_skeptic.md I3, 리드가 로그 8개 확인.
+- 2026-11-09 / 006_size_readout_reanalysis: 004 Colab 파일럿의 MPLBACKEND 상속 오류와 같은 위험을 막기 위해 그림 코드(figs.py, run.py)와 노트북 하위 프로세스 env 에 MPLBACKEND=Agg 를 무조건 설정. 삭제된 002 함수 import(545168e)는 006 에 없음. 노트북 재생성, CPU 검증(잘못된 MPLBACKEND export 상태) 결과는 보고. 해석 없음.
+
+## 2026-11-09 / 004_depth_truncation, 005_inductive_bias_probe / Colab 본 실행 완료, 결과 복사 (결과 기록, 해석 전)
+- 변경점: 사용자가 Colab(NVIDIA L4, 23.66 GB)에서 노트북 exp004_005_colab.ipynb 로 004, 005 본 실행(rc=0, 09:06~12:45 UTC). Drive(`exp004_work`, `exp005_work`)에서 rclone 읽기 방향 copy 로 저장소에 복사(Drive 쓰기/삭제 없음): 004 results.json -> experiments/004_depth_truncation/results.json, results/(summary.json, depth_r2.csv, next_z_mse.csv, 그림 2, parts/ 11개, attempts.json), results/colab/{timing_main.json, timing_pilot.json, pilot/, logs_002_pilot/, pilot_002_results/}, logs/colab_20261109/. 005 results.json, results/(REPORT.md, ib_scores.csv, calibration*.csv, law_fits.csv, cost.json, plan.json, tasks.*, 그림 2, predictions/ npz 25개, attempts.json), results/colab/pilot/, logs/colab_20261109/. rclone check: 004 results 17개, 005 results 37개 차이 0. 기존 로컬 파일 덮어쓰기 없음. 004 README, 005 README 상태 문구 갱신.
+- sha256 / 바이트: 004 results.json 996b5f40c23ff61f5c9951f5e702dbc30a098ffc48070764be270ebdce6bfe3b 9982; 004 results/summary.json 6038a69e5f305ae170bbfc02dd9ce68ac857232d0891434daefa0aee2636a4a3 8149; 005 results.json 30338df6574b5a4960eac4b1059a0278fbad1754f55db93f6799e0272d922656 6449; 005 results/REPORT.md b20dd6ea2544a1396f1edbd262a725e27c32e46e82d93feb530584ac0a08f929 4586.
+- 재계산 확인: parts/ 로 004 `aggregate` 를 CPU(lab07, 임시 --results-dir)에서 다시 돌려 summary.json 이 Drive summary 와 동일(dict 비교 True), 37830 행. (재계산이 저장소의 004/results.json 을 덮어써서 Drive 에서 다시 복사해 sha 996b5f40... 로 복구함; 두 파일의 차이는 environment 필드뿐.) depth_r2.csv: train_seed 고유값 0,1,2(+ 인코더/기준선 NA) = 학습 시드 3개, probe seed 고유값 0~4 = 5개.
+- 환경(results.json environment): NVIDIA L4, torch 2.0.1+cu117 (CUDA 11.7), Python 3.9.25. 단계별 시간(timing_main.json, 초) / 샘플링 최대 GPU 메모리(nvidia-smi 전체 GPU, MiB, 하한): 004 enc_cache 176.6 / 1824, enc_probe 1286.8 / 2112, pred 5345.3 / 5118, aggregate 10.1; 005 feat 136.9 / 2508, heads 4949.2 / 2356, plan 2.0, tasks 3.0, metrics 7.4, report 2.5. check 단계는 각 2.3.
+- 결과(results.json 의 판정만). 004: summary pilot true, verdict_H_d status refuted, reason no_drop_ge_threshold_at_any_depth, k_star null, m_star null, loss_ood_only false, l_best {module predictor, depth 6}, encoder_layers 12, predictor_layers 6, drop_threshold 0.2. 005: plan 행 no_vanishing, 층 pred_out6(predictor 출력, 하위 실험 5-A~5-D), hold false. H-e not_evaluable(reason area_baseline_saturated, 면적 모델 D-IB 점수 1.0691). H-f supported(D-IB_area= 0.9278, D-IB_area≠ 1.0150, |차| 0.0872, sd 0.0452 / 0.0306). H-g refuted(slope 평균: interp 0.9356, extrap 0.5432, early 0.6066, late 0.5362, labels_a060+a160 0.5409, labels_a060+ind 0.3041, labels_ind+a160 0.2523; 범위 [0.8, 1.2], 범위 안은 interp 뿐).
+- 주의 (a): 두 결과의 pilot 은 true 이다. 사용자 확인: 본 실행은 config `pilot: true` 를 그대로 두고 노트북 `ALLOW_MAIN_WITH_PILOT_TRUE` 를 켜서 돌렸다. 결과 파일의 pilot: true 는 config 플래그 때문이며, 실행 범위는 본 실행이다(전체 캐시, 학습 시드 3개, probe seed 5개, head seed 5개). config 의 pilot 값은 바꾸지 않았다. (b): 명세상 임계값(drop 0.2, dev_max 0.1, slope 0.8~1.2, sd_mult 2.0, baseline_saturated 0.95 등)은 "파일럿 후 확정" 제안값인데 확정 기록이 없고, 위 판정은 그 제안값을 그대로 적용한 것이다. 결과를 본 뒤 바꾸지 않는다.
+- 해석: 하지 않음. /review-experiment 대기.
+- 006 검증(잘못된 MPLBACKEND export 상태): selftest 첫 실행은 selftest.py 자체의 import matplotlib 에서 1건 실패(89/1/1) -> 같은 위치에 Agg 설정 후 재실행 PASS 90 FAIL 0 SKIP 1(scipy 없음). --dry-run 14/14 단계(selftest 제외) 통과, 노트북 JSON 유효, 코드 셀 문법 오류 0.
+
+## 2026-11-10 / 005_inductive_bias_probe / 리뷰 3건 완료, 보고서 작성 (reporter)
+- 변경점: notes/reviews/005_prior.md, 005_stats.md, 005_skeptic.md 완료. reports/005_inductive_bias_probe.md 작성(코드와 실험 파일 수정 없음).
+- 결과(results.json 값): H-e not_evaluable(area_baseline_saturated, 면적 D-IB 점수 1.0691), H-f supported(|차| 0.0872, 허용폭 0.0905), H-g refuted(slice 7개 중 interp 0.9356 만 범위 안). 층 pred_out6 하나, 체크포인트 1개, head seed 5개, pilot true(사용자 확인: config pilot true 로 본 실행).
+- 해석(보고서 5, 6절, 추정 포함): 세 분석가 일치: D-IB 점수 1 초과는 약한 MLP oracle(raw 0.3188 대 무정보 0.5) 때문, 5-B 기준 0.1 은 참 함수도 통과 못함(0.328), ours 와 random-init 이 거의 모든 지표에서 비슷, H-f supported 는 경계값 통과, H-g 기울기 < 1 은 random 과 MLP oracle 에도 있음. 갈린 곳: H-e not_evaluable 의 성격(prior 지표의 한계 / stats 규칙대로이나 사유 이름 부정확 / skeptic 구조적으로 통과 불가), H-f 보고 표현과 격차 방향, 확정 기록 12 처리(skeptic: 전제 "oracle D-IB raw 약 0.5" 가 ind 그룹에서만 성립), ours≈random 원인, H-g 결론 범위.
+- 표시만 한 불일치(수정 안 함): 평가 입력 config/명세 2000 대 실행 900(tasks_meta n_eval, config_sha256 2fd84b30... 대 저장소 config 4a6bba0b..., CHANGES.md/log.md 에 기록 없음, 변경 주체 사용자 확인 대기), stats 0절 대 5절의 ours-random 서술, H-f 격차 수치의 계산 방식별 차이, README 낡은 문구. 사람 결정 3건은 보고서 8절.
+
+## 2026-11-10 / 004_depth_truncation / 리뷰 3건 완료 (prior, stats, skeptic)
+- 변경점: notes/reviews/004_prior.md, 004_stats.md, 004_skeptic.md 완료. stats 재계산 산출물 experiments/004_depth_truncation/analysis/{recompute_stats.py, stats_out.txt, plot_curves.py, fig_primary_vs_controls.png}. 코드와 실험 파일은 수정하지 않음.
+- 결과: 세 분석가 모두 H-d refuted(no_drop_ge_threshold_at_any_depth)가 규칙대로임에 일치(주 곡선 최대 하락 0.033, 임계값 0.05~0.3 에서 불변). stats 재계산에서 ind_ood_gap 28행 불일치 0.
+
+## 2026-11-10 / 004_depth_truncation / 보고서 작성 (reporter)
+- 변경점: reports/004_depth_truncation.md 작성(새 측정 없음).
+- 요약(해석은 보고서 1, 5절): 판정 refuted 는 규칙상 유효. 일치: random-init predictor 도 평평한 곡선(학습된 predictor 와 interp +0.04 차), split 간 R² 분모 차이로 ind_ood_gap 과 겹침 검정은 해석 불가, 저수준 면적 단서(k=0 extrap 0.788, mask baseline 0.817). 갈림: refuted 의 강도(prior 정보 비소실 이상 아님 / stats 강한 증거 아님 / skeptic 검정력 없을 수 있음), 면적 단서 설명 정도, (ii) 해석, pilot 플래그의 지위(skeptic 만 중요로 지적).
+- 표시만 한 불일치(수정 안 함): 파일럿 aggregate 재시도 횟수(skeptic I3 은 실패 5 + 거부 1, 위 2026-11-09 항목은 "attempts 1"; 로그 파일 이름 목록은 skeptic 개수와 모순 없음, 내용은 미확인), `pilot: true` 와 `notes` "subset/partial run" 문구가 본 실행과 안 맞음, 임계값/impl default 확정 기록 없음, 004 summary 를 005 가 사람 검토 없이 소비.
+- 사람 결정 3건은 보고서 8절. 가설 확정이나 논문 주장 확정은 하지 않았다.
+
+## 2026-11-10 / 005_inductive_bias_probe / 평가 입력 2000 -> 900 변경 경위 기록
+- 변경점(사용자 확인 2026-11-10): Colab 본 실행에서 평가 입력 수(eval.n_inputs)를 사용자가 2000 에서 900 으로 줄였다. 이유: 비용(실행 시간). 저장소 config.yaml 은 2000 그대로이고, 실행 config 의 sha256 은 2fd84b30... 로 저장소 config(4a6bba0b...)와 다르다(reporter 기록). 변경 방법(노트북에서 어떻게 덮어썼는지)은 기록되지 않았다.
+- 영향: 005 의 모든 판정은 n_eval 900 기준이다. 사전 등록(명세 4.1, config)에서 벗어난 실행으로 표시한다. 판정은 바꾸지 않는다.
+
+## 2026-11-10 / 008_posthoc_reaggregate_004_005 / 004 depth_r2.csv 사후 재집계 실행 (experimenter)
+- 변경점: experiments/008_posthoc_reaggregate_004_005/ 신규 (config.yaml, run.py, README.md, results.json). CPU, numpy, 새 학습 없음. 입력은 004 results/depth_r2.csv, summary.json, 002/004 config (읽기 전용). 임계값 0.2, overlap 2.0, 깊이 비율 0.8 은 004 config 와 같고 run.py 가 일치를 assert 한다. 사전 확인: encoder, predictor 모두 random_init 대응 행이 있고 키(depth, split, probe seed, train seed) 전부 일치(encoder 140/140, predictor 420/420).
+- 결과(results.json 에서):
+  - A 통제 대비 곡선 Δ(d)=real-random_init (linear/new/late): encoder 관측 안 됨, predictor 관측 안 됨 (어느 split 에서도 Δ 곡선의 0.2 이상 하락 깊이 없음). Δ 곡선 수치(깊이 0,2,4,6,8,10,12): encoder train 0.275, 0.150, 0.172, 0.178, 0.176, 0.191, 0.177 / interp 0.365, 0.266, 0.296, 0.298, 0.333, 0.358, 0.302 / extrap 0.132, 0.068, 0.056, 0.073, 0.066, 0.075, 0.083. predictor(깊이 0..6) train 0.0, 0.008, 0.010, 0.012, 0.016, 0.022, 0.025 / interp 0.0, 0.009, 0.031, 0.034, 0.041, 0.035, 0.048 / extrap -0.0, -0.007, -0.010, -0.010, -0.009, -0.006, -0.0. 보조(평균-2sd>0 인 깊이 수): encoder 7/7(train), 7/7(interp), 7/7(extrap), sd 단위 probe seed 5개. predictor 6/7, 2/7, 0/7, sd 단위 학습 seed 3개.
+  - B 척도 통일: 공통분산 R² 와 MSE 는 계산 가능했다. 레벨 레이블을 002 config area_ratio 의 log 로 두고 n_episodes 로 공통 분산 0.49999 를 계산, 복원한 split R² 와 CSV ALL 행 R² 의 최대 차이 8.2e-15. 판정 관측 안 됨(공통분산 R² 곡선에서 0.2 이상 하락 없음, 모든 split, 모듈, real 과 random_init). real 의 깊이별 평균 범위(log 면적비 단위): encoder MAE train 0.1219~0.1612, interp 0.1152~0.1484, extrap 0.2900~0.3701; MSE train 0.0248~0.0430, interp 0.0226~0.0386, extrap 0.1433~0.2048. predictor MAE train 0.1141~0.1281, interp 0.1112~0.1186, extrap 0.2827~0.3013; MSE train 0.0226~0.0267, interp 0.0221~0.0242, extrap 0.1431~0.1526.
+  - C 겹침 재계산(학습 seed 3개의 seed 평균 간 sd 단위): encoder 계산 불가(동결 인코더라 학습 seed 단위가 없음). predictor 관측 안 됨: 허용폭 안 깊이 비율 interp 0.0, extrap 0.7143 (기준 0.8). 참고 004 summary 값(probe/학습 seed 합친 sd): predictor interp 0.0, extrap 0.5714; encoder interp 0.0, extrap 0.1429.
+- 004 판정(H-d refuted)과 005 판정은 바꾸지 않았다. 해석: 하지 않음. /review-experiment 대기.
+
+## 2026-11-10 / 004_depth_truncation / 문서 정리 (README 7절 추가) (experimenter)
+- 변경점: 004 README.md 7절에 기록. results.json 의 `pilot: true` 는 config 플래그 때문이고 실행 범위는 본 실행(학습 시드 3 x probe 시드 5; depth_r2.csv 로 확인), `notes` 의 "subset/partial run" 문구는 이 실행에 맞지 않음. results.json, summary.json 은 수정하지 않았다. log.md 의 재시도 횟수 정정은 하지 않았다(사용자 결정 대기).
+
+## 2026-11-10 / 005_inductive_bias_probe / selftest 보강 (experimenter)
+- 변경점: src/exp005/selftest.py 에 단계 H 추가(3레벨 MLP oracle 의 OoD D-IB 점검, `_vals` 중복, `continue` 구조). 판정/지표 코드는 그대로. CHANGES.md 9절에 기록.
+- 결과(CPU, 로그 logs/selftest_20261110_skeptic.log): passed=98 failed=3 skipped=0. 실패 3개: C1(c)-2 (합성 무작위 모델의 ood_any D-IB 점수 1.587, 기준 < 1), S1-3, S1-4 (5-A 예측만 없는 seed 에서 5-B/5-D 행도 0개). 코드는 고치지 않았다. 사용자 결정 대기. 해석 없음.
+
+## 2026-11-10 / 009_positive_control_depth, 010_source_separation_ib / 코드 작성 (미실행, 승인 대기) (experimenter)
+- 변경점: experiments/009_positive_control_depth/ (config.yaml, run.py, src/exp009, README.md), experiments/010_source_separation_ib/ (동일 구성). 004/005 코드는 import 로만 재사용, 수정 없음. GPU 실행 없음, 실제 체크포인트/캐시에서 실행한 적 없음.
+- 009: predictor 블록 m_int(리스트, 기본 [1,3,5], 초안 승인 대기, CLI/환경변수로 덮어쓰기 가능하며 results.json 에 m_int_config/m_int_used/m_int_overridden 기록) 출력 hidden 의 z 부분에서 크기 방향 소거(leace_scalar 기본, probe_direction 대안), 강도 0/0.25/0.5/1.0, 단위 = (블록, 강도, 학습 seed) 독립 실행과 재개, 강도 0 기준선은 학습 seed 당 1회 공유, 블록마다 판정(강도 1.0, seed 3개 중 2개 이상 m* <= m_int+1). 방향 적합은 학습 episode 절반, 평가는 test episode.
+- 010: 005 head/과제/지표 재사용, 네 표현(enc_k12 ours/random, pred_out6 ours/random), 과제 시드 [2000, 2001, 2002](초안), eval.n_inputs 900, H-f TOST Δ 0.05(초안).
+- 검증(CPU, 합성 데이터/toy 모델): 009 selftest passed=46 failed=0, 010 selftest passed=19 failed=0, 두 실험 --dry-run 통과. selftest 가 확인한 사실: toy 에서 부분 강도(0.5)는 크기 성분을 축소만 하여 다시 학습한 linear probe 의 R² 가 기준선과 같았다(0.996 대 0.996, 강도 1.0 은 -0.022).
+- 예상 GPU 시간은 각 README 에 추정으로 표시(009 블록 1개 약 0.5~1시간, 010 약 3~3.5시간, 둘 다 추정). 해석 없음.
+
+## 2026-11-10 / 008_posthoc_reaggregate_004_005 / 리뷰 3건 완료, 보고서 작성 (reporter)
+- 변경점: notes/reviews/008_prior.md, 008_stats.md, 008_skeptic.md 완료. reports/008_posthoc_reaggregate_004_005.md 작성(새 측정 없음, 코드와 실험 파일 수정 없음).
+- 요약: 사후 탐색이며 004 판정을 바꾸지도 강화하지도 않음. 상태 A/B 관측 안 됨, C predictor 관측 안 됨(extrap 5/7=0.714, 004 원 0.571), C encoder 계산 불가. 일치: 계산 정확(stats 독립 재현), predictor Δ 최대 0.048 이라 0.2 규칙 도달 불가(천장), 공통 R² 도 train/interp 천장, split R² 분모 의존(interp 낮음과 extrap 후함은 인공물), C 는 한 깊이 차이로 불안정. 갈림: random-init 이 통과 통제인가(skeptic), extrap Δ<0 의 의미(prior 가설 / stats 우연 가능 / skeptic 일관된 방향이나 해석 이름), 인코더 보조 판정이 사전 기준 위반인가(skeptic 만), B 판정 규칙이 사전 기준에 없음(skeptic 만). 검정력 문제 해소는 009 필요.
+- 사람 결정 3건은 보고서 8절(009/010 GPU 승인과 순서, 009 에 008 의 A/B 규칙 결합 여부와 CPU 재검정 선행 여부, 008 결과 인용 범위).
+
+## 2026-11-10 / 008, 009 / 사용자 결정 (008 리뷰 후)
+- 008: 사후 탐색으로만 남긴다. 004 H-d refuted 의 보강 근거로 인용하지 않는다. results.json 재현성 기록 보강은 하지 않음(결정 사항에 포함되지 않음).
+- 009: 개입 블록을 가능한 모든 블록 [1, 2, 3, 4, 5, 6] 으로 확정. 008 의 A(random-init 대비 Δ), B(공통 분산 R², MAE/MSE) 규칙을 보조 판정으로 함께 적용. 소거 방식, 강도 구성, 주 성공 기준 확정과 GPU 실행 승인은 아직 대기.
+
+## 2026-11-10 / 009_positive_control_depth / 사용자 결정 반영 (코드, 미실행) (experimenter)
+- 변경점(사용자 결정 2026-11-10): (1) config.yaml `intervention.m_int` 기본값 [1, 2, 3, 4, 5, 6], 주석 "사용자 확정 2026-11-10". 블록 6 은 회복 관측을 계산하지 않고 "해당 없음" 으로 기록, 검출 판정만. (2) 008 의 A, B 를 보조 판정으로 추가(`src/exp009/auxrules.py`, 정의는 008 run.py 에서 복사하고 출처 주석, 008 파일 수정 없음; `stages.aggregate` 가 블록 x 강도 x 학습 seed 별로 results.json 에 관측됨/관측 안 됨/계산 불가 저장). 주 성공 기준(강도 1.0, 3개 중 2개 이상 m* <= m_int + 1)은 바꾸지 않았고 보조 판정은 주 판정에 들어가지 않는다. A 의 random-init 기준은 009 에서 새로 측정하지 않고 004 results/depth_r2.csv 의 predictor random_init 대응 행을 쓴다(학습 seed 0,1,2 각 140행, 키 (깊이, split, probe seed) 일치 확인; 집계 시 매번 검사, 불일치나 파일 없음이면 계산 불가). (3) selftest 에 블록 6, A/B 점검 추가. (4) README 예상 시간 갱신. (5) 008 README 에 "지위: 사후 탐색으로만 남긴다" 문구 추가.
+- 검증(CPU, 합성/toy): 009 selftest passed=64 failed=0, --dry-run (check/intervene/aggregate) 정상. 실행 단위 57 (기준선 3 + 개입 54). GPU 미사용, 실제 체크포인트 실행 없음.
+- 예상 GPU 시간(추정, 실측 없음): 블록 6개 약 3.2~6.3시간(개입 54 단위 3~6시간 + 기준선 10~20분).
+- 해석: 하지 않음. 소거 방식, 강도 구성, 주 성공 기준 확정, GPU 실행 승인은 대기.
+
+## 2026-11-10 / 009_positive_control_depth / 설정 확정 (사용자 승인)
+- 소거 방식 leace_scalar, 강도 [0, 1.0], 주 성공 기준 초안대로 확정(hypotheses.md 009 확정 기록). Colab 노트북 작성 요청. 실행은 사용자가 Colab 에서 한다.
+
+## 2026-11-10 / 009_positive_control_depth / 확정 설정 반영, Colab 노트북 (코드, 미실행) (experimenter)
+- 변경점(사용자 확정 2026-11-10): (1) config.yaml: `intervention.strengths` [0, 1.0] (0.25, 0.5 제거), method leace_scalar, m_int [1..6], success 그대로; "초안/승인 대기" 주석을 "사용자 확정 2026-11-10" 으로 교체. 시드(seed 0, 학습 [0,1,2], probe [0..4], fit_seed 9000) 변화 없음. `pilot: true` 는 그대로(본 실행 전 사람이 변경). (2) selftest: 단위 수 점검 57 -> 21, 단일 블록 점검 3+3, 확정 설정(method, strengths) 점검 추가. 부분 강도 toy 점검들은 코드 기능 점검이라 유지. (3) README: 상태, 실행 단위 21, 예상 GPU 시간(추정) 갱신. (4) Colab: colab/build_notebook.py 와 colab/exp009_colab.ipynb 신규 (004 의 colab/exp045_tools.py 재사용; 코드 스냅샷 임베드; config 값 덮어쓰기 없음, 파일럿 셀만 기존 CLI 플래그 --m-int 6 --train-seeds 0 사용).
+- 검증(CPU): 009 selftest passed=65 failed=0, check/intervene/aggregate --dry-run 정상 (intervene 계획: units total 21 = 기준선 3 + 개입 18). 노트북 JSON 유효, 코드 셀 17개 구문 검사 통과, 임베드 스냅샷을 풀어 selftest 재실행 passed=65 failed=0, 스냅샷 config.yaml 이 원본과 동일. 로컬 check 의 002 run DONE=False 는 이 머신에 체크포인트가 없어서이며 Colab 에서 확인 대상.
+- 예상 GPU 시간(추정, 실측 없음): 블록당 약 16~30분 x 6 + 기준선 약 10~20분 = 약 1.8~3.3시간 (이전 초안 3.2~6.3시간에서 강도 수 감소 반영; 블록당 시간 분해는 가정).
+- GPU 미사용, 실제 체크포인트 실행 없음, git commit 하지 않음. 해석 없음.
+
+## 2026-11-10 / 009_positive_control_depth / 노트북 git clone 전환, Colab 파일럿 실패 1건 수정 (코드, 미실행) (experimenter)
+- 변경점: (1) 노트북의 코드 임베드(약 208KB) 제거, A3 가 공개 저장소 https://github.com/jongmin-s-multicore/probing-experiment.git 을 clone 하고 REPO_REF(A2, 기본 master, 브랜치/commit 해시/태그) 로 checkout, HEAD 해시 출력, `exp009_work/code_version.json` 및 results.json `code_version`(aggregate 에 추가) 에 기록. 토큰 선택 사항. (2) 실패 1건 기록: 사용자 Colab 파일럿 2026-11-10 08:21, `intervene` 이 FileNotFoundError `/content/dinowm/data/cloth_sim/a060_train/metadata.pt`; 원인 metadata.pt 로컬 누락(노트북 README 의 "데이터 다운로드 없음" 문구가 틀림); results_pilot attempts stage:intervene = 2. (3) 수정: 노트북 셀 A6b(metadata.pt 만 배치), `run.py check`/`intervene` 의 metadata.pt 사전 점검(attempts 미소비, 종료 코드 4), README 정정, 009/CHANGES.md 신규, selftest 6개 추가.
+- 검증(CPU): 009 selftest passed=71 failed=0. 노트북 JSON 유효, 코드 셀 ast 통과. GPU 미사용, git commit 하지 않음. 해석 없음.

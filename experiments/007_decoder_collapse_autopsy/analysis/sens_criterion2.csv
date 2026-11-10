@@ -1,0 +1,6 @@
+ckpt,<0.333333,<0.1,<0.01,<0.001,<0.0001,<1e-05
+exp003_mix_adjacent_s0/model_3,upsample_b.blocks.7(27),upsample_b.blocks.7(27),upsample_b.blocks.7(27),upsample_b.blocks.7(27),upsample_b.blocks.7(27),upsample_b.blocks.7(27)
+exp003_single_a026_s1/model_3,upsample_b.blocks.7(27),upsample_b.blocks.7(27),upsample_b.blocks.7(27),upsample_b.blocks.7(5),upsample_b.blocks.7(1),none(0)
+exp003_single_a026_s1/model_4,upsample_b.blocks.7(27),upsample_b.blocks.7(27),upsample_b.blocks.7(27),upsample_b.blocks.7(4),upsample_b.blocks.7(1),none(0)
+exp003_mix_adjacent_s0/model_2,none(0),none(0),none(0),none(0),none(0),none(0)
+exp003_single_a026_s1/model_2,none(0),none(0),none(0),none(0),none(0),none(0)
