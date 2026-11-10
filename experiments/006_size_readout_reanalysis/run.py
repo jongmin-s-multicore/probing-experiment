@@ -102,6 +102,18 @@ def main():
             for b_ in bad[:20]:
                 log("  " + b_)
             sys.exit(4)
+        known = [r for _, _, r in B.all_runs(cfg)]          # run names must be real checkpoint folders (Colab 2026-11-10: smoke.run lacked the exp002_ prefix)
+        want = [cfg["extract"]["smoke"]["run"]] if args.smoke else ([r for r in args.runs.split(",") if r] if args.runs else known)
+        unknown = [r for r in want if r not in known]
+        missing = [r for r in want if not (Path(paths["train_outputs"]) / r / "checkpoints" / "model_latest.pth").exists()]
+        if unknown or missing:
+            log("STOP (not retried, no attempt used): run names do not match runs.run_name_pattern or the checkpoint is missing")
+            log("  expected names: %s" % known)
+            for r in unknown:
+                log("  not a configured run: %s" % r)
+            for r in missing:
+                log("  missing checkpoint: %s" % (Path(paths["train_outputs"]) / r / "checkpoints" / "model_latest.pth"))
+            sys.exit(4)
     info = {"started": started, "host_python": sys.version.split()[0], "git": B.git_info(), "snapshot_sha256": B.snapshot_sha256(), "gpu": B.gpu_info()}
 
     def work():

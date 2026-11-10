@@ -1,5 +1,11 @@
 # 006 CHANGES
 
+## 2026-11-10 smoke 실행 이름 수정 (Colab 셀 9 오류)
+- 증상: Colab 셀 9(`extract --smoke`)가 `train_runs/outputs/multi_60_ind_160_s0/...` 에서 체크포인트를 찾다 실패. Drive 의 실제 폴더명은 `exp002_multi_60_ind_160_s0` 등 `exp002_` 접두사가 붙어 있다.
+- 원인: `config.yaml` `extract.smoke.run` 만 접두사 없이 적혀 있었다. 전체 추출이 쓰는 `runs.run_name_pattern` (`exp002_{cond}_s{seed}`) 은 원래 맞았다.
+- 수정: `extract.smoke.run: "exp002_multi_60_ind_160_s0"`. `run.py extract` 사전 점검 추가: smoke/`--runs` 이름이 `run_name_pattern` 의 실행 목록에 없거나 `checkpoints/model_latest.pth` 가 없으면 GPU 로드 전에 종료코드 4 로 멈춘다(시도 횟수 소모 없음).
+- 확인(CPU, 가짜 입력 폴더): 옛 이름이면 사전 점검에서 멈추고, 새 이름이면 사전 점검을 통과한다. 결과 수치 없음.
+
 ## 2026-11-10 분석 F 추가, 노트북 git clone 전환 (사용자 지시: notes/hypotheses.md "후보 J 추가 (2026-11-10)")
 코드 변경은 사실만 적는다. 결과 수치 없음(GPU 미실행). 002/004/009 파일은 수정하지 않았다.
 

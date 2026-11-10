@@ -58,7 +58,7 @@ extract:
   smoke:
     n_train_batches: 2
     n_test_batches: 2
-    run: "multi_60_ind_160_s0"
+    run: "exp002_multi_60_ind_160_s0"   # 실제 폴더명 = runs.run_name_pattern 결과 (exp002_ 접두사). run.py extract 가 시작 전에 대조한다
   teacher_forcing: true          # 분석 F: 같은 체크포인트/행으로 실제 인코더 latent context 의 1-step 예측(teacher forcing)도 저장 (teacher_forced_pooled.npy). 새 시드 없음
   save_dtype: "float32"          # 풀링된 (패치 평균) latent 만 저장한다. 패치 단위 latent 는 저장하지 않는다 (용량: README 5절)
 
