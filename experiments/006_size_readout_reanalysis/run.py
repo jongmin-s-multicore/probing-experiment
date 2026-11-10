@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """Experiment 006 (size readout re-analysis of 002) entry point.   python run.py <stage> [options]
 
-Stages (in order):  check  selftest  data_meta  extract  pool  labels  transfer  repro  analyze_a  analyze_b  analyze_c  analyze_d  analyze_e  aggregate  figures
+Stages (in order):  check  selftest  data_meta  extract  pool  labels  transfer  repro  analyze_a  analyze_b  analyze_c  analyze_d  analyze_e  analyze_f  aggregate  figures
   check      CPU   inputs of the 002 Drive folder: existence, sizes, sha256 (small files; --hash for all), model-load compatibility facts. Reads only
   selftest   CPU   synthetic data, known answers. The numbers it prints are NOT results
   data_meta  CPU   metadata.pt of the training splits from the 002 archive (action normalisation statistics for extract)
@@ -9,7 +9,7 @@ Stages (in order):  check  selftest  data_meta  extract  pool  labels  transfer 
   pool       CPU   patch-mean of the cached encoder tokens;  labels  CPU  contrast-property labels (D)
   transfer   CPU   the 002 output-space probe fitted once and applied to encoder / persistence / rollouts / untrained rollouts
   repro      CPU   difference to 002's stored numbers (no tolerance applied)
-  analyze_a..e CPU analyses A-E ;  aggregate -> results.json (experiment folder and WORK_ROOT) ;  figures -> analysis/*.png (needs matplotlib)
+  analyze_a..f CPU analyses A-F (F = teacher forcing vs open loop) ;  aggregate -> results.json (experiment folder and WORK_ROOT) ;  figures -> analysis/*.png (needs matplotlib)
 Every stage supports --dry-run (prints the plan, writes nothing). Each stage is attempted at most config run.max_attempts (3) times, then stops.
 Environment variables: EXP006_INPUT_ROOT (read only, the 002 Drive folder), EXP006_WORK_ROOT (outputs), ACWM_PHYS_SRC, DATASET_DIR. Seeds are in config.yaml.
 Nothing is ever written inside EXP006_INPUT_ROOT or the 001/002/003 folders (guard in src/exp006/base.py)."""
@@ -28,8 +28,8 @@ sys.path.insert(0, str(HERE / "src"))
 from exp006 import base as B  # noqa: E402  (puts 002's src on sys.path)
 from exp006.base import log  # noqa: E402
 
-STAGES = ["check", "selftest", "data_meta", "extract", "pool", "labels", "transfer", "repro", "analyze_a", "analyze_b", "analyze_c", "analyze_d", "analyze_e", "aggregate", "figures"]
-CPU_ALL = ["pool", "labels", "transfer", "repro", "analyze_a", "analyze_b", "analyze_c", "analyze_d", "analyze_e", "aggregate", "figures"]
+STAGES = ["check", "selftest", "data_meta", "extract", "pool", "labels", "transfer", "repro", "analyze_a", "analyze_b", "analyze_c", "analyze_d", "analyze_e", "analyze_f", "aggregate", "figures"]
+CPU_ALL = ["pool", "labels", "transfer", "repro", "analyze_a", "analyze_b", "analyze_c", "analyze_d", "analyze_e", "analyze_f", "aggregate", "figures"]
 
 
 def plan(stage, cfg, paths):
@@ -48,6 +48,7 @@ def plan(stage, cfg, paths):
         "analyze_c": ("pooled_tokens.npy, extract/*, transfer_pred.npz", ["%s/analyze_c.json" % P["parts"]]),
         "analyze_d": ("pooled_tokens.npy, d_labels.npz, extract/*", ["%s/analyze_d.json" % P["parts"]]),
         "analyze_e": ("002 q2_cells.npz, 002 results.json", ["%s/analyze_e.json" % P["parts"]]),
+        "analyze_f": ("pooled_tokens.npy, extract/*/{rollout_pooled,teacher_forced_pooled}.npy, transfer_pred.npz", ["%s/analyze_f.json" % P["parts"], "%s/F_per_episode_mean_pred.npz" % P["results"]]),
         "aggregate": ("parts/*.json", [str(B.EXP_DIR / "results.json"), "%s/results.json" % P["results"]]),
         "figures": ("results.json", [str(B.EXP_DIR / "analysis") + "/fig*.png"]),
     }[stage]
@@ -94,10 +95,17 @@ def main():
         return
     from exp006 import stages_pre as SP, stages_an as SA, stages_agg as SG, ctx as CX
     st = args.stage
+    if st == "extract":                                   # preflight (no GPU, no attempt consumed): the 009 Colab pilot failed 2 attempts on missing metadata.pt
+        bad = SP.metadata_missing(cfg, paths)
+        if bad:
+            log("STOP (not retried, no attempt used): metadata.pt missing - run `python run.py data_meta` first:")
+            for b_ in bad[:20]:
+                log("  " + b_)
+            sys.exit(4)
     info = {"started": started, "host_python": sys.version.split()[0], "git": B.git_info(), "snapshot_sha256": B.snapshot_sha256(), "gpu": B.gpu_info()}
 
     def work():
-        if st in ("data_meta", "extract", "pool", "labels", "transfer", "repro", "analyze_a", "analyze_b", "analyze_c", "analyze_d", "analyze_e", "aggregate"):
+        if st in ("data_meta", "extract", "pool", "labels", "transfer", "repro", "analyze_a", "analyze_b", "analyze_c", "analyze_d", "analyze_e", "analyze_f", "aggregate"):
             B.probe_output_dir(paths)                       # Drive write failure must stop the stage here
         if st == "check":
             return SP.stage_check(cfg, cfg2, paths, do_hash=args.hash, write=not args.no_write_check)
@@ -115,6 +123,9 @@ def main():
             return SA.stage_repro(cfg, cfg2, paths)
         if st in ("analyze_a", "analyze_b", "analyze_c", "analyze_d", "analyze_e"):
             return {"analyze_a": SA.stage_a, "analyze_b": SA.stage_b, "analyze_c": SA.stage_c, "analyze_d": SA.stage_d, "analyze_e": SA.stage_e}[st](cfg, cfg2, paths)
+        if st == "analyze_f":
+            from exp006 import stages_f as SF
+            return SF.stage_f(cfg, cfg2, paths)
         if st == "aggregate":
             return SG.stage_aggregate(cfg, cfg2, paths, started)
         if st == "figures":

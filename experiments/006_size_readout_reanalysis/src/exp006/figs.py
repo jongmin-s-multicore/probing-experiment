@@ -33,7 +33,7 @@ def make_all(res, outdir, only_synthetic_label=None):
     made, failed = [], []
     tag = "" if not only_synthetic_label else only_synthetic_label
     for name, fn in (("figA_slope_vs_step", fig_a_slope), ("figA_level_means", fig_a_levels), ("figB_baselines_r2", fig_b), ("figC_retrained_vs_transfer", fig_c),
-                     ("figD_properties_r2", fig_d), ("figE_step12_seed_points", fig_e)):
+                     ("figD_properties_r2", fig_d), ("figE_step12_seed_points", fig_e), ("figF_teacher_forcing_vs_open_loop", fig_f)):
         try:
             fig = fn(plt, res, tag)
             if fig is None:
@@ -175,4 +175,23 @@ def fig_e(plt, res, tag):
         ax.set_xticklabels([LAB[c] for c in E["seed_summary"]], fontsize=7)
         ax.set_title(ttl + " (unseen); bar = mean, t CI df=2", fontsize=8)
     fig.suptitle("E: training-seed values %s" % tag, fontsize=9)
+    return fig
+
+
+def fig_f(plt, res, tag):
+    F = res.get("F")
+    if not F:
+        return None
+    x = F["steps"]
+    fig, axes = plt.subplots(2, 2, figsize=(11, 7.5), sharex=True)
+    for j, probe in enumerate(("transfer", "retrained")):
+        for ax, qn, ttl in ((axes[0][j], "r2|unseen", "R2 (unseen)"), (axes[1][j], "slope_episode|unseen", "episode slope (unseen)")):
+            ax.plot(x, F["encoder_reference"][probe]["r2"]["unseen"] if qn.startswith("r2") else F["encoder_reference"][probe]["q"][qn], "k--", lw=1, label="encoder (ceiling)")
+            for cond, d in F["seed_summary"].items():
+                _band(ax, x, d["%s|open_loop|%s" % (probe, qn)], COL[cond], LAB[cond] + " open loop", ls="-")
+                _band(ax, x, d["%s|teacher_forced|%s" % (probe, qn)], COL[cond], LAB[cond] + " teacher forced", ls=":")
+            ax.set_title("%s probe: %s" % (probe, ttl), fontsize=9)
+            ax.set_xlabel("step k")
+    axes[0][0].legend(fontsize=6)
+    fig.suptitle("F: teacher-forced vs open-loop latents %s" % tag, fontsize=9)
     return fig

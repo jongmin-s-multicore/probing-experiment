@@ -1,7 +1,7 @@
 """CPU selftest on SYNTHETIC data with known answers. Every number printed here is a synthetic number, NOT an experimental result.
 Checks (see README section 8): persistence == encoder-token copy, retrained probe never sees test rows, slope/level alignment, seed-level CI formula, t quantile,
 reproduction machinery (zero difference on identical inputs, nonzero when perturbed), 001/002/003 files unchanged, read-only input guard, loud failure of a
-non-writable output folder, untrained-predictor / rebuild_aux toy checks (torch), --dry-run of every stage, Python 3.9 syntax, notebook JSON + cell compile."""
+non-writable output folder, untrained-predictor / rebuild_aux toy checks (torch), analysis F (teacher forcing vs open loop) known answers, metadata.pt preflight, code_version, --dry-run of every stage, Python 3.9 syntax, notebook JSON + cell compile."""
 from __future__ import annotations
 
 import json
@@ -284,13 +284,18 @@ def make_world(tmp, cfg, cfg2, seed=0, n_tr=10, n_te=8, P=4, D=384):
         # extraction outputs (as the GPU stage would write them)
         tr_roll = PR.pool(R[:Etr])
         te_roll = PR.pool(R[Etr:])
+        s_tf = 0.9                                                       # teacher-forced latent: constant shrink toward the mean at every step (no accumulation)
+        Rtf = (s_tf * tok32[:, 1:13] + (1 - s_tf) * mu_pool[None, None, None, :] + rng.randn(E, 12, P, D) * 0.05).astype(np.float16)
+        Rtf[:, 0] = R[:, 0]                                              # step 1 is the same computation in both (real data: identical up to batch effects)
+        tr_tf, te_tf = PR.pool(Rtf[:Etr]), PR.pool(Rtf[Etr:])
         te_unt = {}
         for v in cfg["extract"]["untrained"]["variants"]:
             for us in cfg["seeds"]["untrained_predictor"]:
                 te_unt[(v, int(us))] = (mu_pool + rng.randn(E - Etr, 12, D) * 0.2).astype(np.float32)
         paths = B.resolve_paths(cfg)
         EX.write_run_outputs(paths, paths["extract"] / run, tr_roll, te_roll, te_unt,
-                             {"run": run, "epoch": 15, "untrained": [{"variant": k[0], "seed": k[1]} for k in te_unt], "synthetic": True, "elapsed_s": 0.0})
+                             {"run": run, "epoch": 15, "untrained": [{"variant": k[0], "seed": k[1]} for k in te_unt], "synthetic": True, "elapsed_s": 0.0,
+                              "teacher_forced": {"enabled": True, "steps_available": list(range(1, 13))}}, tr_tf, te_tf)
     r002 = {"exploratory": {"q2_layer_time_grid_r2_point_estimates": grid},
             "decision_table": [{"id": "H_b:last_rollout_step", "result": {"per_training_seed": rowsd["multi_60_ind_160"]}},
                                {"id": "cond_a_vs_b:last_rollout_step", "result": {"per_training_seed_a": rowsd["single_ind"], "per_training_seed_b": rowsd["multi_60_ind_160"]}}]}
@@ -417,6 +422,67 @@ def t_pipeline(tmp):
     Dq2 = SA.stage_d(cfg, cfg2, paths, ctx, pooled=pooled, labels=lab2, extracts=exs_clean(paths, cfg))
     r2e = Dq2["per_property"]["cum_action_g1_x"]["sets"]["encoder|3"]["r2|all"]
     check("D: label linear in the tokens is recovered by the encoder-trained probe (R2 > 0.9)", r2e > 0.9, "R2 %.3f (synthetic)" % r2e)
+    # F: teacher forcing vs open loop
+    import copy as _copy
+    from . import stages_f as SF
+    cfg_small = _copy.deepcopy(cfg)
+    cfg_small["runs"]["train_seeds"] = [0]                                  # the known-answer tests below need one run per condition only (speed)
+    # accumulation known answer: open loop shrinks like 0.8^k, teacher forcing like 0.8 at every step
+    mu_ = pooled[:ctx.Etr, :12].mean((0, 1))
+    exs_acc = exs_clean(paths, cfg)
+    for run_ in exs_acc:
+        ol_ = np.stack([0.8 ** k * pooled[:, k] + (1 - 0.8 ** k) * mu_ for k in range(1, 13)], 1).astype(np.float32)
+        tf_ = np.stack([0.8 * pooled[:, k] + 0.2 * mu_ for k in range(1, 13)], 1).astype(np.float32)
+        exs_acc[run_]["roll"], exs_acc[run_]["tf"] = ol_, tf_
+    _, pm_acc = SP.stage_transfer(cfg, cfg2, paths, ctx, extracts=exs_acc, out_name=None)
+    Fa = SF.stage_f(cfg_small, cfg2, paths, ctx, pooled=pooled, extracts=exs_acc, transfer_pred=pm_acc)
+    ra = Fa["runs"]["exp002_single_ind_s0"]["transfer"]
+    kk = np.arange(1, 13)
+    eslope = np.array(Fa["encoder_reference"]["transfer"]["q"]["slope_episode|all"])
+    check("F accumulation known answer: transfer slope ratio teacher_forced/encoder = 0.8 at every step", np.abs(np.array(ra["teacher_forced"]["q"]["slope_episode|all"]) / eslope - 0.8).max() < 0.05,
+          "max dev %.3f" % np.abs(np.array(ra["teacher_forced"]["q"]["slope_episode|all"]) / eslope - 0.8).max())
+    check("F accumulation known answer: transfer slope ratio open_loop/encoder = 0.8^k", np.abs(np.array(ra["open_loop"]["q"]["slope_episode|all"]) / eslope - 0.8 ** kk).max() < 0.05,
+          "max dev %.3f" % np.abs(np.array(ra["open_loop"]["q"]["slope_episode|all"]) / eslope - 0.8 ** kk).max())
+    d_unseen = np.array(ra["tf_minus_ol"]["r2"]["unseen"])
+    mae_tf, mae_ol = np.array(ra["teacher_forced"]["mae"]["unseen"]), np.array(ra["open_loop"]["mae"]["unseen"])
+    check("F accumulation known answer: transfer MAE equal at step 1, open loop larger at step 12 (tf_minus_ol R2 > 0 at step 12)", abs(mae_tf[0] - mae_ol[0]) < 1e-6 and mae_ol[-1] > mae_tf[-1] and d_unseen[-1] > 0 and abs(d_unseen[0]) < 1e-9,
+          "mae tf/ol step12 %.3f/%.3f" % (mae_tf[-1], mae_ol[-1]))
+    # a missing teacher_forced file is a clear error
+    try:
+        ex_none = exs_clean(paths, cfg)
+        ex_none["exp002_multi_60_ind_160_s0"]["tf"] = None
+        SF.stage_f(cfg_small, cfg2, paths, ctx, pooled=pooled, extracts=ex_none, transfer_pred=tp)
+        check("F: missing teacher_forced_pooled.npy raises a clear error", False)
+    except FileNotFoundError as e_:
+        check("F: missing teacher_forced_pooled.npy raises a clear error", "teacher_forced_pooled.npy" in str(e_))
+    # full run on the unmodified synthetic extraction (last, so that its part file is the one aggregate reads)
+    seen_f = []
+
+    def spy_f(X, y, groups, alphas, k, seed):
+        seen_f.append((np.asarray(X).shape[0], len(np.unique(groups))))
+        return orig(X, y, groups, alphas, k, seed)
+    D.ridge_fit = spy_f
+    try:
+        Fq = SF.stage_f(cfg, cfg2, paths, ctx, pooled=pooled, extracts=exs_clean(paths, cfg), transfer_pred=tp)
+    finally:
+        D.ridge_fit = orig
+    check("F: every ridge fit used exactly the %d training rows (no test rows)" % ctx.Etr, len(seen_f) > 0 and all(n == ctx.Etr and g == ctx.Etr for n, g in seen_f), "%d fits" % len(seen_f))
+    check("F: 6 runs x {transfer, retrained} x {open_loop, teacher_forced, tf_minus_ol} x 12 steps; steps available 1..12",
+          len(Fq["runs"]) == 6 and all(len(r[p][k]["r2"]["unseen"]) == 12 for r in Fq["runs"].values() for p in ("transfer", "retrained") for k in ("open_loop", "teacher_forced", "tf_minus_ol"))
+          and Fq["teacher_forcing_steps_available"] == list(range(1, 13)))
+    r0 = Fq["runs"]["exp002_single_ind_s0"]
+    enc_sl = np.array(A["sources"]["reproduced"]["per_run"]["single_ind"]["0"]["encoder"]["q"]["slope_episode|all"])
+    tf_sl = np.array(r0["transfer"]["teacher_forced"]["q"]["slope_episode|all"])
+    ol_sl = np.array(r0["transfer"]["open_loop"]["q"]["slope_episode|all"])
+    check("F: transfer slope ratio teacher_forced/encoder = known shrink 0.9 at every step (step 1 equals open loop)", np.abs(tf_sl[1:] / enc_sl[1:] - 0.9).max() < 0.05 and abs(tf_sl[0] - ol_sl[0]) < 1e-9, "max dev %.3f" % np.abs(tf_sl[1:] / enc_sl[1:] - 0.9).max())
+    check("F: transfer slope ratio open_loop/encoder = known world shrink 0.5 (single_ind)", np.abs(ol_sl / enc_sl - 0.5).max() < 0.05)
+    dd = np.array(r0["transfer"]["tf_minus_ol"]["r2"]["unseen"]) - (np.array(r0["transfer"]["teacher_forced"]["r2"]["unseen"]) - np.array(r0["transfer"]["open_loop"]["r2"]["unseen"]))
+    check("F: tf_minus_ol R2 == teacher_forced - open_loop (hand)", np.abs(dd).max() < 1e-12)
+    check("F: step-1 latents identical in the synthetic extraction (reported max abs diff 0)", r0["latent_identity_step1_max_abs_diff_all_rows"] == 0.0)
+    vF = np.array([Fq["runs"]["exp002_single_ind_s%d" % sd]["transfer"]["teacher_forced"]["r2"]["unseen"][-1] for sd in range(3)])
+    aggF = Fq["seed_summary"]["single_ind"]["transfer|teacher_forced|r2|unseen"]
+    halfF = L.t_crit(2) * vF.std(ddof=1) / np.sqrt(3)
+    check("F: seed mean/SD/CI of teacher-forced step-12 R2 equal the hand formula", abs(aggF["mean"][-1] - vF.mean()) < 1e-12 and abs(aggF["sd"][-1] - vF.std(ddof=1)) < 1e-12 and abs(aggF["ci_hi"][-1] - (vF.mean() + halfF)) < 1e-9 and aggF["df"] == 2)
     # E
     Eq = SA.stage_e(cfg, cfg2, paths, ctx)
     v = np.array([Eq["per_run"]["exp002_single_ind_s%d" % s]["r2|rollout|unseen"][-1] for s in range(3)])
@@ -437,12 +503,13 @@ def t_pipeline(tmp):
         exp_copy.unlink()                                                     # synthetic results.json must not stay in the experiment folder
     text = json.dumps(res_json).lower()
     check("results.json: interpretation is null", res_json["interpretation"] is None)
+    check("results.json: F present, code_version recorded", res_json.get("F") is not None and "git_head" in res_json["code_version"] and "requested_ref" in res_json["code_version"])
     check("results.json: no pass/fail/p-value/threshold keys", not any(('"%s"' % w) in text for w in ("pass", "fail", "p_value", "threshold", "significant")))
     try:
         os.environ["MPLBACKEND"] = "Agg"      # unconditional (a kernel-inherited backend is invalid here)
         import matplotlib  # noqa: F401
         made, failed = figs.make_all(json.loads(json.dumps(res_json, default=float)), Path(tmp) / "figs", "(SYNTHETIC)")
-        check("figures: 6 PNGs from synthetic results", len(made) == 6 and not failed, "made %d failed %s" % (len(made), failed))
+        check("figures: 7 PNGs from synthetic results", len(made) == 7 and not failed, "made %d failed %s" % (len(made), failed))
     except ImportError:
         skip("figures", "matplotlib not installed")
     return paths, cfg, cfg2
@@ -536,8 +603,9 @@ def t_toy_extract(tmp):
     cfg["extract"]["batch_episodes"] = 4
     variants, useeds = cfg["extract"]["untrained"]["variants"], cfg["seeds"]["untrained_predictor"]
     untrained = EX.build_untrained(cfg, factory, model, variants, useeds)
-    tr, _ = EX.run_pass(cfg, cfg2, model, C, (0, Etr), mean, std, dev, 0, 12, 1, None, 4, "train")
-    te, un = EX.run_pass(cfg, cfg2, model, C, (Etr, E), mean, std, dev, 0, 12, 1, untrained, 4, "test")
+    diag = {}
+    tr, _, tr_tf = EX.run_pass(cfg, cfg2, model, C, (0, Etr), mean, std, dev, 0, 12, 1, None, 4, "train", diag=diag)
+    te, un, te_tf = EX.run_pass(cfg, cfg2, model, C, (Etr, E), mean, std, dev, 0, 12, 1, untrained, 4, "test")
     # manual reference with exp002 model_io (the 002 code path), whole set in one batch
     with torch.no_grad():
         x = M.frames_to_float(C["frames_u8"]).to(dev)
@@ -547,6 +615,44 @@ def t_toy_extract(tmp):
         ref_pooled = PR.pool(ref.half().cpu().numpy())
     check("toy extract: trained rollout (pooled, batched) == 002 model_io.rollout reference", np.abs(np.concatenate([tr, te]) - ref_pooled).max() < 1e-5, "max diff %.2e" % np.abs(np.concatenate([tr, te]) - ref_pooled).max())
     check("toy extract: first latent step differs from copy of frame 0 (rollout is not persistence)", np.abs(te[:, 0] - PR.pool(z_all[Etr:, 0:1, :, :384].numpy())[:, 0]).max() > 1e-3)
+    # teacher forcing (F): step k = one predict() call on the real encoder latent of frame k-1, pooled like the rollout
+    with torch.no_grad():
+        ref_tf = np.stack([PR.pool(model.predict(z_all[:, k - 1:k])[:, -1:, :, :384].half().numpy())[:, 0] for k in range(1, 13)], 1)
+    check("toy extract: teacher-forced latents (pooled, batched) == one predict() on z_all[:, k-1:k], all 12 steps", np.abs(np.concatenate([tr_tf, te_tf]) - ref_tf).max() < 1e-5, "max diff %.2e" % np.abs(np.concatenate([tr_tf, te_tf]) - ref_tf).max())
+    check("toy extract: teacher-forced step 1 == open-loop step 1 (reported diff %.1e), later steps differ" % diag["tf_step1_vs_open_loop_step1_max_abs_diff"],
+          diag["tf_step1_vs_open_loop_step1_max_abs_diff"] < 1e-6 and np.abs(np.concatenate([tr_tf, te_tf])[:, 1:] - np.concatenate([tr, te])[:, 1:]).max() > 1e-3)
+    check("tf_feasible_steps: 13 cached frames, H=1, t=0 -> steps 1..12; H=2 -> 2..12; horizon 13 -> still 1..12",
+          EX.tf_feasible_steps(0, 12, 1) == list(range(1, 13)) and EX.tf_feasible_steps(1, 12, 2) == list(range(1, 12)) and EX.tf_feasible_steps(0, 13, 1) == list(range(1, 13))
+          and EX.tf_feasible_steps(0, 12, 2) == list(range(2, 13)))
+    # known answer: frames form a ramp, real latents are linear in k (z_k = z_0 + k d). Predictor "x + 1.5 d" overshoots by 0.5 d each call:
+    # teacher forcing error per step is constant (0.5 d), open-loop error accumulates (0.5 k d)
+    ramp = np.broadcast_to((20 + 15 * np.arange(13))[None, :, None, None, None], (4, 13, 8, 8, 3)).astype(np.uint8).copy()
+    Cr = {"frames_u8": ramp, "actions_raw": rng.randn(4, 60, 6).astype(np.float32)}
+    with torch.no_grad():
+        zr_ = M.encode_batch(model, M.frames_to_float(ramp), M.acts_from_raw(torch.as_tensor(Cr["actions_raw"]), mean, std))
+    dvec = (zr_[0, 1, 0, :384] - zr_[0, 0, 0, :384]).clone()
+    lin_dev = float((zr_[0, 2, 0, :384] - zr_[0, 1, 0, :384] - dvec).abs().max())
+
+    class OverPred(nn.Module):
+        def forward(self, x):
+            x = x.clone()
+            x[..., :384] = x[..., :384] + 1.5 * dvec
+            return x
+
+    class Swapped(Toy):
+        def __init__(self):
+            super().__init__()
+            self.predictor = OverPred()
+
+    model_o = Swapped().eval()
+    ol_r, _, tf_r = EX.run_pass(cfg, cfg2, model_o, Cr, (0, 4), mean, std, dev, 0, 12, 1, None, 4, "test")
+    real = PR.pool(zr_[:, 1:13, :, :384].half().numpy())
+    e_tf = np.array([np.abs(tf_r[:, k] - real[:, k]).mean() for k in range(12)])
+    e_ol = np.array([np.abs(ol_r[:, k] - real[:, k]).mean() for k in range(12)])
+    check("toy ramp: real latents are linear in k (precondition, max dev %.1e)" % lin_dev, lin_dev < 1e-4)
+    check("toy ramp known answer: teacher-forcing error is constant over steps (max |e_k/e_1 - 1| = %.2f)" % np.abs(e_tf / e_tf[0] - 1).max(), np.abs(e_tf / e_tf[0] - 1).max() < 0.1)
+    check("toy ramp known answer: open-loop error grows like k (max |e_k/(k e_1) - 1| = %.2f) and exceeds teacher forcing at step 12" % np.abs(e_ol / (e_ol[0] * np.arange(1, 13)) - 1).max(),
+          np.abs(e_ol / (e_ol[0] * np.arange(1, 13)) - 1).max() < 0.1 and e_ol[-1] > 5 * e_tf[-1])
     ref_pred_only = None
     with torch.no_grad(), EX.Swap(model, untrained[("pred_only", 0)]):
         ref_pred_only = PR.pool(M.rollout(model, z_all[Etr:], acts[Etr:], 0, 12, 1).half().numpy())
@@ -575,6 +681,20 @@ def t_toy_extract(tmp):
     except RuntimeError:
         check("structure mismatch of the untrained predictor raises", True)
     # action stats helper: normalise False -> zeros/ones
+    dd_ = Path(tempfile.mkdtemp(prefix="exp006_done_"))
+    try:
+        (dd_ / "DONE").write_text("ok\n")
+        pth = B.resolve_paths(cfg)
+        r_skip = EX.extract_run(cfg, cfg2, pth, "exp002_single_ind_s0", dev, {}, out_dir=dd_)       # DONE and no teacher-forced file: must NOT skip (it tries to load the missing checkpoint)
+        check("extract_run: DONE marker without teacher_forced_pooled.npy is not skipped", False)
+    except FileNotFoundError:
+        check("extract_run: DONE marker without teacher_forced_pooled.npy is not skipped (redo reaches the checkpoint load)", True)
+    try:
+        (dd_ / "teacher_forced_pooled.npy").write_bytes(b"x")
+        r_skip = EX.extract_run(cfg, cfg2, B.resolve_paths(cfg), "exp002_single_ind_s0", dev, {}, out_dir=dd_)
+        check("extract_run: DONE marker with teacher_forced_pooled.npy is skipped", r_skip.get("skipped") is True)
+    finally:
+        shutil.rmtree(dd_, ignore_errors=True)
     m0, s0, n0 = EX.action_stats_local("/nonexistent", "/nonexistent", [0, 1, 2, 4, 5, 6], False)
     check("action_stats_local: normalize_action False -> zeros/ones without reading files", float(m0.abs().sum()) == 0 and float(s0.sum()) == 6 and n0 is False)
 
@@ -616,7 +736,10 @@ def t_check_and_data_meta(tmp):
         rd.mkdir(parents=True)
         eps = [{"split": sp, "name": "episode_%05d.mp4" % i, "dir": "/elsewhere", "group": sp} for sp in ("a060_train", "ind_train", "a160_train") for i in range(5)]
         B.write_json_raw({"episodes": eps}, rd / "train_manifest.json")
+    bad_before = SP.metadata_missing(cfg, paths)
+    check("metadata_missing preflight lists the 3 absent metadata.pt for each of the 6 runs before data_meta", len(bad_before) == 18, "%d problems" % len(bad_before))
     r = SP.stage_data_meta(cfg, cfg2, paths)
+    check("metadata_missing preflight is empty after data_meta", SP.metadata_missing(cfg, paths) == [])
     ok = all((ds / "cloth_sim" / sp / "metadata.pt").exists() for sp in metas) and not (Path(tmp) / "evil").exists()
     check("data_meta: metadata.pt of the 3 splits extracted from the (read only) archive; traversal member ignored", ok)
     a2 = (inp / "cloth_sim_data.tar").stat()
@@ -631,6 +754,7 @@ def t_check_and_data_meta(tmp):
     res = SP.stage_check(cfg, cfg2, paths)
     check("check: runs on an incomplete input folder, lists missing files, hashes small files", "train_runs/outputs/exp002_single_ind_s0/checkpoints/model_latest.pth" in res["missing"]
           and res["files"]["results/q1/cells.npz"]["sha256"] == B.sha256_bytes(b"abc") and (Path(paths["results"]) / "input_manifest.json").exists())
+    check("check: input_manifest records metadata_pt_ok", res["metadata_pt_ok"] is True and res["metadata_pt_missing"] == [])
     check("check: model_load_compat says the resume patch is not needed", res["model_load_compat"]["resume_patch_needed_for_load"] is False and res["model_load_compat"]["model_io_imports_train_py"] is False)
     check("check: wrote nothing into INPUT_ROOT", not any(p.name.endswith((".tmp", ".write_test")) for p in inp.rglob("*")))
 
@@ -662,9 +786,13 @@ def t_static():
                 except SyntaxError as e:
                     errs.append("cell %d: %s" % (i, e))
         check("notebook is valid JSON; %d cells; every code cell compiles" % len(d["cells"]), not errs and d.get("nbformat") == 4, "; ".join(errs))
-        emb = "".join(d["cells"][3]["source"]) if len(d["cells"]) > 3 else ""
-        check("notebook embeds the code snapshot", "EMBEDDED" in emb and len(emb) > 10000)
-        check("notebook does not write to the 002 folder name EXP002_WORK for outputs", "exp006_work" in "".join("".join(c["source"]) for c in d["cells"]))
+        allsrc = "".join("".join(c["source"]) for c in d["cells"])
+        check("notebook has no embedded code snapshot (no base64/EMBEDDED, no string constant > 2000 chars, file < 100 KB)",
+              "EMBEDDED" not in allsrc and "b64decode" not in allsrc and nb.stat().st_size < 100000 and max((len(t) for c in d["cells"] if c["cell_type"] == "code" for t in c["source"]), default=0) < 2000,
+              "%d bytes" % nb.stat().st_size)
+        check("notebook clones the public repo, checks out REPO_REF and records the HEAD hash", all(w in allsrc for w in ("git', 'clone'", "REPO_REF", "rev-parse', 'HEAD'", "code_version.json", "EXP006_CODE_REF")))
+        check("notebook uses its own WORK_ROOT exp006_work, reads exp002_work only, and never names exp009_work as an output", "exp006_work" in allsrc and "exp009_work" not in allsrc)
+        check("notebook: metadata.pt placement cell + extract smoke before the full extraction", "metadata.pt" in allsrc and allsrc.index("--smoke") < allsrc.index("RUN_EXTRACT = False"))
     else:
         skip("notebook checks", "colab/exp006_colab.ipynb not built yet")
     cfg = B.load_config()
@@ -680,11 +808,11 @@ def t_static():
 def t_dry_run(tmp):
     env = dict(os.environ, EXP006_INPUT_ROOT=str(Path(tmp) / "ri"), EXP006_WORK_ROOT=str(Path(tmp) / "rw"), PYTHONDONTWRITEBYTECODE="1")
     bad = []
-    for st in ("check", "data_meta", "extract", "pool", "labels", "transfer", "repro", "analyze_a", "analyze_b", "analyze_c", "analyze_d", "analyze_e", "aggregate", "figures"):
+    for st in ("check", "data_meta", "extract", "pool", "labels", "transfer", "repro", "analyze_a", "analyze_b", "analyze_c", "analyze_d", "analyze_e", "analyze_f", "aggregate", "figures"):
         r = subprocess.run([sys.executable, str(B.EXP_DIR / "run.py"), st, "--dry-run"], env=env, capture_output=True, text=True, cwd=str(tmp))
         if r.returncode != 0 or "DRY-RUN plan" not in r.stdout:
             bad.append("%s rc=%s %s" % (st, r.returncode, (r.stderr or r.stdout)[-200:]))
-    check("--dry-run of 14 stages exits 0 and prints a plan", not bad, "; ".join(bad))
+    check("--dry-run of 15 stages exits 0 and prints a plan", not bad, "; ".join(bad))
     check("--dry-run wrote nothing into the work/input folders", not (Path(tmp) / "rw").exists() and not (Path(tmp) / "ri").exists())
 
 

@@ -28,8 +28,28 @@ def n_roll(run, k):
     return "rollout|%s|%d" % (run, k)
 
 
+def n_tf(run, k):
+    return "teacher|%s|%d" % (run, k)
+
+
 def n_unt(run, variant, seed, k):
     return "untrained|%s|%s|%d|%d" % (run, variant, seed, k)
+
+
+# ------------------------------------------------------------------------------------------------ metadata.pt preflight
+def metadata_missing(cfg, paths):
+    """Preflight without GPU or attempts: extract.action_stats_local reads <data_root>/<split>/metadata.pt for every episode of each run's train_manifest.json
+    (the first 009 Colab pilot failed because these files were missing). Returns a list of problem strings (empty = ok)."""
+    bad = []
+    for _, _, run in B.all_runs(cfg):
+        mp = Path(paths["train_outputs"]) / run / "train_manifest.json"
+        if not mp.exists():
+            bad.append("%s: train_manifest.json missing (%s)" % (run, mp))
+            continue
+        for sp in sorted({e["split"] for e in B.read_json(mp)["episodes"]}):
+            if not (Path(paths["data_root"]) / sp / "metadata.pt").exists():
+                bad.append("%s: %s/%s/metadata.pt missing" % (run, paths["data_root"], sp))
+    return bad
 
 
 # ------------------------------------------------------------------------------------------------ check
@@ -104,13 +124,18 @@ def stage_check(cfg, cfg2, paths, do_hash=False, write=True):
         "resume_patch_needed_for_load": False,
         "resume_patch_reason": "the patch changes only train.py (optimizer state_dict saving, resume of action/proprio encoders). Checkpoint keys read by model_io are predictor, decoder, proprio_encoder, action_encoder, epoch (+ encoder if saved); they are the same with or without the patch. Optimizer entries are ignored by model_io.",
     }
+    md_bad = metadata_missing(cfg, paths)
     res = {"input_root": str(paths["input_root"]), "work_root": str(paths["work_root"]), "files": files, "missing": missing, "expect_mismatch": mismatch,
+           "metadata_pt_missing": md_bad, "metadata_pt_ok": not md_bad,
            "provenance": prov, "acwm_src": acwm, "model_load_compat": load_compat, "python": sys.version.split()[0], "platform": platform.platform(),
            "environment": B.env_info(), "gpu": B.gpu_info(), "hash_computed_for_big_files": hash_all, "seconds": round(time.time() - t0, 1),
            "expect_template_for_config": {k: {"bytes": v["bytes"], "sha256": v.get("sha256")} for k, v in files.items() if v.get("exists") and v.get("sha256") and k.endswith((".pth", ".npz", ".npy"))}}
     log("check: %d files listed, %d missing, %d expectation mismatches" % (len(files), len(missing), len(mismatch)))
     for m in missing:
         log("  MISSING: %s" % m)
+    log("check: metadata.pt of the training splits (needed by extract; run `data_meta`): %s" % ("all present" if not md_bad else "MISSING %d" % len(md_bad)))
+    for m in md_bad[:20]:
+        log("  MISSING metadata.pt: %s" % m)
     for k, v in prov.items():
         log("  %s = %s" % (k, v))
     if write:
@@ -250,6 +275,8 @@ def build_apply_sets(ctx, pooled, extracts, cfg):
         for k in ctx.steps:
             y = ctx.label_te(k)
             sets[n_roll(run, k)] = (ex["roll"][ctx.Etr:, k - 1][:, None, :], y)
+            if ex.get("tf") is not None:
+                sets[n_tf(run, k)] = (ex["tf"][ctx.Etr:, k - 1][:, None, :], y)
             for (v, sd), arr in ex["untrained"].items():
                 sets[n_unt(run, v, sd, k)] = (arr[:, k - 1][:, None, :], y)
     return sets

@@ -88,7 +88,9 @@ def load_extract(paths, run, with_untrained=True):
     d = Path(paths["extract"]) / run
     if not (d / "DONE").exists():
         raise FileNotFoundError("%s/DONE missing - run `python run.py extract` (GPU) first" % d)
-    out = {"roll": np.load(d / "rollout_pooled.npy"), "meta": B.read_json(d / "meta.json"), "untrained": {}}
+    out = {"roll": np.load(d / "rollout_pooled.npy"), "meta": B.read_json(d / "meta.json"), "untrained": {}, "tf": None}
+    if (d / "teacher_forced_pooled.npy").exists():              # analysis F (teacher forcing); absent in extractions made before F existed
+        out["tf"] = np.load(d / "teacher_forced_pooled.npy")
     if with_untrained:
         for m in out["meta"]["untrained"]:
             out["untrained"][(m["variant"], int(m["seed"]))] = np.load(d / ("untrained_%s_s%d.npy" % (m["variant"], m["seed"])))

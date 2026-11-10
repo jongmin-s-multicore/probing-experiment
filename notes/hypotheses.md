@@ -346,6 +346,12 @@
 - 시점: 002 results.json 과 리뷰를 본 뒤 세운 계획이다. 따라서 이 분석은 사후 탐색이며 확증 근거로 쓰지 않는다.
 - GPU: 체크포인트 추론이 필요한 항목은 사람이 Colab 에서 실행한다. 실행 전 예상 시간과 함께 다시 확인받는다.
 
+#### 후보 J 추가 (2026-11-10, 사용자 지시): 분석 F 와 실행 승인
+- 배경(리드 종합, 추정, 분석가 리뷰 전): 004 는 한 step 안의 깊이 축을 봤고 소실이 없었다. 관측된 하락(002 rollout step 1 -> 12)은 시간 축이다. 따라서 질문 (4) 를 추가한다: rollout 하락이 매 step 의 1-step 예측 손실인가, 자기 출력을 다시 입력하며 생기는 누적인가.
+- 분석 (F) teacher-forcing 대 open-loop: 각 step t 에서 실제 인코더 latent context 로 1-step 예측한 latent(teacher-forcing)와 기존 open-loop rollout latent 에 같은 전이 probe(및 C 의 재학습 probe)를 적용해 R², MAE, 레벨별 예측 평균을 step 별로 나란히 보고한다. 같은 checkpoint, 같은 test episode, 같은 시드.
+- 지위: A-E 와 같이 탐색이다. 임계값, pass/fail 없음. 확증 근거로 쓰지 않는다.
+- 실행: 사용자가 Colab 에서 009 와 병행 실행하기로 함(2026-11-10). 이를 006 GPU 실행 승인으로 기록한다. 노트북은 009 처럼 git clone 방식(코드 임베드 없음).
+
 ### 007 진단 질문: 003 디코더 붕괴 run 의 체크포인트 검사 (2026-11-07, 사용자 승인; 가설 확정 아님)
 - 지위: 가설이 아니라 진단 질문이다. 재학습과 GPU 사용은 승인되지 않았다. 입력은 Drive 휴지통의 003 체크포인트(읽기 전용)이다. 아래 검사와 판단 기준은 결과를 보기 전에 적는다.
 - 질문: exp003_mix_adjacent_s0, exp003_single_a026_s1 의 val_img_mse_reconstructed 가 epoch 2 -> 3 에서 급등(0.0030 -> 0.0787, 0.0015 -> 0.0333)하고 디코딩 프레임이 입력과 무관해진다. 체크포인트(붕괴 run model_2/3/(4), 대조 run mix_adjacent_s1/s2, single_a026_s2 model_2/3)에서 다음 관측이 되는가.

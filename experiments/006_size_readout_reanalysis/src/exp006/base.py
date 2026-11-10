@@ -192,6 +192,20 @@ def git_info():
             "note": "if the code was unpacked from a notebook snapshot there is no .git: see snapshot_sha256"}
 
 
+def code_version():
+    """Code identity for results.json: git HEAD of the checkout that contains this experiment (None if not a git checkout) and, when the Colab notebook cloned the repo,
+    the repo URL and requested ref from EXP006_CODE_REPO_URL / EXP006_CODE_REF."""
+    def g(args):
+        try:
+            r = subprocess.run(["git", "-C", str(EXP_DIR)] + args, capture_output=True, text=True, timeout=20)
+            return r.stdout.strip() if r.returncode == 0 else None
+        except Exception:
+            return None
+    head = g(["rev-parse", "HEAD"])
+    return {"git_head": head, "git_status_dirty": (bool(g(["status", "--porcelain", "--", "."])) if head else None),
+            "repo_url": os.environ.get("EXP006_CODE_REPO_URL"), "requested_ref": os.environ.get("EXP006_CODE_REF")}
+
+
 def snapshot_sha256():
     """sha256 over the sorted (relative path, file sha256) of this experiment's code (src, run.py, config.yaml, colab/build_notebook.py)."""
     h = hashlib.sha256()

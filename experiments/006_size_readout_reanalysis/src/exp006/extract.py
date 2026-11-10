@@ -6,6 +6,9 @@ patches first; patch-level latents would be about 3.3 GB per run). Rollout code 
 002 stored: q2_cells.npz holds per-episode probe PREDICTIONS (predmean|...OUT|rollout|stepK) but not the predicted latents; the latents of the training
 rows were also never kept (q2_tmp is deleted). Everything that needs latents (B untrained, C, D, the reproduction check) therefore needs this stage.
 
+Analysis F (teacher forcing): for the same checkpoint and the same rows the trained predictor is also run ONE step ahead from the REAL encoder latent of the
+previous frame (context = z_all[:, t+k-H : t+k], target frame t+k, k = 1..horizon). Same pooling (fp16 cast, float32 patch mean). See README section 3F.
+
 Untrained predictor (README section 3): same class/hyper-parameters as the trained one (hydra.utils.instantiate(tcfg.predictor, num_patches, num_frames, dim) exactly as
 train.py init_models), weights from torch.manual_seed(seed). The input encoder (frozen DINOv2) is the original model in all variants (z_all visual part is the
 same tensor 002 used). Variant `pred_only`: action_encoder and proprio_encoder = the TRAINED ones of the run's checkpoint. Variant `pred_and_action_proprio`:
@@ -116,8 +119,28 @@ def rebuild_aux(model, z_all, acts, mods):
     return z
 
 
-def run_pass(cfg, cfg2, model, C, rows_slice, mean, std, dev, t, horizon, H, untrained, bs, label, stats=None):
-    """Rollouts for rows_slice (start, stop). untrained: None or dict {(variant, seed): modules}. Returns (trained_pooled (n,12,384), {key: (n,12,384)})."""
+def tf_feasible_steps(t, horizon, H, n_frames=13):
+    """Steps k for which a teacher-forced one-step prediction exists from the 13 cached frames: the context z_all[:, t+k-H : t+k] must exist (t+k-H >= 0)
+    and the target frame t+k must be a cached frame (t+k <= n_frames-1)."""
+    return [k for k in range(1, int(horizon) + 1) if t + k - H >= 0 and t + k <= n_frames - 1]
+
+
+def teacher_forced(model, z_all, t, horizon, H):
+    """One-step predictions from REAL encoder latents: step k predicts frame t+k from z_all[:, t+k-H : t+k] (the real, encoded context frames, whose action part is
+    the action embedding of that frame, the same one the open-loop rollout writes back with replace_actions_from_z). Returns visual part (B, horizon, 196, 384).
+    Mirrors exp002 model_io.rollout except that the context is never replaced by the model's own output."""
+    import torch
+    from exp002 import model_io as M
+    preds = []
+    for k in range(1, horizon + 1):
+        zp = model.predict(z_all[:, t + k - H: t + k])
+        preds.append(zp[:, -1:, :, :M.D_VIS].clone())
+    return torch.cat(preds, 1)
+
+
+def run_pass(cfg, cfg2, model, C, rows_slice, mean, std, dev, t, horizon, H, untrained, bs, label, stats=None, teacher=True, diag=None):
+    """Rollouts for rows_slice (start, stop). untrained: None or dict {(variant, seed): modules}. teacher: also the teacher-forced one-step predictions (F).
+    Returns (trained_pooled (n,12,384), {key: (n,12,384)}, teacher_forced_pooled (n,12,384) or None). diag (dict) receives the max |teacher step 1 - open-loop step 1| of the first batch."""
     import torch
     from exp002 import model_io as M
     from exp002 import probes as PR
@@ -125,6 +148,7 @@ def run_pass(cfg, cfg2, model, C, rows_slice, mean, std, dev, t, horizon, H, unt
     n = stop - start
     out_t = np.zeros((n, horizon, M.D_VIS), np.float32)
     out_u = {k: np.zeros((n, horizon, M.D_VIS), np.float32) for k in (untrained or {})}
+    out_tf = np.zeros((n, horizon, M.D_VIS), np.float32) if teacher else None
     t0 = time.time()
     for s in range(start, stop, bs):
         sl = slice(s, min(stop, s + bs))
@@ -136,6 +160,11 @@ def run_pass(cfg, cfg2, model, C, rows_slice, mean, std, dev, t, horizon, H, unt
             z_all = M.encode_batch(model, x, acts)
             r = M.rollout(model, z_all, acts, t, horizon, H)                       # (B, horizon, 196, 384), float32
             out_t[sl.start - start: sl.stop - start] = PR.pool(r.half().cpu().numpy())     # same cast + pooling as exp002 (fp16 rollout memmap, probes.pool)
+            if teacher:
+                rt = teacher_forced(model, z_all, t, horizon, H)
+                out_tf[sl.start - start: sl.stop - start] = PR.pool(rt.half().cpu().numpy())
+                if diag is not None and "tf_step1_vs_open_loop_step1_max_abs_diff" not in diag:
+                    diag["tf_step1_vs_open_loop_step1_max_abs_diff"] = float((rt[:, 0] - r[:, 0]).abs().max())
             if untrained:
                 if s == start and label == "test":
                     z_chk = rebuild_aux(model, z_all, acts, {})
@@ -152,7 +181,7 @@ def run_pass(cfg, cfg2, model, C, rows_slice, mean, std, dev, t, horizon, H, unt
             stats.setdefault(label, []).append(time.time() - tb)
         if ((s - start) // bs) % 20 == 0:
             log("extract %s %d/%d (%.0fs)" % (label, sl.stop - start, n, time.time() - t0))
-    return out_t, out_u
+    return out_t, out_u, out_tf
 
 
 def build_untrained(cfg, factory, model, variants, seeds):
@@ -172,7 +201,10 @@ def extract_run(cfg, cfg2, paths, run, dev, C, factory=None, max_rows=None, out_
     from exp002 import model_io as M
     out_dir = Path(out_dir) if out_dir else paths["extract"] / run
     done = out_dir / "DONE"
-    if write and done.exists():
+    use_tf = bool(cfg["extract"].get("teacher_forcing", True))
+    if write and done.exists() and use_tf and not (out_dir / "teacher_forced_pooled.npy").exists():
+        log("extract %s: DONE marker exists but teacher_forced_pooled.npy (analysis F) is missing -> extraction is redone" % run)
+    elif write and done.exists():
         log("extract %s: DONE marker exists, skip" % run)
         return {"run": run, "skipped": True}
     rdir = paths["train_outputs"] / run
@@ -206,26 +238,36 @@ def extract_run(cfg, cfg2, paths, run, dev, C, factory=None, max_rows=None, out_
     if dev.type == "cuda":
         torch.cuda.reset_peak_memory_stats()
     t0 = time.time()
-    tr_roll, _ = run_pass(cfg, cfg2, model, C, (0, tr_stop), mean, std, dev, t, horizon, H, None, bs, "train", smoke_stats)
-    te_roll, te_unt = run_pass(cfg, cfg2, model, C, (Etr, te_stop), mean, std, dev, t, horizon, H, untrained, bs, "test", smoke_stats)
+    tf_steps = tf_feasible_steps(t, horizon, H)
+    if tf_steps != list(range(1, horizon + 1)):
+        log("WARNING teacher forcing is possible only for steps %s of 1..%d (cached frames: 13)" % (tf_steps, horizon))
+    diag = {}
+    tr_roll, _, tr_tf = run_pass(cfg, cfg2, model, C, (0, tr_stop), mean, std, dev, t, horizon, H, None, bs, "train", smoke_stats, teacher=use_tf, diag=diag)
+    te_roll, te_unt, te_tf = run_pass(cfg, cfg2, model, C, (Etr, te_stop), mean, std, dev, t, horizon, H, untrained, bs, "test", smoke_stats, teacher=use_tf, diag=diag)
+    if use_tf:
+        log("teacher forcing: step 1 vs open-loop step 1 max |diff| (first train batch) = %s" % diag.get("tf_step1_vs_open_loop_step1_max_abs_diff"))
     elapsed = time.time() - t0
     peak = float(torch.cuda.max_memory_allocated()) / 2 ** 30 if dev.type == "cuda" else None
     meta = {"run": run, "epoch": ep, "encoder_fingerprint": fp, "num_hist": H, "t": t, "horizon": horizon, "normalize_action": norm,
             "action_mean": mean.tolist(), "action_std": std.tolist(), "n_train_rows": tr_stop, "n_test_rows": te_stop - Etr, "batch_episodes": bs,
             "checkpoint_bytes": ck.stat().st_size, "untrained": [{"variant": k[0], "seed": k[1]} for k in untrained], "elapsed_s": elapsed,
             "peak_cuda_mem_gib": peak, "pooled": "mean over the 196 patches of the fp16-cast rollout latent (visual 384 dims), as exp002 probes.pool",
-            "device": str(dev), "finished": time.strftime("%F %T")}
+            "device": str(dev), "finished": time.strftime("%F %T"),
+            "teacher_forced": {"enabled": use_tf, "steps_available": tf_steps if use_tf else [], "context": "z_all[:, t+k-H : t+k] (real encoder latents of the cached frames); target frame t+k",
+                               "rows": "same rows as the open-loop rollout (probe-training rows first, then test rows)", "file": "teacher_forced_pooled.npy", **diag}}
     if write:
         meta["checkpoint_sha256"] = B.sha256_file(ck)
-        write_run_outputs(paths, out_dir, tr_roll, te_roll, te_unt, meta)
-    return {"run": run, "meta": meta, "tr_roll": tr_roll, "te_roll": te_roll, "te_unt": te_unt}
+        write_run_outputs(paths, out_dir, tr_roll, te_roll, te_unt, meta, tr_tf, te_tf)
+    return {"run": run, "meta": meta, "tr_roll": tr_roll, "te_roll": te_roll, "te_unt": te_unt, "tr_tf": tr_tf, "te_tf": te_tf}
 
 
-def write_run_outputs(paths, out_dir, tr_roll, te_roll, te_unt, meta):
+def write_run_outputs(paths, out_dir, tr_roll, te_roll, te_unt, meta, tr_tf=None, te_tf=None):
     """Checked writes (read-back) of one run's extraction; the DONE marker is written last, so an interrupted run is redone."""
     out_dir = Path(out_dir)
     B.probe_output_dir(paths)
     B.write_npy(paths, out_dir / "rollout_pooled.npy", np.concatenate([tr_roll, te_roll], 0))
+    if tr_tf is not None and te_tf is not None:
+        B.write_npy(paths, out_dir / "teacher_forced_pooled.npy", np.concatenate([tr_tf, te_tf], 0))
     for (v, sd), arr in te_unt.items():
         B.write_npy(paths, out_dir / ("untrained_%s_s%d.npy" % (v, sd)), arr)
     B.write_json(paths, meta, out_dir / "meta.json")

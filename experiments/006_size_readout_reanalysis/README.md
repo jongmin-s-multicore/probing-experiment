@@ -1,11 +1,11 @@
 # 실험 설명: 006_size_readout_reanalysis
 
-- 상태: **코드와 Colab 노트북 작성 완료, 합성 데이터 CPU selftest 통과(8절). GPU 실행, Colab 접근, git commit/push 는 하지 않았다. 이 문서에 실험 결과 수치는 없다.** (8절의 selftest 숫자는 합성 데이터의 코드 점검이며 결과가 아니다.)
+- 상태: **분석 F(teacher forcing 대 open-loop) 추가와 Colab 노트북(git clone 방식) 재작성 완료(2026-11-10), 합성 데이터 CPU selftest 통과(8절). GPU 실행, Colab 접근, git commit/push 는 하지 않았다. 이 문서에 실험 결과 수치는 없다.** (8절의 selftest 숫자는 합성 데이터의 코드 점검이며 결과가 아니다.) 사용자가 Colab 에서 009 와 병행 실행하기로 했고 이를 GPU 실행 승인으로 기록했다(notes/hypotheses.md 후보 J 추가, 2026-11-10). 노트북은 공개 저장소를 clone 하므로 **이 변경을 commit/push 해야 Colab 에 반영된다.**
 - 검증할 가설: 없음(탐색). notes/hypotheses.md 의 "후보 J / 실험 006" 을 그대로 따른다. 002 의 판정과 임계값은 바꾸지 않는다. 사용자가 2026-11-05 재분석 진행을 지시했다. 이 분석은 002 결과와 리뷰를 본 뒤 세운 사후 탐색이다(확증 근거로 쓰지 않는다).
-- 질문(hypotheses.md 후보 J 목적): (1) rollout R² 하락이 크기 정보 소실인가 판독기 전이 실패인가, (2) 예측이 특정 크기로 몰리는가, (3) 하락이 크기 특이적인가.
-- 방법: 002 의 6개 체크포인트(조건 (a) `single_ind`, (b) `multi_60_ind_160` x 학습 시드 0,1,2)와 002 캐시/결과를 읽기 전용으로 쓰고, 분석 A-E 를 계산한다. 새 학습 없음. 주 타깃 `log_nominal_area_ratio`, 002 와 같은 test episode(9 레벨 x 100), 002 와 같은 Q1 linear probe 경로(`probes.linear_fit_predict`, `evalgrid.fit_apply_cells`).
-- 성공 기준: **없다.** 임계값, pass/fail, p 값 기반 유의성 주장을 A-E 어디에도 만들지 않는다. results.json 의 `interpretation` 은 null. 코드가 하는 일의 정확성만 selftest 로 점검한다(알려진 답을 복구하는지).
-- **이 실험으로 내가 주장하려는 것**(확정 전 초안, 해석은 분석가 리뷰 몫): 002 의 output-space rollout 측정을 같은 코드 경로로 재현했을 때의 차이(재현 차이)와, 그 위에서 (A) 레벨별 전이 probe 예측값 평균/기울기/절편/MAE 가 step 1-12 에서 어떤 값이었는지, (B) persistence 와 학습 안 한 predictor 의 같은 R² 가 얼마였는지, (C) 예측 latent 로 재학습한 probe 의 R² 가 전이 probe 의 R² 와 어떻게 달랐는지, (D) 크기와 무관한 속성의 같은 R² vs step 이 어땠는지, (E) 시드 단위 평균/SD/t 기반 95% CI(n=3, df=2)가 얼마였는지, 를 **수치로 보고**하는 것. 원인(정보 소실, 판독기 전이 실패, 압축 등)에 대한 주장은 하지 않는다.
+- 질문(hypotheses.md 후보 J 목적): (1) rollout R² 하락이 크기 정보 소실인가 판독기 전이 실패인가, (2) 예측이 특정 크기로 몰리는가, (3) 하락이 크기 특이적인가. **(4) (2026-11-10 추가) rollout 하락이 매 step 의 1-step 예측 손실인가, 자기 출력을 다시 입력하며 생기는 누적인가**(분석 F).
+- 방법: 002 의 6개 체크포인트(조건 (a) `single_ind`, (b) `multi_60_ind_160` x 학습 시드 0,1,2)와 002 캐시/결과를 읽기 전용으로 쓰고, 분석 A-F 를 계산한다. 새 학습 없음. 주 타깃 `log_nominal_area_ratio`, 002 와 같은 test episode(9 레벨 x 100), 002 와 같은 Q1 linear probe 경로(`probes.linear_fit_predict`, `evalgrid.fit_apply_cells`).
+- 성공 기준: **없다.** 임계값, pass/fail, p 값 기반 유의성 주장을 A-F 어디에도 만들지 않는다. results.json 의 `interpretation` 은 null. 코드가 하는 일의 정확성만 selftest 로 점검한다(알려진 답을 복구하는지).
+- **이 실험으로 내가 주장하려는 것**(확정 전 초안, 해석은 분석가 리뷰 몫): 002 의 output-space rollout 측정을 같은 코드 경로로 재현했을 때의 차이(재현 차이)와, 그 위에서 (A) 레벨별 전이 probe 예측값 평균/기울기/절편/MAE 가 step 1-12 에서 어떤 값이었는지, (B) persistence 와 학습 안 한 predictor 의 같은 R² 가 얼마였는지, (C) 예측 latent 로 재학습한 probe 의 R² 가 전이 probe 의 R² 와 어떻게 달랐는지, (D) 크기와 무관한 속성의 같은 R² vs step 이 어땠는지, (E) 시드 단위 평균/SD/t 기반 95% CI(n=3, df=2)가 얼마였는지, (F) 같은 체크포인트/episode 에서 실제 인코더 latent 를 context 로 한 1-step 예측(teacher forcing)과 open-loop rollout latent 에 같은 전이 probe 와 재학습 probe 를 적용했을 때 step 별 R², MAE, 레벨별 예측 평균(기울기/절편)이 각각 얼마였는지, 를 **수치로 보고**하는 것. 원인(정보 소실, 판독기 전이 실패, 압축 등)에 대한 주장은 하지 않는다.
 
 ## 1. 구조
 
@@ -13,9 +13,9 @@
 experiments/006_size_readout_reanalysis/
   config.yaml      모든 시드(전역, probe, untrained predictor, bootstrap, retrain probe), 입력 경로 환경변수, rollout horizon 12,
                    002 config/results.json/requirements sha256, 입력 파일 기대 크기/sha 자리(inputs.expect)
-  run.py           단계 CLI: check selftest data_meta extract pool labels transfer repro analyze_a..analyze_e aggregate figures (+ cpu_all)
-  src/exp006/      base(경로, 읽기 전용 guard, 검증되는 쓰기, 재시도 3회) lib(numpy 통계) ctx(입력 로드) extract(GPU) stages_pre stages_an stages_agg figs selftest
-  colab/           build_notebook.py -> exp006_colab.ipynb (코드 스냅샷 내장)
+  run.py           단계 CLI: check selftest data_meta extract pool labels transfer repro analyze_a..analyze_f aggregate figures (+ cpu_all)
+  src/exp006/      base(경로, 읽기 전용 guard, 검증되는 쓰기, 재시도 3회) lib(numpy 통계) ctx(입력 로드) extract(GPU) stages_pre stages_an stages_f(분석 F) stages_agg figs selftest
+  colab/           build_notebook.py -> exp006_colab.ipynb (코드 임베드 없음: 공개 저장소 git clone + REPO_REF checkout + HEAD 해시 기록)
   analysis/        make_figures.py, fig*.png (aggregate 후 생성)
   logs/            단계별 로그
   results.json     aggregate 가 생성 (실험 폴더와 WORK_ROOT 둘 다)
@@ -37,22 +37,22 @@ experiments/006_size_readout_reanalysis/
 | `train_runs/outputs/<run>/` | `checkpoints/model_latest.pth`, `hydra.yaml`, `train_manifest.json`, `DONE` | extract |
 | `cloth_sim_data.tar` | 데이터 아카이브(`cloth_sim/<split>/...`) | data_meta 가 `metadata.pt` 만 스트리밍으로 읽는다(행동 정규화 통계용) |
 
-**저장되지 않아 추론을 다시 돌려야 얻는 값**(`extract` 단계, GPU): 예측 latent 자체. 002 의 `q2_tmp_<run>/roll.npy` 는 학습 행과 test 행 모두를 rollout 했지만 `keep_tmp: false` 로 삭제됐다. 따라서 **B 의 untrained predictor, C 의 재학습 probe(학습 episode 의 rollout), D 의 rollout 측정, 재현 점검의 rollout 부분**이 추론을 필요로 한다. **A 와 E, B 의 persistence/천장, 재현 점검의 인코더 부분은 추론이 필요 없다**(A 는 저장된 predmean, B 의 persistence 는 캐시 토큰 + 같은 probe 재학습).
+**저장되지 않아 추론을 다시 돌려야 얻는 값**(`extract` 단계, GPU): 예측 latent 자체. 002 의 `q2_tmp_<run>/roll.npy` 는 학습 행과 test 행 모두를 rollout 했지만 `keep_tmp: false` 로 삭제됐다. 따라서 **B 의 untrained predictor, C 의 재학습 probe(학습 episode 의 rollout), D 의 rollout 측정, 재현 점검의 rollout 부분**이 추론을 필요로 한다. **F 의 teacher-forced latent 도 추론이 필요하다**(002 는 저장한 적이 없다). **A 와 E, B 의 persistence/천장, 재현 점검의 인코더 부분은 추론이 필요 없다**(A 는 저장된 predmean, B 의 persistence 는 캐시 토큰 + 같은 probe 재학습).
 
-저장 형식: 추출은 패치 평균 풀링된 latent `(E,12,384)` float32 만 저장한다(`linear_pooled` 가 패치 평균 후 ridge 이므로 같은 값이다; 패치 단위 latent 는 run 당 약 3.3 GB 라 저장하지 않는다). 풀링은 002 와 같은 순서(rollout 을 fp16 으로 캐스트한 뒤 `probes.pool` 의 float32 평균)로 한다. 한계: attentive probe 는 이 형식으로 쓸 수 없다(쓰지 않는다).
+저장 형식: 추출은 패치 평균 풀링된 latent `(E,12,384)` float32 만 저장한다(open-loop `rollout_pooled.npy`, teacher-forced `teacher_forced_pooled.npy`, untrained 6종)(`linear_pooled` 가 패치 평균 후 ridge 이므로 같은 값이다; 패치 단위 latent 는 run 당 약 3.3 GB 라 저장하지 않는다). 풀링은 002 와 같은 순서(rollout 을 fp16 으로 캐스트한 뒤 `probes.pool` 의 float32 평균)로 하고 teacher-forced latent 도 같은 순서다. 한계: attentive probe 는 이 형식으로 쓸 수 없다(쓰지 않는다).
 
 ## 3. 단계와 정의
 
 | 단계 | 하는 일 | GPU |
 |---|---|---|
-| `check` | 환경, 경로, 입력 파일 존재/크기/sha256(작은 파일, `--hash` 면 전부), 002 config sha 대조, 고정 commit 체크아웃/`train.py` 상태, 모델 로드 호환 사실. 읽기만, `input_manifest.json` 기록 | 불필요 |
+| `check` | 환경, 경로, 입력 파일 존재/크기/sha256(작은 파일, `--hash` 면 전부), 002 config sha 대조, 고정 commit 체크아웃/`train.py` 상태, 모델 로드 호환 사실, 학습 split 의 `metadata.pt` 존재(사전 점검 사실). 읽기만, `input_manifest.json` 기록 | 불필요 |
 | `selftest` | 합성 데이터 CPU 점검(8절) | 불필요 |
 | `data_meta` | 002 아카이브(읽기 전용)에서 학습 split 의 `metadata.pt` 만 로컬로 꺼냄 + 필드 목록 기록 | 불필요 |
-| `extract` | 체크포인트별 rollout(학습된 predictor, 학습 안 한 predictor 6종)을 002 의 캐시 프레임으로 재계산. 단계별 `DONE` 마커, 재개 가능. `--smoke` 는 메모리/시간만 측정 | 필요 |
+| `extract` | 체크포인트별 rollout(학습된 predictor open-loop, **teacher-forced 1-step(F)**, 학습 안 한 predictor 6종)을 002 의 캐시 프레임으로 재계산. 단계별 `DONE` 마커, 재개 가능(DONE 이 있어도 `teacher_forced_pooled.npy` 가 없으면 다시 계산). 시작 전 `metadata.pt` 사전 점검(없으면 종료코드 4, 시도 횟수 소모 없음). `--smoke` 는 메모리/시간만 측정 | 필요 |
 | `pool`, `labels` | 캐시 토큰 패치 평균, D 의 속성 라벨 | 불필요 |
-| `transfer` | 002 와 같은 함수 `evalgrid.fit_apply_cells` 로 Q1 probe 를 인코더 토큰에서만 한 번 학습하고 인코더/persistence/rollout/untrained 집합 528개에 적용 | 불필요 |
+| `transfer` | 002 와 같은 함수 `evalgrid.fit_apply_cells` 로 Q1 probe 를 인코더 토큰에서만 한 번 학습하고 인코더/persistence/rollout/untrained 집합 528개와 teacher-forced 집합 72개(6 run x 12 step)에 적용 | 불필요 |
 | `repro` | 002 저장값과의 차이 보고(허용오차 없음) | 불필요 |
-| `analyze_a` .. `analyze_e` | 분석 A-E | 불필요 |
+| `analyze_a` .. `analyze_f` | 분석 A-F | 불필요 |
 | `aggregate`, `figures` | results.json(실험 폴더와 `WORK_ROOT/results/results.json`), PNG | 불필요 |
 
 모든 단계는 `--dry-run`(계획만, 아무것도 쓰지 않음)을 지원한다. 모든 단계는 최대 3회(config `run.max_attempts`) 시도하고 3회 실패하면 멈추며(`run.py` 종료코드 3), 안전 중단(읽기 전용 폴더 쓰기 시도)은 재시도하지 않는다(종료코드 4).
@@ -89,6 +89,16 @@ experiments/006_size_readout_reanalysis/
 - 002 `q2_cells.npz`(Drive)로 step 1-12 의 R²(인코더, rollout), 하락 `drop = R²(인코더 step k) - R²(rollout step k)`, MAE, 순서 정확도(`stats.pair_order_accuracy`, 점추정)를 시드별로 계산하고, 002 `results.json` 값(그리드, 판정 표 H_b/cond_a_vs_b 의 시드별 ceiling/q2/drop)과의 차이도 `consistency_with_results002_json` 에 보고한다.
 - step 12 가 중심이지만 모든 step 이 저장된다.
 
+### F. teacher forcing 대 open-loop (2026-11-10 추가)
+- 질문(리드 종합, 추정, 분석가 리뷰 전): rollout 하락이 매 step 의 1-step 예측 손실인가, 자기 출력을 다시 입력하며 생기는 누적인가. 004 는 한 step 안의 깊이 축을 봤고 F 는 시간 축이다.
+- 두 latent(같은 체크포인트 6개, 같은 행, 같은 풀링 형식/순서 = fp16 캐스트 후 float32 패치 평균):
+  - `open_loop`: 기존 rollout step k 의 latent. predictor 가 자기 이전 출력을 context 로 쓴다.
+  - `teacher_forced`: step k 에서 **실제 인코더 latent** `z_all[:, t+k-H : t+k]` 로 predictor 를 한 번 호출해 얻은 프레임 `t+k` 의 예측(visual 384 차원). 이 저장소에서 `num_hist = H = 1`, `t = 0` 이므로 context 는 실제 프레임 `k-1` 한 장이다. 구현은 `extract.teacher_forced` (002 `model_io.rollout` 과 같은 `model.predict` 호출이고, 호출마다 context 를 실제 latent 로 대체하는 점만 다르다).
+- **가능한 step 범위(코드로 확인)**: `extract.tf_feasible_steps(t, horizon, H, n_frames=13)` 는 context 프레임 `t+k-H >= 0` 과 목표 프레임 `t+k <= 12`(002 캐시는 프레임 0..12 의 13장)를 요구한다. `t=0, H=1, horizon=12` 에서 **step 1..12 전부 가능**하다(context 프레임 0..11, 목표 프레임 1..12). 불가능한 step 은 없다. `H=2` 라면 step 1 이 불가능하다(selftest 가 확인). `extract` 가 가능한 step 목록을 `meta.json` 의 `teacher_forced.steps_available` 에 기록하고 results.json `F.teacher_forcing_steps_available` 로 옮긴다.
+- action/proprio 입력: action 부분은 open-loop 와 같은 행동 임베딩이다(`z_all` 의 프레임 `k-1` 에 이미 들어 있는 행동 `k-1` 의 임베딩 = open-loop 가 매 step `replace_actions_from_z` 로 새로 쓰는 값). proprio 부분은 teacher-forced 에서는 실제 인코딩 값(proprio 입력은 0 자리표시자)이고 open-loop 에서는 predictor 가 예측해 되먹임한 값이다. 이 차이는 teacher forcing 정의에 따른 사실이며 `limitations` 에 기록한다. step 1 은 두 경로가 같은 연산이다(`meta.json` 에 첫 배치의 최대 절대 차이를 `tf_step1_vs_open_loop_step1_max_abs_diff` 로, results.json 에 전 행의 차이를 `latent_identity_step1_max_abs_diff_all_rows` 로 기록).
+- 학습 episode: C 의 재학습 probe 를 위해 open-loop 와 같은 범위(probe-training 900행 + test 900행, 1800 episode)를 처리한다. 재학습 probe 는 각 latent 종류로 따로 학습한다(teacher-forced 학습 행으로 학습해 teacher-forced test 행에 적용, open-loop 도 같음).
+- `analyze_f` 가 하는 일: 6 run x {`transfer`, `retrained`} x {`open_loop`, `teacher_forced`} 의 step 1-12 별 R², MAE(역할 `unseen`/`trained`/`all`, `unseen`/`trained` 는 에피소드 bootstrap CI), 레벨별(9) 예측 평균/편향/MAE, 역할별 episode 단위 OLS 기울기와 절편, 레벨 평균 기울기/절편, 평균 편향. `tf_minus_ol`(teacher forced 값 - open loop 값)도 같은 항목으로 저장. 인코더 토큰(천장)의 같은 두 판독기 값을 `encoder_reference` 에 둔다. 시드 단위 요약(`seed_summary`, 조건별 n=3 학습 시드: 평균/SD/t CI, 7절 식)과 (a)-(b) 차이(`a_minus_b`, welch 와 paired_by_seed_index 병기; R² unseen/trained, MAE unseen, 기울기/절편 unseen). 시드별 평균 예측은 `results/F_per_episode_mean_pred.npz`. 새 시드 없음(기존 `seeds.probe`, `seeds.retrain_probe`, `seeds.bootstrap`). 임계값, pass/fail, p 값 없음. `interpretation` 은 null.
+
 ## 4. 모델 로드 호환성 (고정 commit 5a640bed 와 002 패치)
 - `model_io.load_world_model` 은 `torch.load(model_latest.pth, weights_only=False)` 로 `predictor, decoder, proprio_encoder, action_encoder`(그리고 있으면 `encoder`)를 읽고, 없으면 `hydra.yaml` 의 `cfg.encoder` 를 `hydra.utils.instantiate` 한다(DINOv2 torch.hub 다운로드, 인터넷 필요). `train.py` 를 import 하지 않는다(`run.py check` 와 selftest 가 소스에서 확인).
 - 따라서 **고정 commit 의 모델 클래스(`models.*`, `datasets.*`; unpickle 과 hydra target)는 필요하고, 002 패치(`colab/train_resume.patch`, sha256 52eb0052...)는 로드에 필요하지 않다**(패치는 `train.py` 의 optimizer state_dict 저장과 재개 로직만 바꾼다. 패치 후 체크포인트의 optimizer 항목은 `model_io` 가 읽지 않는다). 노트북은 패치를 적용하지 않고 고정 commit 만 체크아웃한다. 이것은 소스 읽기로 얻은 결론이며 실제 체크포인트 로드는 Colab 에서 확인해야 한다(미검증).
@@ -104,9 +114,9 @@ experiments/006_size_readout_reanalysis/
 - 학습 안 한 predictor 의 결과는 초기화에 의존한다. 변형 2 x 시드 3 개를 따로 보고하고, 시드 요약은 untrained 시드 평균 후 학습 시드(run) 간 요약이다.
 
 ## 6. 예상 시간과 자원 (모두 **추정**, 측정 없음. smoke 가 첫 단계로 측정한다)
-- 근거(산술): predictor 약 20M 파라미터(깊이 6, dim 404, mlp 2048, heads 16 x 64) 이므로 한 번의 rollout 한 배치(episode 8 x 12 step x 토큰 196) 약 0.75 TFLOP. run 당 학습된 rollout 1800 episode(225 배치) + untrained 6종 x 900 episode(113 배치) + DINOv2 ViT-S/14 인코딩 약 23,400 프레임으로 약 950 TFLOP, fp32 유효 처리량을 10-30 TFLOPS 로 가정하면 run 당 약 0.5-2 분의 연산 + 로드/데이터 읽기 시간. Drive 읽기(frames_u8 3.5 GB 를 episode 순서로 읽음)와 체크포인트 로드가 지배할 수 있다.
-- 따라서 6 run 합계는 **약 0.3-1.5 GPU 시간(추정, 범위가 넓음)**, GPU 메모리는 배치 8 에서 **약 3-6 GB 이하(추정)**, CPU RAM 은 풀링 결과와 memmap 읽기만이라 수 GB 이하. 출력 용량 약 0.8 GB(`extract/`), `cache/` 약 0.1 GB.
-- CPU 단계(전부 Colab CPU 로도 가능): pool/labels 는 Drive 에서 3.5 GB 씩 읽어 수 분(추정), transfer/analyze 는 합쳐 수 분-십수 분(추정; ridge 적합 수백 회 + bootstrap).
+- 근거(산술): predictor 약 20M 파라미터(깊이 6, dim 404, mlp 2048, heads 16 x 64) 이므로 한 번의 rollout 한 배치(episode 8 x 12 step x 토큰 196) 약 0.75 TFLOP. A-E 만의 run 당 연산: 학습된 rollout 1800 episode(225 배치) + untrained 6종 x 900 episode(113 배치) + DINOv2 ViT-S/14 인코딩 약 23,400 프레임으로 약 950 TFLOP. **F 추가분**: teacher-forced 1-step 12회를 1800 episode 에 더 돌린다(open-loop rollout 1800 episode 와 같은 횟수의 predictor 호출, 인코더는 재사용) = 225 배치 x 0.75 = 약 170 TFLOP, 즉 run 당 약 18% 증가(약 1,120 TFLOP). fp32 유효 처리량을 10-30 TFLOPS 로 가정하면 run 당 약 0.6-2 분의 연산 + 로드/데이터 읽기 시간. Drive 읽기(frames_u8 3.5 GB 를 episode 순서로 읽음)와 체크포인트 로드가 지배할 수 있다.
+- 따라서 6 run 합계는 **약 0.35-1.8 GPU 시간(추정, 범위가 넓음; A-E 만이던 이전 추정 0.3-1.5 시간 + F 약 18%)**, GPU 메모리는 배치 8 에서 **약 3-6 GB 이하(추정; F 는 같은 `z_all` 에서 한 step 씩 계산하므로 추가 메모리 거의 없음)**, CPU RAM 은 풀링 결과와 memmap 읽기만이라 수 GB 이하. 출력 용량 약 0.9 GB(`extract/`; F 가 run 당 (1800,12,384) float32 약 33 MB 추가), `cache/` 약 0.1 GB.
+- CPU 단계(전부 Colab CPU 로도 가능): pool/labels 는 Drive 에서 3.5 GB 씩 읽어 수 분(추정), transfer/analyze 는 합쳐 수 분-십수 분(추정; ridge 적합 수백 회 + bootstrap). `analyze_f` 는 C 와 같은 종류의 작업(재학습 ridge 적합 6 run x 12 step x 5 시드 x 2 latent + 인코더 기준 + 에피소드 bootstrap)이라 C 의 약 2배 시간으로 추정(추정, 측정 없음).
 - 사람이 Colab 런타임 유형을 선택한다. GPU 는 9-10번 셀(smoke, extract)에만 필요하다.
 
 ## 7. 계산식 (시드 단위 보고, `lib.py`)
@@ -119,11 +129,12 @@ experiments/006_size_readout_reanalysis/
 
 ## 8. 검증 (CPU, 합성 데이터; 합성 수치는 결과가 아니다)
 - 환경: 저장소 밖 임시 conda 환경(Python 3.9.23, numpy 1.26.4, scipy, matplotlib, torch 2.0.1+cpu), `python run.py selftest`.
-- 확인하는 것: persistence 예측 == 인코더 토큰 복사에 002 경로를 적용한 값(모든 step), 인코더 step 집합 == 해당 프레임 토큰 적용, 재학습 probe 의 ridge 호출이 학습 행만 받음 + test 를 무작위/NaN 으로 바꿔도 alpha/적합 동일, 알려진 기울기/절편 복구(0.5/0.3), 알려진 축소 비율(0.8/0.5)이 A 의 기울기 비로 복구, 레벨 라벨 정렬(test 행을 섞어도 레벨 인덱스로 정렬, 한 레벨만 이동한 편향이 그 인덱스에만 나타남), 시드 단위 평균/SD/CI 가 손 계산과 일치, t 분위수 scipy 일치, Welch CI scipy 일치, 재현 점검이 동일 입력에서 차이 ~0 이고 추출을 교란하면 차이를 보고, 002 저장 형식(`q2.output_space`)과 같은 형식의 가짜 Drive 폴더에서 A-E/aggregate/figures 가 끝까지 도는지, 읽기 전용 입력 폴더/001/002/003 폴더 쓰기 거부, 쓸 수 없는 출력 폴더의 명확한 실패, 3회 재시도 후 중단, toy torch 모델로 추출 경로(002 `model_io.rollout` 참조 구현과 일치, untrained 변형/시드/구조 검사, `rebuild_aux`), `--dry-run` 14개 단계, Python 3.9 문법, 노트북 JSON/셀 컴파일, 001/002/003 파일 크기+mtime 불변.
+- 확인하는 것: persistence 예측 == 인코더 토큰 복사에 002 경로를 적용한 값(모든 step), 인코더 step 집합 == 해당 프레임 토큰 적용, 재학습 probe 의 ridge 호출이 학습 행만 받음 + test 를 무작위/NaN 으로 바꿔도 alpha/적합 동일, 알려진 기울기/절편 복구(0.5/0.3), 알려진 축소 비율(0.8/0.5)이 A 의 기울기 비로 복구, 레벨 라벨 정렬(test 행을 섞어도 레벨 인덱스로 정렬, 한 레벨만 이동한 편향이 그 인덱스에만 나타남), 시드 단위 평균/SD/CI 가 손 계산과 일치, t 분위수 scipy 일치, Welch CI scipy 일치, 재현 점검이 동일 입력에서 차이 ~0 이고 추출을 교란하면 차이를 보고, 002 저장 형식(`q2.output_space`)과 같은 형식의 가짜 Drive 폴더에서 A-E/aggregate/figures 가 끝까지 도는지, 읽기 전용 입력 폴더/001/002/003 폴더 쓰기 거부, 쓸 수 없는 출력 폴더의 명확한 실패, 3회 재시도 후 중단, toy torch 모델로 추출 경로(002 `model_io.rollout` 참조 구현과 일치, untrained 변형/시드/구조 검사, `rebuild_aux`), `--dry-run` 15개 단계, Python 3.9 문법, 노트북 JSON/셀 컴파일(코드 임베드 없음, 크기, 문자열 상수 길이, git clone/REPO_REF/HEAD 기록 문구, 009 출력 폴더명 미사용), 001/002/003 파일 크기+mtime 불변. **분석 F 추가분**: toy torch 모델에서 teacher-forced latent == `predict(z_all[:, k-1:k])` 참조 구현(12 step), step 1 이 open-loop 와 같음, `tf_feasible_steps`(H=1 -> 1..12, H=2 -> 2..12, horizon 13 -> 1..12), 램프 프레임에서 `x + 1.5 d` predictor 의 teacher-forcing 오차는 step 에 무관하고 open-loop 오차는 k 에 비례, 합성 latent 에서 알려진 축소(teacher forced 0.8 고정, open loop 0.8^k)가 F 의 기울기 비로 복구, `tf_minus_ol` 손 계산 일치, F 의 모든 ridge 적합이 학습 행만 받음, 시드 단위 평균/SD/CI 손 계산 일치, `teacher_forced_pooled.npy` 누락 시 명확한 오류, DONE 마커만 있고 TF 파일이 없으면 extract 를 다시 함, `metadata.pt` 사전 점검, results.json `F`/`code_version`.
 - 결과: 아래 "검증 기록" 참조(마지막 실행 기준).
 
 ### 검증 기록
-- 마지막 실행(합성 데이터, Python 3.9.23 / numpy 1.26.4 / torch 2.0.1+cpu): **PASS 92, FAIL 0, SKIP 0** (`python run.py selftest`, 약 6.5 분; 대부분 합성 Drive 폴더 생성과 파이프라인 시간).
+- 마지막 실행(2026-11-10, 분석 F 추가 후; 합성 데이터, Python 3.9.25 / numpy 1.26.4 / scipy 1.12.0 / torch 2.0.1+cpu, 저장소 밖 임시 venv): **PASS 117, FAIL 0, SKIP 0** (`python run.py selftest`, 약 10 분: t_pipeline 553 초). 같은 환경에서 F 추가 전 코드 복사본은 PASS 92, FAIL 0 이었다. `python run.py <15개 단계> --dry-run` 모두 종료코드 0.
+- 이전 기록(F 추가 전): PASS 92, FAIL 0, SKIP 0 (Python 3.9.23, 약 6.5 분).
 - 실행 이력(재시도 한도 3회 이내): 1회째 실패 3건(002 `cache.load` 가 `tokens_rand.npy` 를 요구함 -> 006 전용 로더로 교체, 테스트 오류 2건), 2회째 실패 6건(원인: 합성 테스트에서 결과 파일 탐색 순서 오류로 진짜 002 `results.json` 이 먼저 읽힘 -> 후보 경로에서 제거, `t` 상수 오기, 테스트 계산 오류 -> 수정), 3회째 85/85 통과, 이후 `data_meta`/`check` 테스트와 C 의 의미 없는 within-level 지표 제거 후 4회째 92/92 통과. 숫자는 모두 합성이다.
 - 건너뜀 0 이지만 **실행하지 못한 것**: 실제 체크포인트 로드, 실제 predictor 추출(CUDA), 실제 hydra 인자(`img_size, concat_dim, ...`) 검증, 실제 Drive 읽기/쓰기, 실제 데이터에 대한 마스크 규칙, Colab 환경 구성. toy torch 모델로는 추출 경로(002 `model_io.rollout` 과 일치, untrained 변형/시드, `rebuild_aux`)만 확인했다.
 - 경고: 합성 D 에서 bbox 중심이 상수(무작위 노이즈 마스크)라 R² 가 정의되지 않는 값이 있어 `Mean of empty slice` RuntimeWarning 이 2건 나온다(합성 인공물; 정의되지 않는 값은 results.json 에 null).
@@ -136,10 +147,13 @@ python run.py selftest
 python run.py <stage> --dry-run
 ```
 [2026-11-09] Colab 하위 프로세스에 `MPLBACKEND=Agg` 를 강제하고 그림 코드도 import 전에 Agg 로 설정(004 Colab 파일럿에서 커널의 MPLBACKEND 상속으로 aggregate 실패한 원인).
-Colab(권장): `colab/exp006_colab.ipynb` 를 새 런타임에서 위에서 아래로 실행. 입력 `MyDrive/exp002_work`(읽기 전용), 출력 `MyDrive/exp006_work`. 환경변수: `EXP006_INPUT_ROOT`, `EXP006_WORK_ROOT`, `ACWM_PHYS_SRC`, `DATASET_DIR`, `EXP006_EXP002_DIR`.
-- 셀 1-8: 환경, 코드 스냅샷(006 + 002 소스 읽기 전용 사본, 002 config sha256 대조), 고정 commit 체크아웃(패치 없음), `data_meta`, `check`, `selftest`.
-- 셀 9: **smoke 가 첫 GPU 단계**(`extract --smoke`; 한 run 의 몇 배치로 메모리/시간 추정). 읽고 나서 셀 10 의 `RUN_EXTRACT = True` 로 바꾼다(GPU 사용 확인, 기본 꺼짐).
-- 셀 11-12: CPU 분석, `aggregate`(results.json 을 실험 폴더와 `exp006_work/results/` 둘 다에), `figures`.
+
+Colab(권장, 2026-11-10 재작성): `colab/exp006_colab.ipynb` 를 새 런타임에서 위에서 아래로 실행. **코드 임베드 없음**. 셀 3 이 공개 저장소(`REPO_URL`, 기본 https://github.com/jongmin-s-multicore/probing-experiment.git)를 `/content/mylab006` 에 clone 하고 `REPO_REF`(셀 2, 기본 `master`; 브랜치/commit 해시/태그)로 checkout 해서 HEAD 해시를 출력하고 `WORK_ROOT/code_version.json` 과 results.json `code_version`(`git_head`, `git_status_dirty`, `repo_url`, `requested_ref`)에 기록한다. 노트북을 바꾸면 `python3 colab/build_notebook.py` 로 다시 만든다. 노트북 크기는 약 24 KB(이전 472 KB).
+- **사용자가 Colab 실행 전에 할 일**: (1) 이 변경(`src/exp006/*`, `run.py`, `config.yaml`, `colab/*`, `README.md`, `CHANGES.md`)을 commit 하고 `REPO_REF` 가 가리키는 브랜치에 push (clone 한 저장소의 코드를 돌리므로 push 하지 않으면 Colab 에 반영되지 않는다. 셀 3 이 `stages_f.py` 등 필요한 파일이 없으면 중단한다). 002 의 `src`, `config.yaml`, `results.json`, `colab/requirements_colab.txt` 도 같은 ref 에 있어야 한다(이미 추적 중). (2) 셀 2 의 Drive 경로 확인: `INPUT_ROOT=MyDrive/exp002_work`(읽기 전용; `train_runs/outputs/<6 run>/checkpoints/model_latest.pth`, `exp002_cache/q1_tokens/`, `results/`, `cloth_sim_data.tar`), `WORK_ROOT=MyDrive/exp006_work`(출력), `DATA_SRC`(선택). (3) 런타임: GPU 는 셀 9-10 에만 필요. 셀 10 의 `RUN_EXTRACT = False` 를 smoke 추정을 읽은 뒤 `True` 로 바꾼다.
+- 환경변수: `EXP006_INPUT_ROOT`, `EXP006_WORK_ROOT`, `ACWM_PHYS_SRC`, `DATASET_DIR`, `EXP006_EXP002_DIR`, `EXP006_CODE_REPO_URL`, `EXP006_CODE_REF`.
+- 009 와 병행: 출력 `MyDrive/exp006_work` (009 는 `exp009_work`), 로컬 `/content/mylab006`, `/content/venv006`, `/content/dinowm006` (009 는 `/content/mylab`, `/content/venv`, `/content/dinowm`). 009 의 파일(`exp045_tools.py` 등)은 import 하지 않는다. 006 의 재시도 한도(3회)는 단계 실행 안에서 세며 009 의 `attempts.json` 과 공유하지 않는다.
+- 셀 순서: 1 GPU/도구, 2 설정(Drive 마운트, 경로 점검), 3 git clone + checkout + HEAD 기록, 4 uv venv(002 requirements + matplotlib), 5 ACWM 고정 commit, 6 환경변수/로그/실행기, 7 `metadata.pt` 배치와 사전 확인(로컬 -> DATA_SRC -> 002 아카이브 순; 009 파일럿이 이 파일 누락으로 실패한 교훈) 후 `data_meta`, 8 모든 단계 `--dry-run` + `check`(metadata.pt 사전 점검 포함) + `selftest`, 9 **smoke**(`extract --smoke`; F 의 teacher-forced 계산 포함), 10 `extract`(기본 꺼짐), 11 CPU 분석(`pool, analyze_a, analyze_e` 먼저; `AFTER_EXTRACT=True` 후 `labels, transfer, repro, analyze_a, analyze_b..d, analyze_f`), 12 `aggregate`(results.json 을 실험 폴더와 `exp006_work/results/` 둘 다에), `figures`(PNG 를 `exp006_work/figures/` 에 복사), 13 Drive flush.
+- `extract` 는 시작 전에 `metadata.pt` 를 점검하고 없으면 종료코드 4 로 멈춘다(재시도 횟수 소모 없음).
 - Drive 쓰기 실패는 모든 쓰기가 쓰고 다시 읽어 검증하므로 즉시 실패한다(`OutputCheckError`). 런타임이 사라져도 `exp006_work` 에 남는다.
 
 ## 10. 한계와 알려진 위험
@@ -151,3 +165,7 @@ Colab(권장): `colab/exp006_colab.ipynb` 를 새 런타임에서 위에서 아�
 - untrained predictor 는 초기화 시드/변형에 따라 달라지며 3x2 를 따로 보고한다.
 - 체크포인트 로드, hydra 인자(`tcfg.img_size, concat_dim, ...`), 행동/proprio 인코더 `in_chans` 추정(행동 30 = 5 x 6, proprio 1)은 실제 체크포인트에서 검증하지 못했다. 맞지 않으면 구조 비교(`same_structure`)가 명확한 에러로 중단시킨다.
 - 노트북 전체(Drive 마운트, uv 환경, 스냅샷 풀기, 고정 commit 클론, 실제 추출)는 Colab 에서 실행해 보지 못했다.
+- (F) teacher-forced 와 open-loop 는 proprio 부분의 context 가 다르다(실제 인코딩 값 대 predictor 가 예측해 되먹임한 값). action 부분은 같다. 이 차이는 teacher forcing 의 정의에서 오는 것이며 결과 해석 때 함께 봐야 하는 사실이다. step 1 은 같은 연산이다.
+- (F) `num_hist = 1` 이라 context 가 프레임 한 장이다. teacher forcing 은 step k 의 예측 오차를 목표 프레임 `k` 에서 재지만, open-loop step k 는 같은 목표를 k 번 되먹임한 입력으로 예측한다. 두 경로의 차이는 되먹임 횟수와 입력 분포(실제 인코더 latent 대 predictor 출력)가 함께 바뀐 것이다.
+- (F) C 와 마찬가지로 조건 (a) 의 a060/a160 학습 행은 predictor 가 보지 못한 크기이다(teacher forcing 도 같다).
+- 노트북은 clone 한 저장소의 코드를 돌린다. push 하지 않은 변경은 Colab 에 반영되지 않는다. `REPO_REF` 가 브랜치면 실행 시점의 최신 HEAD 가 쓰이므로 정확한 재현이 필요하면 commit 해시를 쓴다.
