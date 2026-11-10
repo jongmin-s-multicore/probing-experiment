@@ -1,0 +1,86 @@
+[
+ {
+  "label": "009:check",
+  "stage": "check",
+  "args": [
+   "--results-dir",
+   "/content/drive/MyDrive/exp009_work/results"
+  ],
+  "rc": 0,
+  "seconds": 2.1,
+  "log": "/content/mylab/experiments/009_positive_control_depth/logs/check_20261110-081907.log",
+  "vram_base_mib": 0,
+  "vram_peak_sampled_mib": 0,
+  "finished_utc": "2026-11-10 08:19:07"
+ },
+ {
+  "label": "009:selftest",
+  "stage": "selftest",
+  "args": [
+   "--results-dir",
+   "/content/drive/MyDrive/exp009_work/results"
+  ],
+  "rc": 0,
+  "seconds": 4.7,
+  "log": "/content/mylab/experiments/009_positive_control_depth/logs/selftest_20261110-081950.log",
+  "vram_base_mib": 0,
+  "vram_peak_sampled_mib": 3,
+  "finished_utc": "2026-11-10 08:19:53"
+ },
+ {
+  "label": "009:check",
+  "stage": "check",
+  "args": [
+   "--results-dir",
+   "/content/drive/MyDrive/exp009_work/results"
+  ],
+  "rc": 0,
+  "seconds": 2.0,
+  "log": "/content/mylab/experiments/009_positive_control_depth/logs/check_20261110-083137.log",
+  "vram_base_mib": 0,
+  "vram_peak_sampled_mib": 0,
+  "finished_utc": "2026-11-10 08:31:38"
+ },
+ {
+  "label": "009:selftest",
+  "stage": "selftest",
+  "args": [
+   "--results-dir",
+   "/content/drive/MyDrive/exp009_work/results"
+  ],
+  "rc": 0,
+  "seconds": 4.7,
+  "log": "/content/mylab/experiments/009_positive_control_depth/logs/selftest_20261110-083229.log",
+  "vram_base_mib": 0,
+  "vram_peak_sampled_mib": 3,
+  "finished_utc": "2026-11-10 08:32:32"
+ },
+ {
+  "label": "009:intervene",
+  "stage": "intervene",
+  "args": [
+   "--results-dir",
+   "/content/drive/MyDrive/exp009_work/results"
+  ],
+  "rc": 0,
+  "seconds": 3005.9,
+  "log": "/content/mylab/experiments/009_positive_control_depth/logs/intervene_20261110-083824.log",
+  "vram_base_mib": 0,
+  "vram_peak_sampled_mib": 2508,
+  "finished_utc": "2026-11-10 09:28:28"
+ },
+ {
+  "label": "009:aggregate",
+  "stage": "aggregate",
+  "args": [
+   "--results-dir",
+   "/content/drive/MyDrive/exp009_work/results"
+  ],
+  "rc": 0,
+  "seconds": 5.2,
+  "log": "/content/mylab/experiments/009_positive_control_depth/logs/aggregate_20261110-092831.log",
+  "vram_base_mib": 0,
+  "vram_peak_sampled_mib": 3,
+  "finished_utc": "2026-11-10 09:28:34"
+ }
+]

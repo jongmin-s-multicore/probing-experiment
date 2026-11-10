@@ -1,0 +1,92 @@
+{
+  "m1_a1_s0": {
+    "corr_readout_fit_episodes_pre": 0.9650717268516957,
+    "readout_std_ratio_after_over_fit_pre_train_heldout": 3.0971745695081495e-07,
+    "readout_std_ratio_after_over_fit_pre_test": 3.083939305719223e-07
+  },
+  "m2_a1_s0": {
+    "corr_readout_fit_episodes_pre": 0.9673101370031291,
+    "readout_std_ratio_after_over_fit_pre_train_heldout": 2.5650633952761377e-07,
+    "readout_std_ratio_after_over_fit_pre_test": 2.4309960412898585e-07
+  },
+  "m3_a1_s0": {
+    "corr_readout_fit_episodes_pre": 0.9689212424727099,
+    "readout_std_ratio_after_over_fit_pre_train_heldout": 2.450028225813249e-07,
+    "readout_std_ratio_after_over_fit_pre_test": 2.4393757699553386e-07
+  },
+  "m4_a1_s0": {
+    "corr_readout_fit_episodes_pre": 0.97117198642975,
+    "readout_std_ratio_after_over_fit_pre_train_heldout": 2.61176805822197e-07,
+    "readout_std_ratio_after_over_fit_pre_test": 2.6771967810142046e-07
+  },
+  "m5_a1_s0": {
+    "corr_readout_fit_episodes_pre": 0.9722466118550234,
+    "readout_std_ratio_after_over_fit_pre_train_heldout": 3.104151407121417e-07,
+    "readout_std_ratio_after_over_fit_pre_test": 3.080538686330576e-07
+  },
+  "m6_a1_s0": {
+    "corr_readout_fit_episodes_pre": 0.9729058756731243,
+    "readout_std_ratio_after_over_fit_pre_train_heldout": 4.298368429710382e-07,
+    "readout_std_ratio_after_over_fit_pre_test": 4.4550048011185754e-07
+  },
+  "m1_a1_s1": {
+    "corr_readout_fit_episodes_pre": 0.9670862659941881,
+    "readout_std_ratio_after_over_fit_pre_train_heldout": 3.0151000058042854e-07,
+    "readout_std_ratio_after_over_fit_pre_test": 3.0589080379979995e-07
+  },
+  "m2_a1_s1": {
+    "corr_readout_fit_episodes_pre": 0.9688355737074263,
+    "readout_std_ratio_after_over_fit_pre_train_heldout": 2.363023614222168e-07,
+    "readout_std_ratio_after_over_fit_pre_test": 2.3762429383348898e-07
+  },
+  "m3_a1_s1": {
+    "corr_readout_fit_episodes_pre": 0.969876708312658,
+    "readout_std_ratio_after_over_fit_pre_train_heldout": 2.1536219207599056e-07,
+    "readout_std_ratio_after_over_fit_pre_test": 2.1890959876663874e-07
+  },
+  "m4_a1_s1": {
+    "corr_readout_fit_episodes_pre": 0.9718896899406119,
+    "readout_std_ratio_after_over_fit_pre_train_heldout": 2.3737157321119102e-07,
+    "readout_std_ratio_after_over_fit_pre_test": 2.2985688288075485e-07
+  },
+  "m5_a1_s1": {
+    "corr_readout_fit_episodes_pre": 0.9725772905487851,
+    "readout_std_ratio_after_over_fit_pre_train_heldout": 2.8098858364021876e-07,
+    "readout_std_ratio_after_over_fit_pre_test": 2.8624482101048544e-07
+  },
+  "m6_a1_s1": {
+    "corr_readout_fit_episodes_pre": 0.9733587516119472,
+    "readout_std_ratio_after_over_fit_pre_train_heldout": 3.5372281419368426e-07,
+    "readout_std_ratio_after_over_fit_pre_test": 3.483410635091115e-07
+  },
+  "m1_a1_s2": {
+    "corr_readout_fit_episodes_pre": 0.9653247148648232,
+    "readout_std_ratio_after_over_fit_pre_train_heldout": 2.938937078056012e-07,
+    "readout_std_ratio_after_over_fit_pre_test": 2.9970096353134055e-07
+  },
+  "m2_a1_s2": {
+    "corr_readout_fit_episodes_pre": 0.966480858141852,
+    "readout_std_ratio_after_over_fit_pre_train_heldout": 2.452731116860193e-07,
+    "readout_std_ratio_after_over_fit_pre_test": 2.5309548021969147e-07
+  },
+  "m3_a1_s2": {
+    "corr_readout_fit_episodes_pre": 0.9682284571694445,
+    "readout_std_ratio_after_over_fit_pre_train_heldout": 2.2363864224200367e-07,
+    "readout_std_ratio_after_over_fit_pre_test": 2.2375409712055882e-07
+  },
+  "m4_a1_s2": {
+    "corr_readout_fit_episodes_pre": 0.9699964998889944,
+    "readout_std_ratio_after_over_fit_pre_train_heldout": 2.2280800954970236e-07,
+    "readout_std_ratio_after_over_fit_pre_test": 2.2789079005302174e-07
+  },
+  "m5_a1_s2": {
+    "corr_readout_fit_episodes_pre": 0.9712605983953515,
+    "readout_std_ratio_after_over_fit_pre_train_heldout": 3.104457086517845e-07,
+    "readout_std_ratio_after_over_fit_pre_test": 3.125151217699006e-07
+  },
+  "m6_a1_s2": {
+    "corr_readout_fit_episodes_pre": 0.9727099892333471,
+    "readout_std_ratio_after_over_fit_pre_train_heldout": 4.4937176796664645e-07,
+    "readout_std_ratio_after_over_fit_pre_test": 4.676745607587153e-07
+  }
+}

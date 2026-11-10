@@ -285,3 +285,9 @@
 - 검증(CPU, 합성/toy): selftest PASS 117, FAIL 0, SKIP 0 (F 추가 전 같은 환경 PASS 92). 모든 단계 `--dry-run` 15/15 종료코드 0. 노트북 JSON 유효, 코드 셀 13개 ast 통과(전체 14셀, markdown 1).
 - 예상 GPU 시간(추정, 실측 없음): 6 run 합계 약 0.35-1.8 GPU 시간(A-E 만의 이전 추정 0.3-1.5 시간 + F 약 18%). Drive 읽기가 지배할 수 있다. CPU 분석 F 는 C 의 약 2배 시간(추정).
 - 주의: 노트북은 clone 한 저장소의 코드를 돌리므로 사용자가 이 변경을 commit/push 해야 Colab 에 반영된다. GPU 미사용, git commit/push 하지 않음. 결과 수치 없음, 해석 없음.
+
+## 2026-11-10 / 009_positive_control_depth / Colab 본 실행 완료, 결과 복사 (결과 기록, 해석 전)
+- 실행: 사용자 Colab NVIDIA L4, 코드 4728e83 (results.json `code_version.git_status_dirty` true, 무엇이 dirty 였는지 미확인), `pilot: true` 그대로. attempts intervene 0, aggregate 0. 결과를 Drive exp009_work 에서 experiments/009_positive_control_depth/{results.json, results/, results/colab/} 로 사용자가 복사(Windows Zone.Identifier 부속 파일은 삭제).
+- 결과(results.json): 블록 1-6 모두 `verdict.status` criterion_met, 학습 seed 3/3 검출, `m_star_by_train_seed` 는 모든 블록에서 m_int 와 같음. 보조 A, B 모두 3/3 관측됨(m_int+1 이내). `baseline_vs_004.max_abs_r2_diff` 전부 0.0. missing_units 없음. diagnostics: 소거 후 판독 방향 std 비 약 2e-7~4e-7.
+- 보조 관측(`aux_recovery_r2_minus_r2_at_m_int`, 블록 1): 소거 블록 다음 블록에서 R² 가 train +0.719, interp +0.219, extrap +0.785 회복(seed 평균값 기준인지 키 정의는 리뷰에서 확인). seed 0 곡선: 소거 블록 R² 약 0, 바로 다음 블록 train 0.76~0.82.
+- 해석: 하지 않음. /review-experiment 로 넘김.
