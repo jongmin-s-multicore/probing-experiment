@@ -1,5 +1,5 @@
 name: "010_source_separation_ib"
-hypothesis: "notes/hypotheses.md 010 (원천 분리 대조: 005 의 ours ~ random 의 원인 위치). 2단계 초안, 승인 대기. 코드 작성만 허용, 미실행"
+hypothesis: "notes/hypotheses.md 010 (원천 분리 대조: 005 의 ours ~ random 의 원인 위치). 가설 사용자 확정 2026-11-10 (Δ, 과제 시드). GPU 실행 미승인, 미실행"
 seed: 0
 pilot: true                      # 본 실행 전까지 true (사람이 바꾼다)
 
@@ -20,14 +20,14 @@ representations:                 # 네 표현. name 은 compute_metrics 의 laye
 
 seeds:                           # 모든 시드 명시
   head: [0, 1, 2, 3, 4]          # head 학습 seed (005 와 같음)
-  task_a: [2000, 2001, 2002]     # 초안, 승인 대기: 과제/라벨(5-A 레벨 라벨, D_k) 시드 3개 이상. 첫 값 2000 = 005 의 seeds.tasks_a
+  task_a: [2000, 2001, 2002]     # 사용자 확정 2026-11-10: 과제/라벨(5-A 레벨 라벨, D_k) 시드 3개 이상. 첫 값 2000 = 005 의 seeds.tasks_a
   eval: 1000                     # 005 와 같음 (평가 입력 고정)
   # 5-D 라벨 부분집합(seeds.d)은 쓰지 않는다: 5-A, 5-C 만 실행
 
 subexps: ["5-A", "5-C"]          # R-IB, D-IB, D-IB_area=, D-IB_area!=, R-IB_fold
 
-tost:                            # H-f 동등성 검정 (초안, 승인 대기)
-  delta: 0.05                    # 초안, 승인 대기: 동등성 여유 Δ (점수 단위)
+tost:                            # H-f 동등성 검정 (사용자 확정 2026-11-10)
+  delta: 0.05                    # 사용자 확정 2026-11-10: 동등성 여유 Δ (점수 단위)
   alpha: 0.05                    # TOST 각 단측 검정 수준 (= 90% 신뢰구간이 (-Δ, Δ) 안)
   unit: task_seed                # 검정 단위 = 과제 시드별 (head 시드 평균). 단위 수 < 3 이면 not_evaluable
   pair_group_hf: all             # 005 verdict.h_f.pair_group 과 같음

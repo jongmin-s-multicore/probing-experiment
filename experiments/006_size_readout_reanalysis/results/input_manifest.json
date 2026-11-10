@@ -1,0 +1,379 @@
+{
+  "input_root": "/content/drive/MyDrive/exp002_work",
+  "work_root": "/content/drive/MyDrive/exp006_work",
+  "files": {
+    "results/q1/cells.npz": {
+      "exists": true,
+      "bytes": 18635908,
+      "sha256": "f4d18051d03e22bea16516a501313b4469501ce9648cd5b7cb8244c3484e5889"
+    },
+    "results/q1/test_rows.json": {
+      "exists": true,
+      "bytes": 241912,
+      "sha256": "04dd07e0775716cd2e88812a4da53f0c6c1769dd0641b970de22f1298bb5adda"
+    },
+    "results/q1/q1_summary.json": {
+      "exists": true,
+      "bytes": 1019414,
+      "sha256": "814524b4a6173218b3828d1baf51d1a690119fdae054aad1fcada7967f151d3a"
+    },
+    "results/exp002_multi_60_ind_160_s0/q2_cells.npz": {
+      "exists": true,
+      "bytes": 15412546,
+      "sha256": "9c2c40324d02bd55e5a0232a1769a310451254227e794f33de2609f28471e07f"
+    },
+    "results/exp002_multi_60_ind_160_s0/q2_summary.json": {
+      "exists": true,
+      "bytes": 974626,
+      "sha256": "d845046c0499d89ea602a28d702581fe9d4fa65f3665db5a8a7d19c6cd734172"
+    },
+    "results/exp002_multi_60_ind_160_s0/q3.json": {
+      "exists": true,
+      "bytes": 74380,
+      "sha256": "87f2d1e30ef1e96dd1ed40cb69e471e15fb8c9aeab244f46fd01a84e37a24a3b"
+    },
+    "train_runs/outputs/exp002_multi_60_ind_160_s0/checkpoints/model_latest.pth": {
+      "exists": true,
+      "bytes": 368657250,
+      "sha256": null
+    },
+    "train_runs/outputs/exp002_multi_60_ind_160_s0/hydra.yaml": {
+      "exists": true,
+      "bytes": 2216,
+      "sha256": "0776ae79c7f292a9023b960edc723bc5ae72fd0ce2b75c1f928b6f9c63892b8e"
+    },
+    "train_runs/outputs/exp002_multi_60_ind_160_s0/train_manifest.json": {
+      "exists": true,
+      "bytes": 140547,
+      "sha256": "9a779fc3279f01f319f6b5abda30f49e30e00049f9bff43f5aa0ce3d36ff7d77"
+    },
+    "train_runs/outputs/exp002_multi_60_ind_160_s0/DONE": {
+      "exists": true,
+      "bytes": 3,
+      "sha256": "dc51b8c96c2d745df3bd5590d990230a482fd247123599548e0632fdbf97fc22"
+    },
+    "results/exp002_multi_60_ind_160_s1/q2_cells.npz": {
+      "exists": true,
+      "bytes": 15392817,
+      "sha256": "e69fa88dba1e07ff5e08ac413f9eb2fc8baaa589d289a6402ddd3ab7a27a2bdf"
+    },
+    "results/exp002_multi_60_ind_160_s1/q2_summary.json": {
+      "exists": true,
+      "bytes": 974693,
+      "sha256": "62f470dca6a48ab6bff992f40db8b6e6bf0ba71db267ee37e530319f7e28ff35"
+    },
+    "results/exp002_multi_60_ind_160_s1/q3.json": {
+      "exists": true,
+      "bytes": 74400,
+      "sha256": "3ef487fc2283205c69218859984891cfe4c4ec8e76083c16fe2df42a25812c5e"
+    },
+    "train_runs/outputs/exp002_multi_60_ind_160_s1/checkpoints/model_latest.pth": {
+      "exists": true,
+      "bytes": 368657250,
+      "sha256": null
+    },
+    "train_runs/outputs/exp002_multi_60_ind_160_s1/hydra.yaml": {
+      "exists": true,
+      "bytes": 2216,
+      "sha256": "bda613b679f074c9764c0b8f1776d71565ce9d72b75eb8e9bcd1b3aa38dc5e41"
+    },
+    "train_runs/outputs/exp002_multi_60_ind_160_s1/train_manifest.json": {
+      "exists": true,
+      "bytes": 140547,
+      "sha256": "9a779fc3279f01f319f6b5abda30f49e30e00049f9bff43f5aa0ce3d36ff7d77"
+    },
+    "train_runs/outputs/exp002_multi_60_ind_160_s1/DONE": {
+      "exists": true,
+      "bytes": 3,
+      "sha256": "dc51b8c96c2d745df3bd5590d990230a482fd247123599548e0632fdbf97fc22"
+    },
+    "results/exp002_multi_60_ind_160_s2/q2_cells.npz": {
+      "exists": true,
+      "bytes": 15374332,
+      "sha256": "7ff68a8f34eaf15ba18ce1256157ec6234bbf0712002fbfd5e6fd3811d022b3e"
+    },
+    "results/exp002_multi_60_ind_160_s2/q2_summary.json": {
+      "exists": true,
+      "bytes": 974608,
+      "sha256": "8a472ebaa95c9c8821d84b26f7afbbd5da1e7a35efcd22f8a2a34dd6455e34ca"
+    },
+    "results/exp002_multi_60_ind_160_s2/q3.json": {
+      "exists": true,
+      "bytes": 74407,
+      "sha256": "909274f4104a97c0588145db4c69d589befbce9edaa4f148726ae35184e288a9"
+    },
+    "train_runs/outputs/exp002_multi_60_ind_160_s2/checkpoints/model_latest.pth": {
+      "exists": true,
+      "bytes": 368657954,
+      "sha256": null
+    },
+    "train_runs/outputs/exp002_multi_60_ind_160_s2/hydra.yaml": {
+      "exists": true,
+      "bytes": 2216,
+      "sha256": "99672a6d90efe5e0ddec037348ad6b43d2dfbed4ff02226bd774ee8b10ef730a"
+    },
+    "train_runs/outputs/exp002_multi_60_ind_160_s2/train_manifest.json": {
+      "exists": true,
+      "bytes": 140547,
+      "sha256": "9a779fc3279f01f319f6b5abda30f49e30e00049f9bff43f5aa0ce3d36ff7d77"
+    },
+    "train_runs/outputs/exp002_multi_60_ind_160_s2/DONE": {
+      "exists": true,
+      "bytes": 3,
+      "sha256": "dc51b8c96c2d745df3bd5590d990230a482fd247123599548e0632fdbf97fc22"
+    },
+    "results/exp002_single_ind_s0/q2_cells.npz": {
+      "exists": true,
+      "bytes": 15480355,
+      "sha256": "0bcd5bd2738a6dd62ced3329140112537712ad70064577e4d144be5338774ae5"
+    },
+    "results/exp002_single_ind_s0/q2_summary.json": {
+      "exists": true,
+      "bytes": 976123,
+      "sha256": "93bea742da8aa65f8b81070b99f4a511ef0a8e5ff920bf961008fb73e2b44c36"
+    },
+    "results/exp002_single_ind_s0/q3.json": {
+      "exists": true,
+      "bytes": 74755,
+      "sha256": "daaa56b39bc28b814ff674116d63d111d06499346da7c2c274454454c8f8b812"
+    },
+    "train_runs/outputs/exp002_single_ind_s0/checkpoints/model_latest.pth": {
+      "exists": true,
+      "bytes": 368657954,
+      "sha256": null
+    },
+    "train_runs/outputs/exp002_single_ind_s0/hydra.yaml": {
+      "exists": true,
+      "bytes": 2204,
+      "sha256": "168cd8e69bcd0aeaf221d1c82949519be2bf0e588cf483687c924379e4d2664d"
+    },
+    "train_runs/outputs/exp002_single_ind_s0/train_manifest.json": {
+      "exists": true,
+      "bytes": 138707,
+      "sha256": "101baeb84c013617fe3a27d92ccb56801d2ec9650e1eb7ef86fddcf2d44a3e2a"
+    },
+    "train_runs/outputs/exp002_single_ind_s0/DONE": {
+      "exists": true,
+      "bytes": 3,
+      "sha256": "dc51b8c96c2d745df3bd5590d990230a482fd247123599548e0632fdbf97fc22"
+    },
+    "results/exp002_single_ind_s1/q2_cells.npz": {
+      "exists": true,
+      "bytes": 15507856,
+      "sha256": "6d57b4cf3a040565ff187bf4dd407b53aea2928ac6f77b022b21db41509d32b3"
+    },
+    "results/exp002_single_ind_s1/q2_summary.json": {
+      "exists": true,
+      "bytes": 975902,
+      "sha256": "abd237428bdedc7e89571c87515b08485e64a83314ea5c00c087a3a168df8d90"
+    },
+    "results/exp002_single_ind_s1/q3.json": {
+      "exists": true,
+      "bytes": 74724,
+      "sha256": "c85e6a57377b6172b4247d9acb2ef6230746ab7ff06a59f637d646d449331bd1"
+    },
+    "train_runs/outputs/exp002_single_ind_s1/checkpoints/model_latest.pth": {
+      "exists": true,
+      "bytes": 368657954,
+      "sha256": null
+    },
+    "train_runs/outputs/exp002_single_ind_s1/hydra.yaml": {
+      "exists": true,
+      "bytes": 2204,
+      "sha256": "084ba19acc9918a1a2998762c0f2d4df7d7d8881aff4d5752b37e741c12e5d16"
+    },
+    "train_runs/outputs/exp002_single_ind_s1/train_manifest.json": {
+      "exists": true,
+      "bytes": 138707,
+      "sha256": "101baeb84c013617fe3a27d92ccb56801d2ec9650e1eb7ef86fddcf2d44a3e2a"
+    },
+    "train_runs/outputs/exp002_single_ind_s1/DONE": {
+      "exists": true,
+      "bytes": 3,
+      "sha256": "dc51b8c96c2d745df3bd5590d990230a482fd247123599548e0632fdbf97fc22"
+    },
+    "results/exp002_single_ind_s2/q2_cells.npz": {
+      "exists": true,
+      "bytes": 15549773,
+      "sha256": "8d0f6b841f042e27a3eee18e7730635ad6f2ee5a027e19b2184565ca3720302e"
+    },
+    "results/exp002_single_ind_s2/q2_summary.json": {
+      "exists": true,
+      "bytes": 976433,
+      "sha256": "7f7e2f2abda4d6d24d03ec1ac4cdce5eb63c5f492ee0b1f4881c26e925ddeaa1"
+    },
+    "results/exp002_single_ind_s2/q3.json": {
+      "exists": true,
+      "bytes": 74859,
+      "sha256": "088b29b47380d37a6f266fcb9d339b5b8f026d5f74bab51a7be18429cc3239b2"
+    },
+    "train_runs/outputs/exp002_single_ind_s2/checkpoints/model_latest.pth": {
+      "exists": true,
+      "bytes": 368657954,
+      "sha256": null
+    },
+    "train_runs/outputs/exp002_single_ind_s2/hydra.yaml": {
+      "exists": true,
+      "bytes": 2204,
+      "sha256": "4a294f5a7dae1135c1dbdd96f9789967e81c5b5817e0a524c53f162575459457"
+    },
+    "train_runs/outputs/exp002_single_ind_s2/train_manifest.json": {
+      "exists": true,
+      "bytes": 138707,
+      "sha256": "101baeb84c013617fe3a27d92ccb56801d2ec9650e1eb7ef86fddcf2d44a3e2a"
+    },
+    "train_runs/outputs/exp002_single_ind_s2/DONE": {
+      "exists": true,
+      "bytes": 3,
+      "sha256": "dc51b8c96c2d745df3bd5590d990230a482fd247123599548e0632fdbf97fc22"
+    },
+    "exp002_cache/q1_tokens/frames_u8.npy": {
+      "exists": true,
+      "bytes": 3522355328,
+      "sha256": null
+    },
+    "exp002_cache/q1_tokens/tokens_dino.npy": {
+      "exists": true,
+      "bytes": 3522355328,
+      "sha256": null
+    },
+    "exp002_cache/q1_tokens/mask_feat.npy": {
+      "exists": true,
+      "bytes": 280928,
+      "sha256": "a795abd9625277e06400e595ab0e336b6101c0faf87b2c384015468582a2ff53"
+    },
+    "exp002_cache/q1_tokens/actions_raw.npy": {
+      "exists": true,
+      "bytes": 2592128,
+      "sha256": "2fafb29c044788a5bc0d8ebb6078eeff12721fd433e704270152e01980d2e6c6"
+    },
+    "exp002_cache/q1_tokens/episodes.json": {
+      "exists": true,
+      "bytes": 483272,
+      "sha256": "0d69213bc8dbe85c15ab10f36801aeaed994e75fa9604c4c0e23e8aa5806c092"
+    },
+    "exp002_cache/q1_tokens/meta.json": {
+      "exists": true,
+      "bytes": 398,
+      "sha256": "ddadcf9bda74cde85f6931e515dd3a8200b0b02e8ba13ac35f5ed64a2c0f4cf2"
+    },
+    "exp002_cache/q1_tokens/DONE": {
+      "exists": true,
+      "bytes": 3,
+      "sha256": "dc51b8c96c2d745df3bd5590d990230a482fd247123599548e0632fdbf97fc22"
+    },
+    "cloth_sim_data.tar": {
+      "exists": true,
+      "bytes": 669818880,
+      "sha256": null
+    }
+  },
+  "missing": [],
+  "expect_mismatch": [],
+  "metadata_pt_missing": [],
+  "metadata_pt_ok": true,
+  "provenance": {
+    "config002_sha256": "4d5261d68a5d7270d845bab6ef30f924bad31fd46f0b252b802303a3823fd1ce",
+    "config002_expected": "4d5261d68a5d7270d845bab6ef30f924bad31fd46f0b252b802303a3823fd1ce",
+    "requirements002_sha256": "72ffaae853bd7f04c605a44d4b8d9cd67f4fdca63689392b4bab604422b8486d",
+    "requirements002_expected": "72ffaae853bd7f04c605a44d4b8d9cd67f4fdca63689392b4bab604422b8486d",
+    "train_resume_patch_sha256": "52eb005288c935eddf322fda06ca06a68f165b7b2244a1548570e72614cd6a3c",
+    "train_resume_patch_expected_prefix": "52eb0052"
+  },
+  "acwm_src": {
+    "path": "/content/dinowm006/acwm_phys_src",
+    "exists": true,
+    "head": "5a640bed66002eca7bdb31d10b2bde59ad944551",
+    "head_matches_config": true,
+    "train_py_sha256": "7f4463e24b22fb001cfae9f3a8e26117116f11927b7fd686861a6a75a2d65516",
+    "train_py_has_resume_patch_marker": false
+  },
+  "model_load_compat": {
+    "model_io_imports_train_py": false,
+    "model_io_needs": "unpickling needs the classes of the pinned commit (models.*, datasets.* are on sys.path via ACWM_PHYS_SRC) and run_dir/hydra.yaml; model_io.load_world_model reads encoder from the checkpoint if present else instantiates cfg.encoder (torch.hub download of DINOv2)",
+    "resume_patch_needed_for_load": false,
+    "resume_patch_reason": "the patch changes only train.py (optimizer state_dict saving, resume of action/proprio encoders). Checkpoint keys read by model_io are predictor, decoder, proprio_encoder, action_encoder, epoch (+ encoder if saved); they are the same with or without the patch. Optimizer entries are ignored by model_io."
+  },
+  "python": "3.9.25",
+  "platform": "Linux-6.6.159+-x86_64-with-glibc2.39",
+  "environment": {
+    "python": "3.9.25",
+    "python_executable": "/content/venv006/bin/python",
+    "platform": "Linux-6.6.159+-x86_64-with-glibc2.39",
+    "CONDA_DEFAULT_ENV": null,
+    "CONDA_PREFIX": null,
+    "packages": {
+      "torch": "2.0.1+cu117",
+      "torchvision": "0.15.2+cu117",
+      "numpy": "1.26.4",
+      "scipy": "1.13.1",
+      "sklearn": null,
+      "yaml": "6.0.3",
+      "cv2": "4.6.0",
+      "decord": "0.6.0",
+      "hydra": "1.2.0",
+      "omegaconf": "2.3.0",
+      "einops": "0.4.1"
+    },
+    "torch_cuda": "11.7",
+    "cuda_available": true,
+    "gpu": "NVIDIA L4",
+    "gpu_mem_gb": 23.66,
+    "arch_list": [
+      "sm_37",
+      "sm_50",
+      "sm_60",
+      "sm_70",
+      "sm_75",
+      "sm_80",
+      "sm_86"
+    ]
+  },
+  "gpu": {
+    "available": true,
+    "name": "NVIDIA L4",
+    "mem_gb": 23.66,
+    "torch": "2.0.1+cu117",
+    "cuda": "11.7"
+  },
+  "hash_computed_for_big_files": false,
+  "seconds": 35.9,
+  "expect_template_for_config": {
+    "results/q1/cells.npz": {
+      "bytes": 18635908,
+      "sha256": "f4d18051d03e22bea16516a501313b4469501ce9648cd5b7cb8244c3484e5889"
+    },
+    "results/exp002_multi_60_ind_160_s0/q2_cells.npz": {
+      "bytes": 15412546,
+      "sha256": "9c2c40324d02bd55e5a0232a1769a310451254227e794f33de2609f28471e07f"
+    },
+    "results/exp002_multi_60_ind_160_s1/q2_cells.npz": {
+      "bytes": 15392817,
+      "sha256": "e69fa88dba1e07ff5e08ac413f9eb2fc8baaa589d289a6402ddd3ab7a27a2bdf"
+    },
+    "results/exp002_multi_60_ind_160_s2/q2_cells.npz": {
+      "bytes": 15374332,
+      "sha256": "7ff68a8f34eaf15ba18ce1256157ec6234bbf0712002fbfd5e6fd3811d022b3e"
+    },
+    "results/exp002_single_ind_s0/q2_cells.npz": {
+      "bytes": 15480355,
+      "sha256": "0bcd5bd2738a6dd62ced3329140112537712ad70064577e4d144be5338774ae5"
+    },
+    "results/exp002_single_ind_s1/q2_cells.npz": {
+      "bytes": 15507856,
+      "sha256": "6d57b4cf3a040565ff187bf4dd407b53aea2928ac6f77b022b21db41509d32b3"
+    },
+    "results/exp002_single_ind_s2/q2_cells.npz": {
+      "bytes": 15549773,
+      "sha256": "8d0f6b841f042e27a3eee18e7730635ad6f2ee5a027e19b2184565ca3720302e"
+    },
+    "exp002_cache/q1_tokens/mask_feat.npy": {
+      "bytes": 280928,
+      "sha256": "a795abd9625277e06400e595ab0e336b6101c0faf87b2c384015468582a2ff53"
+    },
+    "exp002_cache/q1_tokens/actions_raw.npy": {
+      "bytes": 2592128,
+      "sha256": "2fafb29c044788a5bc0d8ebb6078eeff12721fd433e704270152e01980d2e6c6"
+    }
+  }
+}

@@ -1,0 +1,83 @@
+{
+  "note": "metadata.pt fields (first episode of each split). 'proprio' is not a metadata field: ManifestDataset.get_frames returns zeros as proprio.",
+  "splits": {
+    "a060_train": {
+      "n_episodes": 2000,
+      "keys": [
+        "actions",
+        "cloth_dimx",
+        "cloth_dimy",
+        "length",
+        "n_attempts",
+        "seed",
+        "video_path",
+        "x0"
+      ],
+      "shapes": {
+        "video_path": "str",
+        "actions": [
+          64,
+          8
+        ],
+        "length": "int",
+        "seed": "int",
+        "cloth_dimx": "int",
+        "cloth_dimy": "int",
+        "x0": "float",
+        "n_attempts": "int"
+      }
+    },
+    "a160_train": {
+      "n_episodes": 2000,
+      "keys": [
+        "actions",
+        "cloth_dimx",
+        "cloth_dimy",
+        "length",
+        "n_attempts",
+        "seed",
+        "video_path",
+        "x0"
+      ],
+      "shapes": {
+        "video_path": "str",
+        "actions": [
+          64,
+          8
+        ],
+        "length": "int",
+        "seed": "int",
+        "cloth_dimx": "int",
+        "cloth_dimy": "int",
+        "x0": "float",
+        "n_attempts": "int"
+      }
+    },
+    "ind_train": {
+      "n_episodes": 2000,
+      "keys": [
+        "actions",
+        "cloth_dimx",
+        "cloth_dimy",
+        "length",
+        "n_attempts",
+        "seed",
+        "video_path",
+        "x0"
+      ],
+      "shapes": {
+        "video_path": "str",
+        "actions": [
+          64,
+          8
+        ],
+        "length": "int",
+        "seed": "int",
+        "cloth_dimx": "int",
+        "cloth_dimy": "int",
+        "x0": "float",
+        "n_attempts": "int"
+      }
+    }
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "run": "exp002_multi_60_ind_160_s0",
+  "device": "cuda",
+  "gpu": {
+    "available": true,
+    "name": "NVIDIA L4",
+    "mem_gb": 23.66,
+    "torch": "2.0.1+cu117",
+    "cuda": "11.7"
+  },
+  "batch_seconds_train_batches": [
+    2.05853533744812,
+    0.5796144008636475
+  ],
+  "batch_seconds_test_batches": [
+    3.6742587089538574,
+    1.6663110256195068
+  ],
+  "peak_cuda_mem_gib": 1.2970552444458008,
+  "median_batch_s": {
+    "train": 1.3190748691558838,
+    "test": 2.670284867286682
+  },
+  "estimate_note": "ESTIMATE (추정): median batch time x number of batches; the first batch includes warm-up; model load time and checkpoint hashing are not included",
+  "estimated_extract_minutes_per_run": 7.480049505829811,
+  "estimated_extract_minutes_all_6_runs": 44.88029703497887,
+  "smoke_total_seconds": 20.441295385360718,
+  "rows_used": [
+    16,
+    16
+  ]
+}

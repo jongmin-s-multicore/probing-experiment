@@ -3,6 +3,7 @@ Covers: TOST statistics on planted data, task-seed independence, the 005 metric 
 from __future__ import annotations
 
 import copy
+import os
 import traceback
 
 import numpy as np
@@ -10,6 +11,8 @@ import numpy as np
 from . import stats as ST
 from . import stages as S
 from . import base as B
+
+C2 = B.C2
 
 REC = {"pass": [], "fail": [], "skipped": []}
 
@@ -107,8 +110,96 @@ def t_config(cfg):
     check("first task seed equals 005 seeds.tasks_a (replicates 005 tasks)", cfg["seeds"]["task_a"][0] == B.B5.load_config((B.EXP_DIR / cfg["base"]["config005"]).resolve())["seeds"]["tasks_a"])
 
 
+def t_colab(cfg, c2):
+    print("D  Colab notebook / preflight / code_version (CPU, no Colab)")
+    import ast
+    import json
+    import tempfile
+    from pathlib import Path
+    from . import stages as S
+    nbp = B.EXP_DIR / "colab" / "exp010_colab.ipynb"
+    if not nbp.exists():
+        REC["skipped"].append("colab notebook missing")
+        print("  [skip] colab/exp010_colab.ipynb not built")
+        return
+    nb = json.loads(nbp.read_text())
+    cells = nb["cells"]
+    src = ["".join(c["source"]) for c in cells if c["cell_type"] == "code"]
+    check("notebook JSON is nbformat 4 with code cells", nb["nbformat"] == 4 and len(src) > 10, "%d code cells" % len(src))
+    bad = []
+    for i, t in enumerate(src):
+        try:
+            ast.parse(t)
+        except SyntaxError as e:
+            bad.append((i, str(e)))
+    check("every code cell parses as Python", not bad, str(bad))
+    allsrc = "\n".join(src)
+    check("three approval gates default to False", all(("%s = False" % g) in allsrc for g in ("APPROVED_REGEN_010", "APPROVED_PILOT_010", "APPROVED_MAIN_010")))
+    check("no embedded code snapshot (git clone only)", "base64" not in allsrc and "git', 'clone'" in allsrc)
+    check("MPLBACKEND=Agg set for sub-processes", "'MPLBACKEND': 'Agg'" in allsrc)
+    check("separate folders from 006/009 (mylab010, venv010, exp010_work)", all(x in allsrc for x in ("/content/mylab010", "/content/venv010", "exp010_work")) and "/content/mylab'" not in allsrc)
+    run0 = C2.run_name(cfg["base"]["condition"], 0)
+    check("checkpoint run name used in the notebook equals exp002 run_name(condition, 0) (006 prefix lesson)", ("want_run = '%s'" % run0) in allsrc, run0)
+    check("regeneration calls 004 enc_cache and 005 feat through run.py (no source edit)", "'enc_cache'" in allsrc and "stage='feat'" in allsrc)
+    check("main/pilot cells do not pass --task-seeds/--delta overrides to the main run", "run010('heads', mode='main')" in allsrc and "--delta" not in allsrc)
+    # compare_logs / plan_fields from cell R4 against the committed original logs
+    r4 = [t for t in src if t.lstrip().startswith("# R4.")][0]
+    ns = {}
+    head = r4.split("REF = {")[0]
+    exec(head.replace("import re, glob, time, hashlib\nimport numpy as np\n", "import re, glob, time, hashlib\n"), ns)
+    e4 = B.EXP_DIR.parent / "004_depth_truncation" / "logs" / "colab_20261109" / "enc_cache_20261109-092707.log"
+    e5 = B.EXP_DIR.parent / "005_inductive_bias_probe" / "logs" / "colab_20261109" / "feat_20261109-112051.log"
+    if e4.exists() and e5.exists():
+        t4, t5 = e4.read_text(errors="replace"), e5.read_text(errors="replace")
+        r = ns["compare_logs"](t4, t4)
+        check("compare_logs parses the original 004 enc_cache log (plan, 3 consistency lines, 1800/1800)", len(r) == 5 and all(x[3] != "DIFFERENT" for x in r) and r[0][1] is not None, str([x[0] for x in r]))
+        r = ns["compare_logs"](t4, t4.replace("k_grid=[0, 2, 4, 6, 8, 10, 12]", "k_grid=[0, 2, 4, 6, 8, 10]"))
+        check("compare_logs flags a changed k_grid", any(x[0] == "enc_cache plan" and x[3] == "DIFFERENT" for x in r))
+        r = ns["compare_logs"](t5, t5)
+        check("compare_logs parses the original 005 feat log (plan, 1800/1800)", len(r) == 2 and r[0][1] is not None and all(x[3] != "DIFFERENT" for x in r), str(r))
+        r = ns["compare_logs"](t5, t5.replace("['pred_out6']", "['pred_out6', 'pred_out5']"))
+        check("compare_logs flags a changed layer list", any(x[3] == "DIFFERENT" for x in r))
+    else:
+        REC["skipped"].append("original 004/005 logs missing")
+    # preflight and code_version
+    with tempfile.TemporaryDirectory() as td:
+        env_keys = {"EXP004_CACHE": td, "EXP005_CACHE": td, "EXP002_CACHE": td}
+        old = {k: os.environ.get(k) for k in env_keys}
+        os.environ.update(env_keys)
+        try:
+            p2 = B.resolve_paths(cfg, cfg["_c5"], c2)
+            miss = S.missing_inputs(cfg, p2)
+            check("missing_inputs lists the 4 feature files and the 002 cache when absent", len(miss) == 5, str(len(miss)))
+            for l in S.plan_of(cfg)["layers"]:
+                for ctl, _ in S.MODELS:
+                    pth = S.FE.layer_path(p2, l, ctl, cfg["_c5"]["exp4"]["cache_suffix"])
+                    pth.parent.mkdir(parents=True, exist_ok=True)
+                    pth.write_bytes(b"x")
+            miss2 = S.missing_inputs(cfg, p2)
+            check("missing_inputs only reports the 002 cache once the 4 files exist", len(miss2) == 1 and "002" in miss2[0], str(miss2))
+        finally:
+            for k, v in old.items():
+                if v is None:
+                    os.environ.pop(k, None)
+                else:
+                    os.environ[k] = v
+    os.environ["EXP010_CODE_REPO_URL"], os.environ["EXP010_CODE_REF"] = "u", "r"
+    cv = S.code_version(B.EXP_DIR)
+    check("code_version has git_head/git_status_dirty/repo_url/requested_ref and reads the env", set(cv) == {"git_head", "git_status_dirty", "repo_url", "requested_ref"} and cv["repo_url"] == "u" and cv["requested_ref"] == "r")
+    os.environ.pop("EXP010_CODE_REPO_URL"), os.environ.pop("EXP010_CODE_REF")
+    # config values the regeneration preflight (cell R1) expects from the 004 / 005 / 002 config files
+    import yaml
+    c4 = yaml.safe_load((B.EXP_DIR.parent / "004_depth_truncation" / "config.yaml").read_text())
+    c5 = yaml.safe_load((B.EXP_DIR.parent / "005_inductive_bias_probe" / "config.yaml").read_text())
+    check("004/005 config values equal the ones expected by cell R1",
+          c4["encoder"]["k_grid"] == [0, 2, 4, 6, 8, 10, 12] and c4["encoder"]["random_init_control"] is True and c4["encoder"]["source_train_seed"] == 0
+          and c5["feat"]["train_seed"] == 0 and c5["feat"]["random_init_seed"] == 1234 and c2["probe_impl"]["random_init"]["seed"] == 0)
+    pl = json.loads((B.EXP_DIR.parent / "005_inductive_bias_probe" / "results" / "plan.json").read_text())
+    check("005 results/plan.json (copied for `feat`) has exactly the layer pred_out6", [(l["name"], l["module"], l["depth"]) for l in pl["layers"]] == [("pred_out6", "predictor", 6)])
+
+
 def run(cfg, c2):
-    for name, fn in (("A", t_stats), ("C", lambda: t_config(cfg)), ("B", lambda: t_pipeline(cfg, c2))):
+    for name, fn in (("A", t_stats), ("C", lambda: t_config(cfg)), ("B", lambda: t_pipeline(cfg, c2)), ("D", lambda: t_colab(cfg, c2))):
         try:
             fn()
         except Exception:

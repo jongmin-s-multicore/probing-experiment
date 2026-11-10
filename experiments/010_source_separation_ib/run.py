@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """Experiment 010 entry point (source separation of the 005 ours ~ random result).   python run.py <stage> [options]
+Exit codes: 0 ok, 1 failure, 3 config value null (ConfigNull), 4 preflight stop (heads: missing input files; no attempt used).
 Stages: check | heads | report | selftest      (every stage supports --dry-run; nothing here has been run on a GPU; approval pending)
 heads: 5-A heads for four representations (enc_k12 ours/random, pred_out6 ours/random) x task seeds x head seeds, 005 code re-used unmodified.
 report: 005 metrics per task seed + H-f TOST (Delta from config) -> results.json, ib_scores.csv."""
@@ -45,6 +46,13 @@ def main():
     hseeds = [int(x) for x in args.seeds.split(",")] if args.seeds else list(cfg["seeds"]["head"])
     key = "stage:" + args.stage
     guard = args.stage not in ("check", "selftest") and not args.dry_run
+    if args.stage == "heads" and not args.dry_run:      # preflight (no GPU, no attempt consumed): missing caches must not burn one of the 3 attempts
+        bad = S.missing_inputs(cfg, paths)
+        if bad:
+            log("STOP (not retried, no attempt used): inputs missing (004 `enc_cache` / 005 `feat` caches, 002 Q1 cache):")
+            for b_ in bad:
+                log("  " + b_)
+            sys.exit(4)
     try:
         if guard:
             B.attempts_check(cfg, paths, key)

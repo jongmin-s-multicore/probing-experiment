@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import csv
 import hashlib
+import os
 import time
 from pathlib import Path
 
@@ -35,6 +36,35 @@ def n_heads(cfg, max_tasks=None):
     ts, hs = len(cfg["seeds"]["task_a"]), len(cfg["seeds"]["head"])
     reps = len(cfg["representations"]) * 2
     return {"attentive_rep_heads": ts * hs * reps * n_task, "base_heads_attn_area": ts * hs * n_task, "base_small_oracle_heads": ts * hs * n_task * 2}
+
+
+def missing_inputs(cfg, paths):
+    """Preflight list (no GPU, no attempt consumed): the four representation files and the 002 Q1 cache DONE marker. Empty list = all present."""
+    suffix = cfg["_c5"]["exp4"]["cache_suffix"]
+    bad = []
+    for l in plan_of(cfg)["layers"]:
+        for ctl, _ in MODELS:
+            p = FE.layer_path(paths, l, ctl, suffix)
+            if not p.exists():
+                bad.append(str(p))
+    if not (CA.cache_dir(B.B5.as002(paths), suffix) / "DONE").exists():
+        bad.append("002 Q1 cache DONE (%s)" % CA.cache_dir(B.B5.as002(paths), suffix))
+    return bad
+
+
+def code_version(exp_dir):
+    """Code identity for results.json: git HEAD of the checkout containing exp_dir (None if not a git checkout), plus env EXP010_CODE_REPO_URL / EXP010_CODE_REF set by the Colab notebook."""
+    import subprocess
+
+    def git(*a):
+        try:
+            r = subprocess.run(["git", "-C", str(exp_dir)] + list(a), capture_output=True, text=True, timeout=20)
+            return r.stdout.strip() if r.returncode == 0 else None
+        except Exception:
+            return None
+    head = git("rev-parse", "HEAD")
+    return {"git_head": head, "git_status_dirty": (bool(git("status", "--porcelain", "--", ".")) if head else None),
+            "repo_url": os.environ.get("EXP010_CODE_REPO_URL"), "requested_ref": os.environ.get("EXP010_CODE_REF")}
 
 
 def check(cfg, c2, paths):
@@ -173,7 +203,7 @@ def report_stage(cfg, c2, paths, head_seeds, dry_run=False):
     res = {"experiment": cfg["name"], "pilot": bool(cfg["pilot"]), "task_seeds_used": sorted(tasks_by_ts), "task_seeds_missing_files": missing, "head_seeds": list(head_seeds),
            "eval_n_inputs": cfg["eval"]["n_inputs"], "tost_delta": cfg["tost"]["delta"], "tost_alpha": cfg["tost"]["alpha"], "tost_unit": cfg["tost"]["unit"],
            "normalization": cfg["_c5"]["normalization"], "analysis": A, "config_sha256": hashlib.sha256(Path(cfg["_config_path"]).read_bytes()).hexdigest(),
-           "config005_sha256": hashlib.sha256((B.EXP_DIR / cfg["base"]["config005"]).resolve().read_bytes()).hexdigest(), "environment": env_info(), "interpretation": None}
+           "config005_sha256": hashlib.sha256((B.EXP_DIR / cfg["base"]["config005"]).resolve().read_bytes()).hexdigest(), "environment": env_info(), "code_version": code_version(paths["exp"]), "interpretation": None}
     write_json(res, paths["exp"] / "results.json")
     log("report done: %d ib rows" % len(rows))
     return res
