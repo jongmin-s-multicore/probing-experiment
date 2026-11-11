@@ -1,0 +1,21 @@
+# 013 CHANGES
+
+## 2026-11-11 코드와 Colab 노트북 작성 (CPU 점검까지; GPU 실행 없음, 미승인, 커밋/푸시 안 함)
+- 신규: `run.py`(check | gate | fit | measure | readout | aggregate | selftest, 모두 `--dry-run`), `src/exp013/{base,lib,core,stages,selftest}.py`, `colab/build_notebook.py`, `colab/exp013_colab.ipynb`. README.md 갱신.
+- 009 `exp009.erase`(fit_eraser, forward_hidden, load/save_eraser), `exp009.stages`(labels_positions, probe_rows, metadata_missing), `exp009.curves`(seed_curve), 004 `exp004.deep.random_init_predictor`/`stages`, 002 `exp002.*` 는 import 만 한다. 수정 없음. config.yaml 은 바꾸지 않았다(`pilot: true` 유지).
+- 검증: `python run.py selftest` 결과는 notes/log.md 2026-11-11 항목과 `logs/selftest_*.log`. 노트북은 JSON 생성과 코드 셀 `ast.parse` 만 확인. Colab/GPU/실제 체크포인트 실행은 하지 않았다.
+
+## 실험자가 정한 구현 사항 (config/hypotheses 에 없음; 사용자 확인 필요)
+config 와 hypotheses.md 확정 값은 하나도 바꾸지 않았다. 아래는 피할 수 없어서 정한 것이며 모두 결과를 보기 전에 고정했다.
+1. **캐시 위치 환경변수**: config 에 `paths` 절이 없어 `EXP013_CACHE`(기본 `$DINO_WORK/exp013_cache`)를 코드에 고정했다. 소거기 적합(`fit/`), 패치 평균 캐시, 임시 특징이 여기에 간다.
+2. **움직임 오차 정의**: "Δz 오차"를 소거된 입력 기준으로 정의했다. `motion = ((pred − z_e) − (z_{t+1} − z_t))²`, z_e = 소거된 입력. 이유: 입력 z 를 소거하면 `pred − z_{t+1}` 은 총 오차와 같아져 (A)와 (B)가 구별되지 않고, 겉모습 복사 실패를 움직임 실패와 분리하려는 가설의 의도(hypotheses 013 "설계 전제")에 맞지 않는다. persistence(Δz = 0) 기준은 `|z_{t+1} − z_t|²`. 소거 없음에서는 total == motion. 총 오차 `total`, 소거된 입력 복사 오차 `copy` 도 함께 저장한다.
+3. **level_mean_match 의 "전체 평균"**: 9개 레벨 평균의 동일 가중 평균(패치 위치별). 평균은 12 입력 프레임과 적합 episode 에 걸친 평균. 학습 레벨은 train split 300 episode 전부(fit_fraction 0.5 는 LEACE 에만 적용), OoD 레벨은 test 100 episode 의 무작위 절반(`RandomState(fit_seed 9000)` 으로 레벨 순서대로 순열, 앞 50개 적합/나머지 평가). 이 분할은 학습 seed 와 조건에 무관하다. `results/fit.json` 에 episode 인덱스를 기록한다.
+4. **LEACE 적합 데이터**: 009 규칙대로 Q1 캐시 train 행(900)에서 `RandomState(9000 + 학습 seed)` 절반(450)을 뽑고, 인코더 latent 의 패치 평균(12개 입력 프레임, 레이블 = 레벨의 log 면적비)으로 `fit_eraser`. 009 는 predictor 내부 hidden 에 적합했지만 013 은 predictor 입력(= 인코더 latent)이므로 적합도 인코더 latent 이다. 인코더는 고정이므로 같은 학습 seed 의 소거기는 두 조건이 공유한다. 이 공유가 맞는지 가정하지 않고 실행 시 각 체크포인트의 인코더 지문을 Q1 캐시와 비교해(다르면 중단) results.json `erasers_shared_across_conditions` 에 기록하고, 첫 배치에서 `encode_batch` 시각 부분과 캐시 `tokens_dino` 의 최대 차이도 기록한다. 소거 위치는 위치 임베딩 더하기 전(009 의 h_0 는 더한 뒤이지만 소거는 상수 이동만 다르다).
+5. **level_mean_match 의 무작위 대조**: 변위 norm 은 (레벨, 패치)별 |D| 와 같게, 방향은 20개 무작위 단위 방향 중 하나, 부호는 (방향, 레벨, 패치)별 무작위 ±1(seed 13000+1). 이유: 부호를 고정하면 레벨 평균 변위의 합이 0 이라는 성질이 깨져 전체 평균이 이동한다. LEACE 대조는 `−coef x |c| x 무작위 방향`(부호 있는 계수는 크기 소거와 같음, 합이 0). 두 경우 모두 토큰별 변위 norm 이 정확히 같음을 selftest 와 results.json(`norm_matching`)이 확인한다.
+6. **0단계 세부**: 행동 = Q1 캐시 `actions_raw` 의 12 그룹 x 30(정규화 안 함, ridge 안에서 표준화), 입력 프레임 f = 0..11 -> Δ(f -> f+1), 오차 = 패치 평균 Δz(384) MSE. alpha 격자 = 002 `probe_impl.ridge_alphas`, 내부 분할 수 = 002 `probe_impl.inner_folds`(3), 분할은 episode 단위, 결정적 순열(sklearn 은 lab07 에 없어 직접 구현). "같은 레벨 test 오차"는 같은 회귀기의 A test 오차(진단으로 B 의 자기 회귀기 대비 비도 저장).
+7. **판정의 모호한 부분**: (2) "Δ_use 가 (persistence 오차 − 모델 오차) 의 10% 이상"과 (3) "(b) > (a)"를 학습 seed 평균 기준으로 구현했다(조건 (1)만 seed 별 2/3). 이유: 문장이 seed 별인지 명시하지 않았다. seed 별 10% 충족 여부도 `per_seed_b.delta_use_ge_10pct_gap_this_seed` 로 저장한다. gap ≤ 0 이면 조건 (2) 불충족. (a)의 seed 가 하나라도 없으면 `not_evaluable`. CI 하한이 정확히 0 이면 "0 을 제외"로 세지 않는다. Δ_use 는 정규화 오차 단위(persistence = 1)이고, 정규화는 평가 집합 전체의 합비(Σ motion / Σ persist).
+8. **bootstrap**: 레벨별 층화 episode 재표집(각 레벨의 episode 수를 유지), 모든 학습 seed·조건·방식에서 같은 인덱스(seed 14000)를 쓴다(짝지음). 평가 집합은 방식마다 다르다: LEACE 는 OoD 레벨 100 episode 전부(+ 같은 절반 `*_heldhalf` 도 보고), level_mean_match 는 OoD 레벨 평가 절반(50)만.
+9. **소거 확인(readout)**: 009 의 `probe_rows`/`seed_curve` 를 그대로 쓰되(late 창, linear_pooled, probe seed = 009 의 0..4) 소거를 predictor 입력에 적용한 hidden 으로 깊이 0..6 모두를 잰다(깊이 0 포함은 추가). 소거 없음/LEACE/level_mean_match 3가지, 무작위 대조는 생략. 학습 seed 별 R² 곡선을 split(train/interp/extrap)별로 저장.
+10. **배치와 정밀도**: `--batch-episodes` 기본 8, fp32, `torch.no_grad`. 첨부된 모델의 `predict` 를 그대로 호출.
+11. **관문 파일**: `results/stage0.json`(pilot 은 `--results-dir` 쪽). 관문 정의(config `stage0`, `data`, `base.conditions`)의 해시가 다르면 낡은 기록으로 보고 거부(종료코드 5). `pilot` 플래그 변경은 해시에 영향 없다. 관문 기록이 없거나 미통과면 `measure`/`readout` 이 종료코드 5 로 거부하고 시도를 소비하지 않는다. `--override-gate` 는 기록되고 results.json 을 `pilot: true` 로 만든다. `aggregate` 는 관문 상태와 무관하게 실행되며 결과에 관문 기록을 포함한다.
+12. **파일럿**: `--episodes-per-level N`(앞 N episode)을 추가했다(012 의 `--m-int` 에 해당하는 축소 수단). 결과는 `pilot: true`.

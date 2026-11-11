@@ -1,0 +1,134 @@
+[2026-11-11 17:50:31] log file: /home/jaekyungkim/mylab/experiments/013_size_use_erasure/logs/selftest_20261111-175031.log
+[2026-11-11 17:50:31] stage=selftest dry_run=False python=/home/jaekyungkim/miniconda3/envs/lab07/bin/python conda_env=base pilot_config_flag=True results_dir=/home/jaekyungkim/mylab/experiments/013_size_use_erasure/results
+A  verdict rule (confirmed 2026-11-11)
+  [ok] config: min_seeds 2, 10% of gap, b>a required 
+  [ok] all three conditions met -> criterion_met 
+  [ok] 2 of 3 seeds with CI excluding 0 -> met (cond1) 
+  [ok] 1 of 3 seeds -> not met 
+  [ok] CI lower bound exactly 0 does not exclude 0 
+  [ok] point estimate <= 0 never counts even with lo > 0 (inconsistent input) 
+  [ok] Delta_use exactly 10% of the gap counts (>=) 
+  [ok] Delta_use just below 10% of the gap does not count 
+  [ok] gap <= 0 (model not better than persistence) -> cond2 false 
+  [ok] (b) Delta_use equal to (a) -> cond3 false (strict >) 
+  [ok] (b) larger than (a) -> cond3 true 
+  [ok] missing (b) seed -> not_evaluable 
+  [ok] NaN in (b) -> not_evaluable 
+  [ok] missing (a) seed -> not_evaluable 
+  [ok] not-detected reading says it does NOT mean 'unused' 
+B  bootstrap and Delta_use known answers
+  [ok] boot_indices reproducible for seed 14000, different for another seed 
+  [ok] stratified: every resample keeps the group sizes and draws only inside the group 
+  [ok] constants: motion_norm none 0.5, size 0.7, rand 0.55; increases 0.2 / 0.05; Delta_use 0.15; gap 0.5 {'point': 0.1499999999999999, 'ci_lo': 0.1499999999999999, 'ci_hi': 0.1499999999999999}
+  [ok] constants: CI collapses to the point 
+  [ok] noise toy n=200: point inside the 90% CI; no true effect -> |point| within one CI width of 0 (point -0.0037, width 0.0214)
+  [ok] noise toy n=2000: point inside the 90% CI; no true effect -> |point| within one CI width of 0 (point -0.0036, width 0.0069)
+  [ok] CI narrows with more episodes 
+  [ok] planted effect: CI excludes 0 
+C  erasers: norm matching, properties, numpy == torch
+  [ok] LEACE (numpy displacement): covariance of every coordinate with y ~ 0 after erasure (7.9e-16 vs 2.2)
+  [ok] LEACE: fitted readout a.x is constant after erasure (2.4e-16)
+  [ok] LEACE numpy displacement == 009 apply_eraser_np(alpha=1) - x 
+  [ok] random directions: 20 unit vectors, reproducible with seed 13000, different with another seed 
+  [ok] random signs: +-1, shape (20, 9, P), reproducible 
+  [ok] level_mean_match: Mn + D is the overall mean for every level and patch (all levels end up with the same mean) 
+  [ok] level_mean_match: shifts sum to zero over levels 
+  [ok] torch LEACE displacement == numpy reference (2e-07)
+  [ok] torch level-mean displacement == numpy reference 
+  [ok] norm matching: per-token displacement norm of every random direction == size erasure (LEACE and level-mean-match) (max abs diff 4.8e-07 / 4.8e-07)
+  [ok] random control is NOT the size direction (cosine with the size displacement < 0.9) 
+  [ok] level-mean random control: displacement is not the size shift 
+D  fit / evaluation separation
+  [ok] LEACE fit episodes follow the 009 rule and are train rows only 
+  [ok] fit episodes depend on the train seed (9000 + seed) 
+  [ok] OoD halves: disjoint, half/half per OoD level, train levels all evaluated and never fit 
+  [ok] OoD halves are reproducible (seed 9000) 
+  [ok] poison test (LEACE): garbage in every non-fit train row and every test row does not change the eraser 
+  [ok] poison test (level means): garbage in every test row except the OoD fit half does not change the level-mean shifts 
+  [ok] level-mean fit read only: train rows (train levels) + the OoD fit-half test rows (never the OoD eval half or train-level test rows) 
+  [ok] level-mean fit counts: train levels = n_train rows of the level, OoD levels = fit half 
+E  stage-0 gate and its refusal
+  [ok] gate: level-dependent dynamics -> 6 directed pairs, passed (pass 6/6, ratios [16.89, 10.94, 20.33, 18.23, 17.26, 22.49])
+  [ok] gate: identical dynamics in all levels -> NOT passed (< 4 pairs with ratio >= 1.1) (pass 0/6, ratios [1.07, 0.98, 0.96, 0.9, 1.03, 1.05])
+  [ok] gate: threshold boundary (>= 1.1 counts) 
+  [ok] gate: ridge alpha chosen by episode groups (alpha from the grid), ratio uses the SAME regressor on same vs other level 
+  [ok] kfold_groups: every group in exactly one of 3 balanced folds 
+  [ok] run.py: gate check (exit 5) comes before the preflight (exit 4) and before attempts_check / attempts_record 
+  [ok] measure with NO stage0.json: exit 5, no attempts.json (rc=5)
+  [ok] measure with a FAILED gate: exit 5, message names the pairs, no attempts.json (rc=5)
+  [ok] readout with a FAILED gate: exit 5 
+  [ok] measure with a STALE gate record (other gate definition): exit 5 
+  [ok] measure with a PASSED gate goes on to the preflight (inputs missing here -> exit 4, no attempts.json) (rc=4)
+  [ok] --override-gate with a failed gate passes the gate (then exit 4 on missing inputs) and is logged 
+  [ok] dry-run with a failed gate does not exit 5 
+  [ok] pilot_reasons: gate override listed 
+F  metric definitions against an independent numpy computation
+  [ok] eval_batch == independent numpy (total, motion, persist, copy, displacement norms) for none / LEACE size+random / level-mean size+random (max abs diff 7.9e-07)
+  [ok] no erasure: total == motion, displacement 0 
+  [ok] copy predictor (pred = erased input): motion == persistence for EVERY erasure; total == copy error 
+  [ok] persist does not depend on the erasure 
+  [ok] stage-2 inputs: dreal == mean real change; shapes (B, dz) 
+G  stage-2 level-mean comparison
+  [ok] pred = 2 * real + constant: correlation ~1, slope ~2 (global mean removed) {'corr': 1.0, 'slope_pred_on_real': 2.0, 'norm_real_residual': 11.8243, 'norm_pred_residual': 23.6487}
+  [ok] unrelated prediction: |correlation| small 
+  [ok] a constant offset on all levels does not change the result 
+H  planted size-use world: fit -> eval -> Delta_use -> verdict -> aggregate (results.json)
+[2026-11-11 17:50:45] aggregate: conditions ['single_ind', 'multi_60_ind_160'] seeds [0, 1, 2]
+[2026-11-11 17:50:46] aggregate done (pilot=True): verdicts {'leace_scalar': 'criterion_met', 'level_mean_match': 'criterion_met'}
+     planted b: motion_norm none 0.309 size 0.999 rand 0.351 Delta_use 0.648 CI [0.627, 0.667]
+  [ok] planted use in (b), none in (a): LEACE verdict = criterion_met {'cond1_seeds_positive_ci_excl_0': {'n': 3, 'needed': 2, 'met': True}, 'cond2_mean_delta_use_ge_10pct_mean_gap': {'mean_delta_use_b': 0.6629071742195906, 'mean_gap_b': 0.6912207873749434, 'threshold': 0.06912207873749435, 'met': True}, 'cond3_b_greater_than_a': {'mean_delta_use_b': 0.6629071742195906, 'mean_delta_use_a': 0.0, 'met': True}}
+  [ok] planted use in (b), none in (a): level-mean-match verdict = criterion_met {'cond1_seeds_positive_ci_excl_0': {'n': 3, 'needed': 2, 'met': True}, 'cond2_mean_delta_use_ge_10pct_mean_gap': {'mean_delta_use_b': 0.6956025096323226, 'mean_gap_b': 0.6912207873749434, 'threshold': 0.06912207873749435, 'met': True}, 'cond3_b_greater_than_a': {'mean_delta_use_b': 0.6956025096323226, 'mean_delta_use_a': 0.0, 'met': True}}
+  [ok] planted use: un-erased motion error is far below persistence (gap large) and size erasure removes it 
+  [ok] a predictor that ignores the input size (copy) has Delta_use == 0 and gap 0 
+  [ok] random-init (= copy here) reference Delta_use ~ 0 is reported per condition/seed 
+  [ok] results.json records the norm matching (ratio random/size == 1) {'size_mean_token_displacement_norm': 1.3257699936440541, 'random_mean_token_displacement_norm': 1.3257700240921346, 'ratio_random_over_size': 1.000000022966337, 'max_abs_diff_per_episode': 7.218596831393143e-08}
+[2026-11-11 17:50:48] aggregate: conditions ['single_ind', 'multi_60_ind_160'] seeds [0, 1, 2]
+[2026-11-11 17:50:49] aggregate done (pilot=True): verdicts {'leace_scalar': 'criterion_not_met', 'level_mean_match': 'criterion_not_met'}
+  [ok] no predictor uses size (both copy): verdict criterion_not_met for both methods 
+[2026-11-11 17:50:52] aggregate: conditions ['single_ind', 'multi_60_ind_160'] seeds [0, 1, 2]
+[2026-11-11 17:50:53] aggregate done (pilot=True): verdicts {'leace_scalar': 'criterion_not_met', 'level_mean_match': 'criterion_not_met'}
+  [ok] size use equally strong in (a) and (b): cond3 (b > a) fails -> criterion_not_met 
+  [ok] sets: leace has train/interp/extrap (+ held-half variants); level-mean-match evaluates OoD levels on the held-out half only (n smaller) 
+  [ok] results.json fields: pilot (true: config flag + separate dir), pilot_reasons, config_sha256, code_version, environment, gate, interpretation null, stage2, missing_units empty 
+  [ok] stage 2: oracle predictor tracks the level-mean change (corr > 0.9, slope ~1) {'corr': 0.999879618898438, 'slope_pred_on_real': 1.000491765618829, 'n_levels': 9, 'n_entries': 144, 'norm_real_residual': 0.6369608457967942, 'norm_pred_residual': 0.6373508062334332}
+[2026-11-11 17:50:53] aggregate: conditions ['single_ind', 'multi_60_ind_160'] seeds [0, 1, 2]
+[2026-11-11 17:50:54] aggregate done (pilot=True): verdicts {'leace_scalar': 'not_evaluable', 'level_mean_match': 'not_evaluable'}
+  [ok] a missing (a) unit -> verdict not_evaluable, listed in missing_units (no estimate substituted) 
+  [ok] pilot logic: config pilot false + experiment results dir + no overrides -> no reasons; each override adds a reason 
+I  toy world model: compute_unit, determinism, batch invariance, erased extraction, readout drop
+[2026-11-11 17:50:54] toy first batch: max |encode_batch visual - cached tokens_dino| = 0 (cache is fp16)
+[2026-11-11 17:50:54] toy: 8/90 episodes (0s)
+[2026-11-11 17:50:55] toy first batch: max |encode_batch visual - cached tokens_dino| = 0 (cache is fp16)
+[2026-11-11 17:50:55] toy: 16/90 episodes (0s)
+[2026-11-11 17:50:56] toy first batch: max |encode_batch visual - cached tokens_dino| = 0 (cache is fp16)
+[2026-11-11 17:50:56] toy: 8/90 episodes (0s)
+  [ok] compute_unit shapes: (43 configs, 90 test episodes, 6 metrics) for trained and random-init 
+  [ok] deterministic (same inputs twice) and batch-size invariant (8 vs 16 episodes) 
+  [ok] encoder == cached tokens in the toy (first-batch difference ~ 0) (0)
+  [ok] trained and random-init predictors give different scores 
+  [ok] config keys: 1 + 2 x (1 + 20) = 43, none first 
+  [ok] size vs random displacement norms are equal per episode for all 20 directions in the full pipeline 
+[2026-11-11 17:50:57]  extract 8/138 (0s)
+[2026-11-11 17:50:57]  extract 8/138 (0s)
+  [ok] extract_erased without erasure == 009 extract_hidden (depths 0, 3, 6) 
+[2026-11-11 17:50:57]  extract 8/138 (0s)
+  [ok] erasure is applied to the predictor INPUT z part (depth-0 hidden differs from the plain one by the LEACE displacement) (0.00071, fp16 storage)
+  [ok] after the input erasure the pooled fitted readout is (almost) constant over episodes/frames at depth 0 (std ratio < 0.02) (5.06e-06 vs 0.617)
+[2026-11-11 17:50:57]  extract 8/138 (0s)
+[2026-11-11 17:50:57]  extract 8/138 (0s)
+[2026-11-11 17:50:57]  extract 8/138 (0s)
+     toy linear size readout R2 (train split) depth 0/3/6: none [0.997, 0.996, 0.996] | leace [0.026, -0.015, -0.006] | level-mean [0.001, -0.003, -0.005]
+  [ok] readout check: size readable without erasure (R2 > 0.5 at depth 0), strongly reduced by LEACE and by level-mean-match 
+  [ok] readout record: depths 0..L for splits train/interp/extrap 
+  [ok] part file names distinct per (condition, seed) 
+J  config consistency, attempts, preflight
+  [ok] config consistency with 009/002 (17 checks) []
+  [ok] a changed fit_seed / bootstrap seed is detected ['erasure.fit_seed == 009 intervention.fit_seed', 'success numbers (2026-11-11): min_seeds 2, ci 0.90, 0.10 of persistence gap, b>a, bootstrap 2000 seed 14000 episode']
+  [ok] config: seeds explicit (global 0, train seeds, random-init 1234, fit 9000, random directions 13000, bootstrap 14000) and pilot flag present 
+  [ok] attempts: after 3 consecutive failures the 4th run is refused (max_attempts 3) 
+  [ok] attempts are counted per stage 
+  [ok] preflight: run dir without the exp002_ prefix is not accepted, message names the expected folder 
+  [ok] preflight: model_latest.pth missing reported; with it present the (a) condition run dir is accepted 
+  [ok] preflight: complete exp002_single_ind_s0 -> no problem 
+  [ok] run names: exp002_<cond>_s<seed> 
+selftest summary: passed=99 failed=0 skipped=0

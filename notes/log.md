@@ -286,8 +286,73 @@
 - 예상 GPU 시간(추정, 실측 없음): 6 run 합계 약 0.35-1.8 GPU 시간(A-E 만의 이전 추정 0.3-1.5 시간 + F 약 18%). Drive 읽기가 지배할 수 있다. CPU 분석 F 는 C 의 약 2배 시간(추정).
 - 주의: 노트북은 clone 한 저장소의 코드를 돌리므로 사용자가 이 변경을 commit/push 해야 Colab 에 반영된다. GPU 미사용, git commit/push 하지 않음. 결과 수치 없음, 해석 없음.
 
+## 2026-11-10 / phys_param_shift (실험 011 준비) / 문헌 종합과 가설 후보 3개 추가 (reporter)
+- notes/research/{prior,stats,skeptic}_phys_param_shift.md 를 notes/lit_review.md 새 절 "phys_param_shift (실험 011 준비, 2026-11-10)" 로 종합했다(기존 천 크기 절은 변경 없음). Thorpe 2605.30542 확인 수준이 분석가마다 다름(prior 본문 / stats 초록 / skeptic 검색 결과), 정량 근거 없음. 의견 갈림은 합치지 않고 병기.
+- notes/hypotheses.md 에 후보 K(전제 점검 P0), L(1단계 폐루프 ΔCD, 학습 없음), M(2단계 θ-일치/H=3 이중 차이, 재학습)을 미확정으로 추가. 실험 실행 없음, 새 수치 없음, 가설 확정 아님(사람 선택 대기).
+
 ## 2026-11-10 / 009_positive_control_depth / Colab 본 실행 완료, 결과 복사 (결과 기록, 해석 전)
 - 실행: 사용자 Colab NVIDIA L4, 코드 4728e83 (results.json `code_version.git_status_dirty` true, 무엇이 dirty 였는지 미확인), `pilot: true` 그대로. attempts intervene 0, aggregate 0. 결과를 Drive exp009_work 에서 experiments/009_positive_control_depth/{results.json, results/, results/colab/} 로 사용자가 복사(Windows Zone.Identifier 부속 파일은 삭제).
 - 결과(results.json): 블록 1-6 모두 `verdict.status` criterion_met, 학습 seed 3/3 검출, `m_star_by_train_seed` 는 모든 블록에서 m_int 와 같음. 보조 A, B 모두 3/3 관측됨(m_int+1 이내). `baseline_vs_004.max_abs_r2_diff` 전부 0.0. missing_units 없음. diagnostics: 소거 후 판독 방향 std 비 약 2e-7~4e-7.
 - 보조 관측(`aux_recovery_r2_minus_r2_at_m_int`, 블록 1): 소거 블록 다음 블록에서 R² 가 train +0.719, interp +0.219, extrap +0.785 회복(seed 평균값 기준인지 키 정의는 리뷰에서 확인). seed 0 곡선: 소거 블록 R² 약 0, 바로 다음 블록 train 0.76~0.82.
 - 해석: 하지 않음. /review-experiment 로 넘김.
+
+## 2026-11-10 / 009_positive_control_depth / 리뷰 3건 완료, 보고서 작성 (reporter)
+- 변경점: notes/reviews/009_prior.md, 009_stats.md, 009_skeptic.md 종합. reports/009_positive_control_depth.md 작성(새 측정 없음, 코드와 실험 파일 수정 없음). README 는 낡은 상태 문구가 있어 결과 근거로 인용하지 않음.
+- 요약: 블록 1-6 모두 criterion_met, 학습 seed 3/3, m* = m_int (stats 독립 재현 18/18). 소거 하락 최소 0.489(interp), 임계 0.2 의 2.4배 이상. 일치: 계산 정확, 효과가 완전 선형 소거 한 점이라 부분/비선형 소실 민감도와 004 의 특이성(random-init 평평)은 미검증, "사용"이 아닌 선형 판독 가능성, 004 refuted 를 강화/일반화해 쓰면 안 됨, 회복 경로 구분 불가, pilot/dirty 정리 필요. 갈림: 통과의 정보량(prior 구조적 맹검 아님 / stats 민감도 상한 없이 통과 / skeptic 구성상 거의 보장된 배관 점검), std 비 진단 해석, 회복 해석(prior 잔차/문헌 후보 / stats 분모 효과, 해석 안 함 / skeptic 선형 투영만 지워졌을 가능성), "검출력 있음" 라벨.
+- 정정: 위 "Colab 본 실행 완료" 항목의 aux_recovery 는 stats 가 정의를 확인했다 = 학습 seed 별 (R²(d) - R²(m_int)) 의 3개 seed 평균, 기준선 미차감, 재계산 최대 차 0 (원문은 수정하지 않음). README 낡은 문구, hypotheses.md 009 제목 미갱신, 실행 시간 추정(1.8-3.3h)과 실제(intervene 약 50분)도 보고서 6절에 표시.
+- 사람 결정 3건은 보고서 8절(결과 인용 범위와 004 refuted 표기, pilot/dirty 처리와 정정 반영, skeptic 추가 실험 3종과 006 F, 010 GPU 승인).
+
+## 2026-11-10 / 010_source_separation_ib / Colab 노트북 작성 (코드, 미실행) (experimenter)
+- 근거: 사용자 요청 "010 코랩 노트북 만들어줘". 010 가설은 초안(notes/hypotheses.md "010" 절, 수정하지 않음). Delta(0.05), 과제 시드([2000, 2001, 2002]), GPU 실행 승인은 사용자 결정 대기이며 노트북은 config.yaml 을 덮어쓰지 않는다.
+- 변경점: (1) experiments/010_source_separation_ib/colab/build_notebook.py -> exp010_colab.ipynb (git clone + REPO_REF checkout, HEAD 를 exp010_work/code_version.json 에 기록, 승인 게이트 APPROVED_REGEN_010 / APPROVED_PILOT_010 / APPROVED_MAIN_010 기본 False, 폴더 분리 exp010_work, /content/mylab010, /content/venv010). (2) 캐시 4개(004 tokens_k12, rand_k12; 005 feat_pred_out6, feat_pred_out6_rand)가 Drive 에 없어 수정 없는 004 `enc_cache` 와 005 `feat` 를 부르는 재생성 셀(R) 추가: 결과는 Drive exp010_work/cache004, cache005 에 보관, 원래 로그와 설정 대조. (3) 010 코드: results.json 에 code_version, `heads` 사전 점검(종료코드 4). 변경은 CHANGES.md. 004/005 파일 수정 없음.
+- 검증(CPU, lab07): `python run.py selftest` PASS 37 FAIL 0 SKIP 0 (이전 19). 노트북 JSON 유효, 코드 셀 23개 ast 통과. 임시 복사본에서 노트북 셀 A6, B2 와 run010 (check/heads/report --dry-run, selftest), run_regen 004/005 --dry-run, R1 사전 점검(체크포인트 없음으로 의도한 중단) 실행 확인. 캐시 없이 `heads` 실행 시 종료코드 4 확인. 실제 predictor/GPU 경로는 확인하지 못함.
+- 알려진 사실: 원래 실행 시간 enc_cache 177 s, feat 137 s (004/results/colab/timing_main.json, Colab L4). 본 heads 약 3-3.5 시간은 README 의 추정(실측 없음). 005 config.yaml 의 현재 sha256 은 005/results.json 의 값과 다르다(원인 미확인).
+- 결과 수치 없음, 해석 없음. GPU/Colab/git commit/push 하지 않음. 노트북 반영에는 사용자의 commit/push 가 필요.
+
+## 2026-11-10 / 006_size_readout_reanalysis / Colab 본 실행 완료, 결과 복사 (결과 기록, 해석 전)
+- 실행: 사용자 Colab NVIDIA L4, 코드 01489ad (results.json `code_version.git_status_dirty` true, 무엇이 dirty 였는지 미확인). 첫 extract 시도(10:27 UTC)는 config `extract.smoke.run` 의 `exp002_` 접두사 누락으로 3/3 실패 후 멈춤 -> 01489ad 로 수정(이름 사전 점검 추가) 후 재실행. 이후 extract(6 run, 10:35-11:03), pool, labels, transfer, repro, analyze_a-f, aggregate(11:19), figures 모두 1회 시도로 완료. analyze_a 는 transfer 전후 두 번 실행(각 1회 시도), 두 번째가 part 를 덮어씀. aggregate: parts 7개 모두 있음, missing 없음.
+- 결과 복사: 사용자가 Drive exp006_work/results 를 zip 으로 받아 옮김 -> results/ 로 평탄화, results.json 을 실험 폴더 최상위에도 둠(sha256 a92d11a8...). Zone.Identifier, zip 삭제(zip 내용과 동일 확인). Drive exp006_work/figures(그림 7장)는 아직 저장소에 없음.
+- 재현(results.json `reproduction`): 002 대비 rollout R² 최대 |차| 0.000146(144값), 인코더 probe 최대 |차| 5.8e-15.
+- 결과(results.json `*.seed_summary`, role unseen, 학습 seed 3개 평균, step 1/6/12):
+  - 인코더 천장 R²(E): 0.894 / 0.895 / 0.820 (두 조건 같음). persistence(B): 0.894 / 0.894 / 0.894.
+  - (a) single_ind: 전이 probe open-loop R² 0.686 / 0.163 / 0.096; 재학습 probe open-loop(C) 0.918 / 0.516 / 0.217; teacher-forced 전이(F) 0.686 / 0.606 / 0.582; teacher-forced 재학습(F) 0.918 / 0.924 / 0.795. 레벨 평균 기울기(F 전이) open-loop 0.454 / 0.094 / 0.065, teacher-forced 0.454 / 0.383 / 0.374.
+  - (b) multi_60_ind_160: 전이 open-loop 0.857 / 0.730 / 0.518; 재학습 open-loop 0.913 / 0.846 / 0.613; teacher-forced 전이 0.857 / 0.858 / 0.788; teacher-forced 재학습 0.913 / 0.913 / 0.805. 기울기(F 전이) open-loop 0.705 / 0.594 / 0.451, teacher-forced 0.705 / 0.744 / 0.661.
+  - 학습 안 한 predictor(B, 두 변형): R² 약 -23 (step 1), 약 -55 ~ -57 (step 6, 12).
+  - D(크기 무관 속성)는 속성별 값이 많아 여기 옮기지 않음(results.json `D`).
+- 해석: 하지 않음. /review-experiment 로 넘김.
+
+## 2026-11-10 / 012_erasure_residual_info / 코드와 Colab 노트북 작성 (코드, 미실행) (experimenter)
+- 근거: notes/hypotheses.md "012 소거 후 잔여 정보 진단" 절과 확정 기록(2026-11-10), 실험 README/config.yaml(사용자 결정, 값 변경 없음). GPU 실행은 사용자가 아직 승인하지 않았다.
+- 변경점: experiments/012_erasure_residual_info/ 에 `run.py`(check | measure | aggregate | selftest, `--dry-run`), `src/exp012/{base,measure,verdict,stages,selftest}.py`, `colab/build_notebook.py` -> `colab/exp012_colab.ipynb`, `CHANGES.md`, README 실행 방법/Colab 절 추가. 009 의 `exp009.erase`(fit_eraser, forward_hidden, pooled_hidden)와 004/002 모듈은 import 만 했고 009/004/002 파일은 수정하지 않았다. 시작 시 config 의 intervention 값이 009 config 와 같은지, attentive 값이 002 config 와 같은지 검사한다.
+- 구현 사항: 단위 21개(기준선 3 + 소거 18), 깊이 m_int(판정)와 m_int+1(보조, 블록 6 은 "해당 없음"), 측정 5종(a 로지스틱, b MLP, b attentive, c 행동 좌표 ridge, d linear), probe 는 방향 적합에 쓰지 않은 train episode 에서만 학습하고 test 에서 평가(assert + selftest). 판정은 config success 값 그대로(0.5333333333, 0.2, 0.2, 2/3 seed), 값이 없으면 not_evaluable, `interpretation` null. part 파일 재개, 시도 최대 3회(attempts.json), 사전 점검 실패는 시도 소비 없이 종료코드 4(체크포인트 폴더 `exp002_` 접두사 구조, Q1 캐시, metadata.pt, config 일치). results.json 에 code_version, config_sha256, environment, `pilot`/`pilot_reasons`(config 플래그, 결과 폴더, CLI 덮어쓰기에서 계산; 파일럿은 `--results-dir` 분리).
+- config 에 없어서 실험자가 정한 것(README 에 기록, 사람 확인 필요): (b), (c) 의 판정 split 을 test 전체 합산 `all` 로 두고 split 별 판정도 저장, 로지스틱 C 격자/선택 기준/솔버, window `late`(009 primary).
+- 검증(CPU, lab07, 합성/toy): `python run.py selftest` PASS 82 FAIL 0 SKIP 0. `python run.py check` 는 이 머신에 체크포인트/캐시/metadata.pt 가 없어 종료코드 1 과 7개 문제 목록을 출력(의도한 동작, config 일치 검사 29개는 모두 ok). `measure --dry-run`, `aggregate --dry-run` 종료코드 0(measure 는 사전 점검 실패를 기록하고 계속). 비 dry-run `measure` 는 체크포인트 없음으로 종료코드 4, attempts.json 미생성(selftest 가 subprocess 로 확인). 노트북: JSON 유효, 25셀(code 18, markdown 7), 코드 셀 ast 통과. 실제 predictor, GPU, Colab, 실제 체크포인트 경로는 확인하지 못했다.
+- 비용 추정(실측 없음): 약 2 시간(범위 1.5-3 시간, L4). 근거: 009 intervene 3005.9 s(009 timing_main.json) + 004 enc_probe 셀당 약 57-68 s 로 환산한 attentive 상한 약 52 분 + MLP/로지스틱 미측정. 임시 디스크 최대 약 13 GB(추정).
+- 결과 수치 없음, 해석 없음. GPU/Colab/git commit/push 하지 않음. 노트북 반영에는 사용자의 commit/push 가 필요.
+
+## 2026-11-10 / 006_size_readout_reanalysis / 리뷰 3건 완료, 보고서 작성 (reporter)
+- 변경점: notes/reviews/006_prior.md, 006_stats.md, 006_skeptic.md 종합. reports/006_size_readout_reanalysis.md 작성(새 측정 없음, 코드와 실험 파일 수정 없음). README 는 실행 후 갱신되지 않아 결과 근거로 인용하지 않음. 사후 탐색이라 판정 없음.
+- 요약: 일치 = 수치 재현(rollout R² 최대 차 1.46e-4), TF > open-loop 방향은 시드 운이 아님, untrained 전이 R²(-23 ~ -55)는 하한 불가, TF 는 복사만으로도 높을 수 있음, seed 3개라 정밀 수치 불안정, dirty/그림/로그 부재 정리 전 확정 금지. 갈림 = TF 대 OL 차이의 해석(prior 되먹임 누적과 합치(추정) / stats 누적 효과 패턴이나 원인 주장은 약하게 / skeptic 설계가 분리 못 함, persistence 0.894 가 TF 보다 높음, proprio 되먹임 교란), (a) 손실 원인과 in-sample probe 학습 행, 정보 소실 대 판독기 전이 실패, D 의 의미, dirty 의 의미(prior 원인 미확인 / skeptic 구조적으로 항상 true).
+- 사람 결정 3건은 보고서 8절(인용 범위, dirty/재현/기록·그림 반입 처리, 후속 실험 사전 등록과 GPU 승인).
+
+## 2026-11-11 / 010_source_separation_ib / Colab 본 실행 완료, 결과 복사 (결과 기록, 해석 전)
+- 실행(2026-11-10, 사용자 Colab NVIDIA L4, 코드 d6b0366, results.json `code_version.git_status_dirty` true, 무엇이 dirty 였는지 미확인): R2 004 `enc_cache` 재생성 188.7 s, R3 005 `feat` 재생성 134.5 s, R4 `cache_record.json` `plan_lines_equal_to_original_logs` true(4개 파일 [1800, 8, 196, 384] float16, sha256 기록). 파일럿 heads(과제 시드 2000, head 시드 0, 3 과제) 30.1 s. 본 heads 11568.2 s(105 단위, 과제 시드 [2000, 2001, 2002] x head 시드 [0..4]), report 16.5 s(4200 ib 행). attempts heads 0, report 0. 본 결과의 `pilot` 은 true 로 남음(로그 `pilot=True`; 사용자 확인 2026-11-11: config `pilot: true` 상태 그대로 본 실행을 진행함).
+- 결과 복사: Claude 가 Drive `exp010_work` 에서 받음(json/로그는 Drive 다운로드 API, 크기 일치 확인; predictions 105개는 동기화된 G: 드라이브에서 복사). `results/` 전체가 Drive `exp010_work/results` 와 sha256 동일. results.json 은 실험 폴더 최상위에도 둠. Colab 기록은 `results/colab/`, 로그는 `logs/colab_20261110/`(재생성 로그는 `regen/`). 캐시 4개(각 2.17 GB), results_pilot, regen/results_00{4,5} 는 받지 않음.
+- 결과(results.json `analysis.H_f_tost`, d = D-IB_area= - D-IB_area≠, Δ 0.05, 단위 과제 시드 3, df 2): enc_k12 ours -0.088 [-0.108, -0.068] refuted, enc_k12 random -0.302 [-0.320, -0.285] refuted, pred_out6 ours -0.100 [-0.138, -0.062] refuted, pred_out6 random -0.090 [-0.118, -0.063] refuted. 표현별 점수(pair group all, 과제 시드 평균) R-IB / D-IB: enc ours 0.716 / 1.034, enc random 0.701 / 0.881, pred ours 0.750 / 1.019, pred random 0.717 / 1.035. 표현 간 D-IB 차이(all): enc ours-enc random +0.154 refuted, enc ours-pred ours +0.015 supported, enc ours-pred random -0.001 supported, enc random-pred ours -0.138 refuted, enc random-pred random -0.155 refuted, pred ours-pred random -0.016 supported. R-IB 차이는 enc random-pred ours(-0.048) 만 inconclusive, 나머지 supported. ood_any 도 같은 판정. 전체는 `analysis.pairwise_differences`.
+- 참고(대조만, 해석 아님): 같은 과제 시드 2000 의 pred_out6 ours |d| 는 005 0.0872, 010 0.0887.
+- 해석: 하지 않음. /review-experiment 로 넘김.
+
+## 2026-11-11 / 010_source_separation_ib / 리뷰 3건 완료, 보고서 작성 (reporter)
+- 변경점: notes/reviews/010_prior.md, 010_stats.md, 010_skeptic.md 종합. reports/010_source_separation_ib.md 작성(새 측정 없음, 코드와 실험 파일 수정 없음). README, config.yaml 2행, hypotheses.md 010 제목/395행은 실행 후 갱신되지 않은 문구라 결과 근거로 인용하지 않음. 사용자 확인(2026-11-11): 본 실행은 config `pilot: true` 그대로 진행.
+- 요약: H-f TOST 4개 모두 refuted(Δ 0.05, df 2), pred_out6/random 은 enc_k12/ours 와 R-IB -0.0014, D-IB -0.0008 차로 사실상 같고 인코더 random-init 은 D-IB -0.154. 일치 = 계산 정확(stats 독립 재현 최대 차 0), "원인은 인코더"/"predictor 가 크기를 못 배웠다" 주장 불가, random predictor 가 고정 인코더 입력을 통과시킬 가능성(추정, 직접 측정 없음), H-f refuted 는 면적 휴리스틱 증거 아님(귀무값 0 아님: 선형 oracle -0.158, 면적 head -0.166, 무정보 +0.884), 005 supported 와 010 refuted 는 허용폭 규칙 차이, pairwise supported 는 "차이 없음" 아닌 "Δ 안"(pred ours-random R-IB +0.032, CI 0 제외), D-IB 포화, 단위 3 + 학습/random-init 시드/평가 입력 고정, 28건 미보정, pilot/dirty 정리 필요.
+- 갈림: 원인 위치 서술 강도(prior 는 predictor 대조 설계 쪽으로 읽힌다고 추정 / stats 는 인코더 단계 D-IB 차이가 predictor 출력에서 사라진 형태로도 읽되 무게 낮음 / skeptic 은 분리 불가·사후 해석), H-f refuted 의 의미(prior 입력 연속성 교란 / stats Δ 의존과 낮은 검정력 / skeptic 귀무값 0 아님), 작은 predictor 효과의 의미(stats Bonferroni 에서 소실, skeptic ind 그룹 사후 관측), Δ 정당성(skeptic 은 005 를 본 뒤 정했다고 지적), dirty 원인(skeptic 은 untracked 로그 추정), 고정 인코더 확인(skeptic 코드 인용 / prior 미확인).
+- 사람 결정 3건은 보고서 8절(pilot/dirty 와 결과 지위·인용 범위, 갈린 해석 처리와 낡은 문구·GPU 승인 기록 보완, CPU 입력-출력 유사도 확인 우선 여부와 인스턴스 변동 포함 2x2 및 시드 증가 승인).
+
+## 2026-11-11 / 013_size_use_erasure / 코드와 Colab 노트북 작성 (코드, 미실행) (experimenter)
+- 근거: notes/hypotheses.md "013 크기 정보의 사용" 절과 확정 기록 2개(2026-11-11), 실험 config.yaml(사용자 확정, 값 변경 없음, `pilot: true` 유지). GPU 실행은 사용자가 아직 승인하지 않았다. git commit/push 안 함.
+- 변경점: experiments/013_size_use_erasure/ 에 `run.py`(check | gate | fit | measure | readout | aggregate | selftest, 모두 `--dry-run`), `src/exp013/{base,lib,core,stages,selftest}.py`, `colab/build_notebook.py` -> `colab/exp013_colab.ipynb`, `CHANGES.md`, README 갱신. 009(`exp009.erase/stages/curves`), 004(`exp004.deep.random_init_predictor`/`stages`), 002 모듈은 import 만 했고 해당 파일은 수정하지 않았다.
+- 구현 사항: 0단계 관문(레벨별 ridge, 6 방향 쌍 비 ≥ 1.1 이 4개 이상, 결과 `results/stage0.json`; 미통과/없음/낡음이면 `measure`/`readout` 이 종료코드 5 로 거부하고 시도 소비 없음, `--override-gate` 는 기록되고 pilot: true). 1단계: 단위 6개(2 조건 x 학습 seed 3) x 900 test episode x 12 전이 x (소거 설정 43 x 학습된/random-init predictor 2). 소거는 predictor 입력 z 부분(384, 모든 패치, 위치 임베딩 전)에 변위를 더함. 소거기 2종(스칼라 LEACE = 009 fit_eraser, 레벨 평균 맞추기)과 토큰별 변위 norm 을 맞춘 무작위 방향 20개. 지표 total / motion / persist(persistence 정규화가 주 지표), Δ_use, 레벨별 층화 episode bootstrap 2000(seed 14000, 90% CI), 판정 규칙은 확정 기록 그대로, 2단계 상관·기울기, 소거 확인 R²(블록 0..6). results.json 에 config_sha256, code_version, environment, pilot/pilot_reasons, `interpretation: null`. 시도 최대 3회(attempts.json).
+- config/hypotheses 에 없어서 실험자가 정한 것(사람 확인 필요, 전부 CHANGES.md): 움직임 오차 = ((예측 − 소거된 입력) − 실제 Δz)², level_mean_match 의 전체 평균 = 9개 레벨 평균의 동일 가중 평균과 적합 분할 방식, LEACE 적합 = 인코더 latent 패치 평균(12 입력 프레임), level_mean_match 무작위 대조의 부호, 판정 (2)(3) 을 학습 seed 평균으로 구현, bootstrap 층화, 소거 확인 세부, 캐시 환경변수 `EXP013_CACHE`.
+- 검증(CPU, lab07, 합성/toy): `python run.py selftest` PASS 99 FAIL 0 SKIP 0 (`experiments/013_size_use_erasure/logs/selftest_20261111-175031.log`). 판정 경계(2/3 seed, CI 하한 0, 10% 경계, b>a, gap ≤ 0, 누락/NaN), 변위 norm 일치(LEACE·레벨 평균, 20 방향), 적합/평가 분리(poison), 관문 통과/미통과 합성 데이터와 run.py 거부(종료코드 5, attempts.json 없음), 지표 정의를 독립 numpy 계산과 대조, 심어 둔 크기 사용 세계에서 판정 criterion_met / 사용 없음에서 criterion_not_met, toy 세계 모델에서 소거 입력 추출이 009 extract_hidden 과 일치, 소거 후 판독 R² 하락. `check`/`--dry-run` 은 이 머신에 체크포인트/캐시가 없어 사전 점검 실패 목록을 출력(config 일치 17개는 모두 ok). 실제 predictor, GPU, Colab, 실제 체크포인트 경로는 확인하지 못했다. 노트북은 JSON 생성(28셀)과 코드 셀 ast.parse 만 확인.
+- 비용 추정(실측 없음): measure 약 1~1.5 시간(predictor 깊이 6, dim 404, mlp 2048 에서 샘플당 약 9 GFLOP 로 계산, L4 유효 8~12 TFLOPs 가정), readout 약 1.5~2 시간(009 호출당 25~35 s 로 환산), 합계 약 2.5~3.5 GPU 시간(추정). 임시 디스크 최대 약 16 GB(추정).
+- 결과 수치 없음, 해석 없음. 노트북 반영에는 사용자의 commit/push 가 필요.

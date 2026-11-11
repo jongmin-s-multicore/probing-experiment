@@ -1,0 +1,51 @@
+name: "013_size_use_erasure"
+hypothesis: "notes/hypotheses.md 013 (크기 정보의 사용). 가설과 판정 기준 사용자 확정 2026-11-11. GPU 실행 미승인, 미실행"
+seed: 0
+pilot: true                      # 본 실행 전까지 true (사람이 바꾼다)
+
+base:
+  config002: "../002_single_size_sweep/config.yaml"   # 데이터, 체크포인트, 레벨 역할은 읽기만 한다
+  config009: "../009_positive_control_depth/config.yaml"  # fit_eraser 와 블록 판독 규칙 재사용
+  conditions: ["single_ind", "multi_60_ind_160"]       # (a), (b)
+  checkpoint: "model_latest"     # 사용자 확정 2026-11-11 (004/006/009 와 같은 파일)
+
+predictor:
+  train_seeds: [0, 1, 2]
+  random_init_seed: 1234         # 사용자 확정 2026-11-11. 학습 seed 마다 1234 + train_seed (004/005 와 같음)
+
+data:
+  eval_split: "test"             # 9 레벨 x 100 episode
+  judge_levels: [a060, ind, a160]   # 판정 = 학습 레벨 test episode
+  transitions: 12                # 사용자 확정 2026-11-11: 에피소드당 12 step 전부 (frameskip 5, 002/006 과 같음)
+
+stage0:                          # 관문 (확정 2026-11-11)
+  levels: [a060, ind, a160]
+  regressor: {kind: ridge, input: "patch_mean_z + action", target: "patch_mean_delta_z", alpha_select: "GroupKFold over episodes"}   # 사용자 확정 2026-11-11
+  ratio_threshold: 1.1
+  min_pairs: 4                   # 6개 방향 쌍 중
+
+erasure:
+  methods: [leace_scalar, level_mean_match]   # 확정 2026-11-11
+  apply_to: "z_part_all_tokens"  # predictor 입력 h_0 의 앞 384, 모든 패치. 행동/proprio 좌표는 건드리지 않음
+  fit_fraction: 0.5              # 009 와 같음. 적합 episode 는 평가에 쓰지 않음
+  fit_seed: 9000                 # 009 와 같음
+  ridge_rel: 0.001               # 009 와 같음
+  level_mean_ood_fit: "half_of_test"   # 사용자 확정 2026-11-11: OoD 6개 레벨은 test 100 episode 의 절반으로 레벨 평균을 적합, 나머지 절반으로 평가. 학습 레벨은 train split 에서 적합
+  random_directions: 20          # 확정 2026-11-11
+  random_dir_seed: 13000
+  random_norm_match: "per_token_displacement"   # 사용자 확정 2026-11-11: 무작위 방향 소거의 토큰별 이동 norm 을 크기 소거와 같게
+
+metrics:
+  error_space: "token_mse_visual"   # 사용자 확정 2026-11-11: 196 패치 x 시각 384 차원 MSE (DINO-WM 학습 손실과 같은 공간)
+  primary: "motion_persistence_normalized"   # 확정 2026-11-11
+  also_record: ["total_next_latent", "delta_z"]
+
+success:                         # 확정 2026-11-11
+  min_seeds: 2
+  ci: 0.90
+  min_fraction_of_persistence_gap: 0.10
+  require_b_greater_than_a: true
+  bootstrap: {unit: "episode", n: 2000, seed: 14000}   # 사용자 확정 2026-11-11
+
+run:
+  max_attempts: 3
