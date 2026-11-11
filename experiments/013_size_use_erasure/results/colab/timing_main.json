@@ -1,0 +1,100 @@
+[
+ {
+  "label": "013:check",
+  "stage": "check",
+  "args": [
+   "--results-dir",
+   "/content/drive/MyDrive/exp013_work/results"
+  ],
+  "rc": 0,
+  "seconds": 2.1,
+  "log": "/content/mylab013/experiments/013_size_use_erasure/logs/check_20261111-091030.log",
+  "vram_base_mib": 0,
+  "vram_peak_sampled_mib": 3,
+  "finished_utc": "2026-11-11 09:10:30"
+ },
+ {
+  "label": "013:selftest",
+  "stage": "selftest",
+  "args": [
+   "--results-dir",
+   "/content/drive/MyDrive/exp013_work/results"
+  ],
+  "rc": 0,
+  "seconds": 34.9,
+  "log": "/content/mylab013/experiments/013_size_use_erasure/logs/selftest_20261111-091042.log",
+  "vram_base_mib": 0,
+  "vram_peak_sampled_mib": 3,
+  "finished_utc": "2026-11-11 09:11:15"
+ },
+ {
+  "label": "013:gate",
+  "stage": "gate",
+  "args": [
+   "--results-dir",
+   "/content/drive/MyDrive/exp013_work/results"
+  ],
+  "rc": 0,
+  "seconds": 58.7,
+  "log": "/content/mylab013/experiments/013_size_use_erasure/logs/gate_20261111-091117.log",
+  "vram_base_mib": 0,
+  "vram_peak_sampled_mib": 3,
+  "finished_utc": "2026-11-11 09:12:14"
+ },
+ {
+  "label": "013:fit",
+  "stage": "fit",
+  "args": [
+   "--results-dir",
+   "/content/drive/MyDrive/exp013_work/results"
+  ],
+  "rc": 0,
+  "seconds": 12.7,
+  "log": "/content/mylab013/experiments/013_size_use_erasure/logs/fit_20261111-091216.log",
+  "vram_base_mib": 0,
+  "vram_peak_sampled_mib": 3,
+  "finished_utc": "2026-11-11 09:12:27"
+ },
+ {
+  "label": "013:measure",
+  "stage": "measure",
+  "args": [
+   "--results-dir",
+   "/content/drive/MyDrive/exp013_work/results"
+  ],
+  "rc": 0,
+  "seconds": 12626.6,
+  "log": "/content/mylab013/experiments/013_size_use_erasure/logs/measure_20261111-091641.log",
+  "vram_base_mib": 0,
+  "vram_peak_sampled_mib": 2958,
+  "finished_utc": "2026-11-11 12:47:06"
+ },
+ {
+  "label": "013:readout",
+  "stage": "readout",
+  "args": [
+   "--results-dir",
+   "/content/drive/MyDrive/exp013_work/results"
+  ],
+  "rc": 0,
+  "seconds": 2802.0,
+  "log": "/content/mylab013/experiments/013_size_use_erasure/logs/readout_20261111-124708.log",
+  "vram_base_mib": 0,
+  "vram_peak_sampled_mib": 2510,
+  "finished_utc": "2026-11-11 13:33:48"
+ },
+ {
+  "label": "013:aggregate",
+  "stage": "aggregate",
+  "args": [
+   "--results-dir",
+   "/content/drive/MyDrive/exp013_work/results"
+  ],
+  "rc": 0,
+  "seconds": 9.4,
+  "log": "/content/mylab013/experiments/013_size_use_erasure/logs/aggregate_20261111-133351.log",
+  "vram_base_mib": 0,
+  "vram_peak_sampled_mib": 3,
+  "finished_utc": "2026-11-11 13:33:57"
+ }
+]

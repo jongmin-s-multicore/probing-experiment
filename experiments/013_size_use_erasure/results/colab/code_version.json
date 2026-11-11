@@ -1,0 +1,7 @@
+{
+ "repo_url": "https://github.com/jongmin-s-multicore/probing-experiment.git",
+ "requested_ref": "master",
+ "git_head": "5d6b1654601c25353f2f69b9872889393855d901",
+ "head_subject": "experiments/013: fix Colab notebook folder path (013_erasure_residual_info -> 013_size_use_erasure)",
+ "head_date": "2026-11-11T18:07:06+09:00"
+}

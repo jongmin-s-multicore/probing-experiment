@@ -1,0 +1,42 @@
+## decomposition motion = |e-delta|^2, total=|e|^2 => 2<e,delta> = total + |delta|^2 - motion  (per-element units; |delta|^2 per element = disp_sq_mean/384 ASSUMED)
+leace_scalar single_ind 0 persist 0.517 none 0.2732 [('size', 0.6559, 0.8513, 359.109, 0.9352, 0.3699), ('rand_mean', 0.4074, 0.9376, 359.109, 0.9352, 0.2025)]
+leace_scalar single_ind 1 persist 0.517 none 0.2714 [('size', 0.6483, 0.8469, 323.427, 0.8423, 0.3218), ('rand_mean', 0.4025, 0.8972, 323.427, 0.8423, 0.1738)]
+leace_scalar single_ind 2 persist 0.517 none 0.2725 [('size', 0.5643, 0.8011, 315.995, 0.8229, 0.293), ('rand_mean', 0.3991, 0.8886, 315.995, 0.8229, 0.1667)]
+leace_scalar multi_60_ind_160 0 persist 0.517 none 0.2209 [('size', 0.6948, 0.82, 359.109, 0.9352, 0.405), ('rand_mean', 0.3902, 0.9123, 359.109, 0.9352, 0.2065)]
+leace_scalar multi_60_ind_160 1 persist 0.517 none 0.2272 [('size', 0.6148, 0.7885, 323.427, 0.8423, 0.3343), ('rand_mean', 0.3792, 0.8608, 323.427, 0.8423, 0.1803)]
+leace_scalar multi_60_ind_160 2 persist 0.517 none 0.2248 [('size', 0.5877, 0.7929, 315.995, 0.8229, 0.3088), ('rand_mean', 0.3856, 0.8581, 315.995, 0.8229, 0.1752)]
+level_mean_match single_ind 0 persist 0.517 none 0.2732 [('size', 0.3115, 0.304, 22.626, 0.0589, 0.0332), ('rand_mean', 0.2774, 0.3148, 22.626, 0.0589, 0.0107)]
+level_mean_match single_ind 1 persist 0.517 none 0.2714 [('size', 0.3076, 0.2994, 22.626, 0.0589, 0.0335), ('rand_mean', 0.2764, 0.3143, 22.626, 0.0589, 0.0105)]
+level_mean_match single_ind 2 persist 0.517 none 0.2725 [('size', 0.3089, 0.3018, 22.626, 0.0589, 0.033), ('rand_mean', 0.2776, 0.3155, 22.626, 0.0589, 0.0105)]
+level_mean_match multi_60_ind_160 0 persist 0.517 none 0.2209 [('size', 0.2793, 0.2777, 22.626, 0.0589, 0.0302), ('rand_mean', 0.2296, 0.266, 22.626, 0.0589, 0.0113)]
+level_mean_match multi_60_ind_160 1 persist 0.517 none 0.2272 [('size', 0.2797, 0.2806, 22.626, 0.0589, 0.029), ('rand_mean', 0.2351, 0.2719, 22.626, 0.0589, 0.0111)]
+level_mean_match multi_60_ind_160 2 persist 0.517 none 0.2248 [('size', 0.2776, 0.2807, 22.626, 0.0589, 0.0279), ('rand_mean', 0.234, 0.2709, 22.626, 0.0589, 0.011)]
+
+## seed-level t tests (n=3 per cond), train, trained
+leace_scalar motion b-a diff -0.0037 welch t -0.13 df 3.48 (no scipy; p not computed) | b mean/se t=-9.41 | 90% t-int(df2) of b mean [-0.1941, -0.1022]
+leace_scalar total b-a diff 0.0534 welch t 0.68 df 3.96 (no scipy; p not computed) | b mean/se t=8.21 | 90% t-int(df2) of b mean [0.3083, 0.6489]
+level_mean_match motion b-a diff 0.0449 welch t 15.35 df 3.68 (no scipy; p not computed) | b mean/se t=11.27 | 90% t-int(df2) of b mean [0.0145, 0.0246]
+level_mean_match total b-a diff 0.0267 welch t 6.54 df 3.01 (no scipy; p not computed) | b mean/se t=24.51 | 90% t-int(df2) of b mean [0.0783, 0.0995]
+
+## random_init: (a) vs (b) identical?  max abs diff in train delta_use over seeds
+leace_scalar motion 2.9750616230339588e-05
+leace_scalar total 3.8318962708061566e-05
+level_mean_match motion 1.2660994076818533e-05
+level_mean_match total 1.3900542008643546e-05
+
+## motion_norm_none trained vs random_init (train)
+single_ind 0 trained none 0.529 | RI none 5.742 size 6.100
+single_ind 1 trained none 0.525 | RI none 5.755 size 5.999
+single_ind 2 trained none 0.527 | RI none 5.730 size 5.950
+multi_60_ind_160 0 trained none 0.427 | RI none 5.741 size 6.099
+multi_60_ind_160 1 trained none 0.439 | RI none 5.755 size 6.000
+multi_60_ind_160 2 trained none 0.435 | RI none 5.731 size 5.950
+
+## split-wise B-vs-A sign agreement (trained, b), LMM & LEACE; cond (a) interp sign by seed
+## stage2
+single_ind 0 {"trained": {"corr": -0.02927999966378343, "slope_pred_on_real": -0.11975655979986904, "n_levels": 9, "n_entries": 3456, "norm_real_residual": 0.9614007360168018, "norm_pred_residual": 3.932173704115307}, "random_init": {"corr": -0.15154212701516195, "slope_pred_on_real": -1.1127208857747295, "n_levels": 9, "n_entries": 3456, "norm_real_residual": 0.9614007360168018, "norm_pred_residual": 7.059229
+single_ind 1 {"trained": {"corr": -0.04047867812748576, "slope_pred_on_real": -0.1633739830396538, "n_levels": 9, "n_entries": 3456, "norm_real_residual": 0.9614007360168018, "norm_pred_residual": 3.8802617774632244}, "random_init": {"corr": -0.1554354839048983, "slope_pred_on_real": -1.162980963265686, "n_levels": 9, "n_entries": 3456, "norm_real_residual": 0.9614007360168018, "norm_pred_residual": 7.19327869
+single_ind 2 {"trained": {"corr": -0.04969730624928501, "slope_pred_on_real": -0.20834603143538902, "n_levels": 9, "n_entries": 3456, "norm_real_residual": 0.9614007360168018, "norm_pred_residual": 4.030480585072848}, "random_init": {"corr": -0.14597773398713318, "slope_pred_on_real": -1.0723767408787777, "n_levels": 9, "n_entries": 3456, "norm_real_residual": 0.9614007360168018, "norm_pred_residual": 7.062609
+multi_60_ind_160 0 {"trained": {"corr": 0.46100625187474636, "slope_pred_on_real": 0.6562615902926052, "n_levels": 9, "n_entries": 3456, "norm_real_residual": 0.9614007360168018, "norm_pred_residual": 1.3685939688694047}, "random_init": {"corr": -0.15145832434047157, "slope_pred_on_real": -1.1118844884622383, "n_levels": 9, "n_entries": 3456, "norm_real_residual": 0.9614007360168018, "norm_pred_residual": 7.05782643
+multi_60_ind_160 1 {"trained": {"corr": 0.47654638451931824, "slope_pred_on_real": 0.7247407591228786, "n_levels": 9, "n_entries": 3456, "norm_real_residual": 0.9614007360168018, "norm_pred_residual": 1.462116431635346}, "random_init": {"corr": -0.15549210890787415, "slope_pred_on_real": -1.1632350231518576, "n_levels": 9, "n_entries": 3456, "norm_real_residual": 0.9614007360168018, "norm_pred_residual": 7.192229980
+multi_60_ind_160 2 {"trained": {"corr": 0.5553534845844963, "slope_pred_on_real": 0.9635650399810359, "n_levels": 9, "n_entries": 3456, "norm_real_residual": 0.9614007360168018, "norm_pred_residual": 1.6680765752841527}, "random_init": {"corr": -0.1459395211587256, "slope_pred_on_real": -1.0721105614291528, "n_levels": 9, "n_entries": 3456, "norm_real_residual": 0.9614007360168018, "norm_pred_residual": 7.0627056650
