@@ -83,7 +83,7 @@ EXPECTED_CFG002_SHA = '@@CFG002SHA@@'    # 002/results.json config_sha256 read a
 import json, os, subprocess
 REPO = '/content/mylab013'
 EXPS = REPO + '/experiments'
-EXP002, EXP004, EXP009, EXP013 = EXPS + '/002_single_size_sweep', EXPS + '/004_depth_truncation', EXPS + '/009_positive_control_depth', EXPS + '/013_erasure_residual_info'
+EXP002, EXP004, EXP009, EXP013 = EXPS + '/002_single_size_sweep', EXPS + '/004_depth_truncation', EXPS + '/009_positive_control_depth', EXPS + '/013_size_use_erasure'
 def git(*a, check=True):
     r = subprocess.run(['git', '-C', REPO] + list(a), capture_output=True, text=True)
     if check and r.returncode != 0:
