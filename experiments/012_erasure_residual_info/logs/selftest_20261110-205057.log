@@ -1,0 +1,124 @@
+[2026-11-10 20:50:57] log file: /home/jaekyungkim/mylab/experiments/012_erasure_residual_info/logs/selftest_20261110-205057.log
+[2026-11-10 20:50:57] stage=selftest dry_run=False python=/home/jaekyungkim/miniconda3/envs/lab07/bin/python conda_env=base pilot_config_flag=True results_dir=/home/jaekyungkim/mylab/experiments/012_erasure_residual_info/results
+A  verdict rules (config success block)
+  [ok] config thresholds are the confirmed numbers (0.5333333333, 0.2, 0.2, 2 seeds) 
+  [ok] (a) exactly 0.5333333333 counts (>=) 
+  [ok] (a) 0.5333333332 does not count 
+  [ok] (a) 8/15 = 0.53333.. counts 
+  [ok] R2 exactly 0.2 counts, 0.19999 does not 
+  [ok] 2 of 3 seeds -> met 
+  [ok] 1 of 3 seeds -> not met 
+  [ok] which seeds met is irrelevant (seeds 1 and 2) 
+  [ok] a missing unit -> not_evaluable (no estimate substituted) 
+  [ok] NaN value -> not_evaluable 
+  [ok] (b) MLP OR attentive per seed: mlp>=0.2 on seeds 0,1 only -> met 
+  [ok] (b) mlp on seed 0, attentive on seed 1 -> met (any-of per seed) 
+  [ok] (b) both below on 2 seeds -> not met 
+  [ok] (b) attentive missing on one seed -> not_evaluable 
+  [ok] block: nothing met and all evaluable -> '이 측정들로는 잔여 정보 미검출' 
+  [ok] block: only (a) met -> status criterion_met with items_met [a_class_structure] 
+  [ok] block: nothing met but (a) not evaluable -> not_evaluable (no 'undetected' claim) 
+  [ok] block: (b) met while (a) not evaluable -> criterion_met listing the unevaluable item 
+B  probe-train / direction-fit / test separation
+  [ok] probe_split: held = train episodes not in fit; test = test split 
+  [ok] assert: probe-train overlapping fit episodes raises 
+  [ok] assert: probe-train containing a test episode raises 
+  [ok] assert: fit episode in the test split raises 
+  [ok] assert: test index inside the train split raises 
+  [ok] assert: empty probe-train set (fit = all) raises 
+  [ok] row check: rows from a fit episode raise 
+  [ok] row check: clean rows pass 
+D  logistic solver
+  [ok] Newton solution is stationary (max |grad| < 1e-4) (6.5e-07)
+  [ok] fit_logistic_cv: separable-ish blobs are classified well above chance; C comes from the grid (train acc 0.925, C 1)
+  [ok] fit_logistic_cv: labels unrelated to X -> accuracy on fresh random labels near chance 
+C  measure toys (does the measurement catch what skeptic I2 says the scalar erasure can leave?)
+  [ok] toy I2-a: after the scalar erasure the covariance of every coordinate with y is ~0 on the fit episodes (4.9e-10 vs 0.53)
+  [ok] toy I2-a: linear R2 on the erased features is ~0 while the unerased value is high (unerased 0.835, erased 0.004)
+  [ok] toy I2-a: (a) accuracy on the erased features is ABOVE the 0.5333 threshold although linear R2 ~0 (the measurement catches the left-over class structure) (unerased 0.971, erased 0.642, chance 0.333)
+  [ok] toy I2-a: (c) with no size information in the action coordinates is below 0.2 (-0.010)
+  [ok] toy I2-a: MLP R2 is finite (the left-over structure here is a class-identity pattern, not an R2 gain: R2 is reported, not asserted) (mlp -0.001 linear 0.004)
+  [ok] toy negative control (size purely linear in z): after the erasure (a) is near chance (< 0.5333) and linear R2 ~0 (acc 0.333, R2 0.003)
+  [ok] toy I2-b (nonlinear only): MLP R2 high, linear R2 ~0 (mlp 0.767, linear -0.009)
+  [ok] toy I2-b: a linear (a) classifier cannot read the levels from |x1| (accuracy < 0.5333) (0.333)
+  [ok] toy I2-c (size only in action coordinates): (c) R2 high, (d) linear R2 on z ~0, (a) near chance (c 0.955, d -0.010, a 0.333)
+  [ok] results carry per-split values (train, interp, extrap, all) for R2 measures and 'train' only for (a) 
+  [ok] per-probe-seed lists have one value per probe seed (R2)  
+  [ok] poisoned features/labels of the direction-fit episodes change NOTHING (probes never train on them) 
+  [ok] (a) does not depend on test labels other than the level names (test labels shifted: same accuracy) 
+  [ok] measure_all refuses a fit set covering the whole train split 
+E  units, resume, config consistency, checkpoint structure preflight
+  [ok] units: 3 baselines + 6 blocks x 3 seeds = 21 
+  [ok] needed baseline depths for m_int [1..6] = 1..6; for [6] = [6]; for [2,6] = [2,3,6] 
+  [ok] part file names distinct for every unit 
+  [ok] base unit_done only when it covers the needed depths 
+  [ok] unit_done recognises finished erased units only 
+  [ok] default m_int [1..6] from config, not overridden 
+  [ok] CLI override sorted and recorded as overridden 
+  [ok] config consistency with 009 and 002 (29 checks) []
+  [ok] a changed fit_seed / attentive d_model is detected ['intervention.fit_seed == 009', 'b_attentive.d_model == 002 probe_impl.attentive']
+  [ok] config: seeds explicit (global, train seeds, probe seeds, fit seed) and pilot flag present 
+  [ok] config: m_int [1..6], strengths [0, 1.0], method leace_scalar, depths m_int and m_int+1 
+  [ok] preflight: run dir without the exp002_ prefix is not accepted; message names the expected folder and the near miss train seed 0: run directory /tmp/tmpof2p3nhh/outputs/exp002_multi_60_ind_160_s0 missing (expected name exp002_multi_60_ind_160_s0 under /tmp/tmpof2p3nhh/outputs; directories there with s0: ['multi_60_
+  [ok] preflight: model_latest.pth missing is reported 
+  [ok] preflight: complete run dir (exp002_multi_60_ind_160_s0/checkpoints/model_latest.pth) -> no problem 
+  [ok] preflight: seed 1 without a directory is reported 
+  [ok] run.py: preflight (exit 4) comes before attempts_check / attempts_record 
+  [ok] run.py measure with missing checkpoints/metadata exits 4 and writes no attempts.json (rc=4)
+F  toy world model: extraction with erasure, measures, resume, aggregate
+[2026-11-10 20:51:16] s0 base extract 16/138 (0s)
+[2026-11-10 20:51:17] s0 base depth 2 measured in 1s
+[2026-11-10 20:51:19] s0 base depth 3 measured in 1s
+[2026-11-10 20:51:20] s0 base depth 6 measured in 2s
+[2026-11-10 20:51:20] s0 baseline done (depths [2, 3, 6])
+[2026-11-10 20:51:20] s0 m_int 2: direction fitted on 24 fit episodes (192 samples), corr(a.x, y) on fit data 0.998
+[2026-11-10 20:51:20] s0 m2 a1 extract 16/138 (0s)
+[2026-11-10 20:51:21] s0 m2 erased depth 2 measured in 1s
+[2026-11-10 20:51:23] s0 m2 erased depth 3 measured in 2s
+[2026-11-10 20:51:23] s0 m_int 2 strength 1 done
+[2026-11-10 20:51:23] s0 m_int 6: direction fitted on 24 fit episodes (192 samples), corr(a.x, y) on fit data 0.998
+[2026-11-10 20:51:23] s0 m6 a1 extract 16/138 (0s)
+[2026-11-10 20:51:25] s0 m6 erased depth 6 measured in 1s
+[2026-11-10 20:51:25] s0 m_int 6 strength 1 done
+  [ok] run_seed12 wrote base_s0 + unit_m2_s0 + unit_m6_s0 ['base_s0.json', 'unit_m2_s0.json', 'unit_m6_s0.json']
+  [ok] baseline part covers depths [2, 3, 6] (m_int and m_int+1 of both blocks; 7 does not exist) 
+  [ok] block 2 unit has records at m_int and m_int+1; block 6 unit: m_int+1 is '해당 없음' 
+  [ok] record contains all five measures (b_attentive on tokens too) and the separation meta 
+  [ok] direction-fit episodes follow 009's rule (RandomState(9000+seed).permutation(Etr)[:round(0.5 Etr)], sorted) 
+  [ok] diagnostic: after full-strength erasure the fitted readout has ~no variance on probe-train and test episodes (std ratio < 0.05) {'corr_readout_fit_episodes_pre': 0.9982, 'readout_std_ratio_after_over_fit_pre_probe_train': 0.0, 'readout_std_ratio_after_over_fit_pre_test': 0.0}
+  [ok] toy: linear R2 at depth m_int=2: baseline high, erased far lower (baseline 0.996, erased -0.113)
+  [ok] resume: nothing to do, part files untouched 
+[2026-11-10 20:51:25] s0 m2 a1 extract 16/138 (0s)
+[2026-11-10 20:51:26] s0 m2 erased depth 2 measured in 1s
+[2026-11-10 20:51:27] s0 m2 erased depth 3 measured in 1s
+[2026-11-10 20:51:27] s0 m_int 2 strength 1 done
+  [ok] resume: only the deleted unit is recomputed 
+  [ok] adding block 4 later: baseline is incomplete (needs depths 4, 5), unit_m4 pending 
+[2026-11-10 20:51:27] s0 base extract 16/138 (0s)
+[2026-11-10 20:51:28] s0 base depth 4 measured in 1s
+[2026-11-10 20:51:29] s0 base depth 5 measured in 1s
+[2026-11-10 20:51:29] s0 baseline done (depths [2, 3, 4, 5, 6])
+[2026-11-10 20:51:29] s0 m_int 4: direction fitted on 24 fit episodes (192 samples), corr(a.x, y) on fit data 0.998
+[2026-11-10 20:51:29] s0 m4 a1 extract 16/138 (0s)
+[2026-11-10 20:51:30] s0 m4 erased depth 4 measured in 1s
+[2026-11-10 20:51:31] s0 m4 erased depth 5 measured in 1s
+[2026-11-10 20:51:31] s0 m_int 4 strength 1 done
+  [ok] baseline part merged: depths [2, 3, 4, 5, 6]; the already measured depth 2 was not recomputed 
+[2026-11-10 20:51:31] aggregate: m_int [2, 4, 6] (source cli, overridden=True), train seeds [0] (overridden=True)
+[2026-11-10 20:51:31] aggregate done (pilot=True): {'2': '이 측정들로는 잔여 정보 미검출', '4': '이 측정들로는 잔여 정보 미검출', '6': '이 측정들로는 잔여 정보 미검출'}
+  [ok] results.json: interpretation null, pilot true with reasons (config flag, separate dir, overrides) ['config.yaml pilot flag is true', 'results dir /tmp/tmpm9ueya8u/res is not the experiment results dir /home/jaekyungkim/mylab/experiments/012_erasure_residual_info/results (pilot / separate run)', 'm_int overridden on the command line ([2, 4, 6])', 'train seeds overridden on the command line ([0])']
+  [ok] results.json written to the results dir only (no results.json in the exp dir for a separate results dir) 
+  [ok] results.json has code_version(git_head, git_status_dirty, repo_url, requested_ref), config_sha256, environment 
+  [ok] block 6: auxiliary m_int+1 observation is '해당 없음' 
+  [ok] block 2: auxiliary m_int+1 is a dict with strength_1 and strength_0 
+  [ok] every block has a verdict with items a/b/c and an overall status 
+  [ok] 009 results.json absent -> (d) reproduction is 'not_available' (no number invented) 
+[2026-11-10 20:51:31] aggregate: m_int [2] (source cli, overridden=True), train seeds [0] (overridden=True)
+[2026-11-10 20:51:31] aggregate done (pilot=True): {'2': '이 측정들로는 잔여 정보 미검출'}
+  [ok] (d) reports 012 minus 009 difference per split and strength 
+[2026-11-10 20:51:31] aggregate: m_int [2, 4, 6] (source cli, overridden=True), train seeds [0] (overridden=True)
+[2026-11-10 20:51:31] aggregate done (pilot=True): {'2': '이 측정들로는 잔여 정보 미검출', '4': 'not_evaluable', '6': '이 측정들로는 잔여 정보 미검출'}
+  [ok] a missing unit -> that block not_evaluable, other blocks unaffected 
+  [ok] pilot logic: config pilot false + experiment results dir + no overrides -> no reasons (main run) 
+  [ok] pilot logic: separate results dir -> pilot; config flag true -> pilot; overrides -> pilot 
+selftest summary: passed=82 failed=0 skipped=0

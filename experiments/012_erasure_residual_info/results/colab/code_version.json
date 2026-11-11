@@ -1,0 +1,7 @@
+{
+ "repo_url": "https://github.com/jongmin-s-multicore/probing-experiment.git",
+ "requested_ref": "master",
+ "git_head": "9097de12004560b29fba7d6939435e7b829acf6b",
+ "head_subject": "experiments/012: erasure residual-info code, selftest, Colab notebook (approval gate); experimenter-chosen settings confirmed by user",
+ "head_date": "2026-11-10T23:41:51+09:00"
+}

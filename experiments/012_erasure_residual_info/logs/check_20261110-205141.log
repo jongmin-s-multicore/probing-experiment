@@ -1,0 +1,41 @@
+[2026-11-10 20:51:41] log file: /home/jaekyungkim/mylab/experiments/012_erasure_residual_info/logs/check_20261110-205141.log
+[2026-11-10 20:51:41] stage=check dry_run=False python=/home/jaekyungkim/miniconda3/envs/lab07/bin/python conda_env=base pilot_config_flag=True results_dir=/home/jaekyungkim/mylab/experiments/012_erasure_residual_info/results
+cache dir (tmp features, directions): /home/jaekyungkim/dinowm/exp012_cache exists=False
+  [ok] intervention.m_int == 009 
+  [ok] intervention.strengths == 009 
+  [ok] intervention.method == 009 
+  [ok] intervention.ridge_rel == 009 
+  [ok] intervention.fit_fraction == 009 
+  [ok] intervention.fit_seed == 009 
+  [ok] intervention.apply_to == 009 
+  [ok] predictor.train_seeds == 009 
+  [ok] predictor.batch_episodes == 009 
+  [ok] base.condition == 009 
+  [ok] measure.probe_seeds == 009 probe.seeds 
+  [ok] feature_part_z == [0, 384] and action part == [384, 404] 
+  [ok] success.strength is one of intervention.strengths and 0 is included 
+  [ok] b_attentive.d_model == 002 probe_impl.attentive 
+  [ok] b_attentive.n_heads == 002 probe_impl.attentive 
+  [ok] b_attentive.mlp_hidden == 002 probe_impl.attentive 
+  [ok] b_attentive.epochs == 002 probe_impl.attentive 
+  [ok] b_attentive.lr == 002 probe_impl.attentive 
+  [ok] b_attentive.weight_decay == 002 probe_impl.attentive 
+  [ok] b_attentive.batch_size == 002 probe_impl.attentive 
+  [ok] b_attentive.val_fraction == 002 probe_impl.attentive 
+  [ok] b_mlp.epochs == 002 attentive training setting 
+  [ok] b_mlp.lr == 002 attentive training setting 
+  [ok] b_mlp.weight_decay == 002 attentive training setting 
+  [ok] b_mlp.batch_size == 002 attentive training setting 
+  [ok] b_mlp.val_fraction == 002 attentive val_fraction (exp002 mlp probe hard-codes 0.1) 
+  [ok] b_mlp: 1 hidden layer relu, early stopping 
+  [ok] b_mlp.init_seeds == b_attentive.init_seeds == probe_seeds 
+  [ok] success numbers (2026-11-10): min_seeds 2, a 0.5333333333, b 0.2, c 0.2 
+009 results.json (for the reproduction check (d)): /home/jaekyungkim/mylab/experiments/009_positive_control_depth/results.json exists=True
+inputs (checkpoints, Q1 cache, metadata.pt): MISSING 7
+  !! train seed 0: run directory /home/jaekyungkim/dinowm/train_runs/outputs/exp002_multi_60_ind_160_s0 missing (expected name exp002_multi_60_ind_160_s0 under /home/jaekyungkim/dinowm/train_runs/outputs; directories there with s0: [])
+  !! train seed 1: run directory /home/jaekyungkim/dinowm/train_runs/outputs/exp002_multi_60_ind_160_s1 missing (expected name exp002_multi_60_ind_160_s1 under /home/jaekyungkim/dinowm/train_runs/outputs; directories there with s1: [])
+  !! train seed 2: run directory /home/jaekyungkim/dinowm/train_runs/outputs/exp002_multi_60_ind_160_s2 missing (expected name exp002_multi_60_ind_160_s2 under /home/jaekyungkim/dinowm/train_runs/outputs; directories there with s2: [])
+  !! 002 Q1 cache DONE missing (/home/jaekyungkim/dinowm/exp002_cache/q1_tokens/DONE)
+  !! train seed 0: train_manifest.json missing (/home/jaekyungkim/dinowm/train_runs/outputs/exp002_multi_60_ind_160_s0/train_manifest.json)
+  !! train seed 1: train_manifest.json missing (/home/jaekyungkim/dinowm/train_runs/outputs/exp002_multi_60_ind_160_s1/train_manifest.json)
+  !! train seed 2: train_manifest.json missing (/home/jaekyungkim/dinowm/train_runs/outputs/exp002_multi_60_ind_160_s2/train_manifest.json)
