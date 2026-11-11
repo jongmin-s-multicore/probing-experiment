@@ -1,0 +1,31 @@
+name: "014_predictor_passthrough"
+hypothesis: "014 (H-pass)"   # notes/hypotheses.md
+seed: 0                       # bootstrap / CV fold / shuffle seed
+pilot: true
+
+paths:
+  cache004_env: "EXP004_CACHE"   # enc/tokens_k12.npy, enc/rand_k12.npy
+  cache005_env: "EXP005_CACHE"   # feat_pred_out6.npy, feat_pred_out6_rand.npy
+
+eval:
+  n_inputs: 900                  # same as 005/010
+
+compare:
+  source: [enc_k12_ours, enc_k12_random]
+  target: [pred_out6_ours, pred_out6_random]
+  alignment: [input_frame, predicted_frame]   # user 2026-11-11: report both pairings
+  token_pooling: same_as_005_heads             # user 2026-11-11: pool exactly as 005 probe heads saw the features
+
+metrics:
+  cka: linear
+  ridge_r2: {folds: 5, split_by: episode, alpha_grid: [0.1, 1, 10, 100, 1000]}   # chosen inside CV (nested); experimenter default
+  bootstrap: {n: 1000, ci: 0.90, unit: episode}
+  null_shuffle: {n: 100}
+
+criterion:
+  cka_min: 0.9                   # user confirmed 2026-11-11, before any 014 results
+  r2_min: 0.9                    # user confirmed 2026-11-11, before any 014 results
+
+run:
+  where: local                   # user 2026-11-11: user copies the 4 caches to this machine; conda env
+  max_attempts: 3

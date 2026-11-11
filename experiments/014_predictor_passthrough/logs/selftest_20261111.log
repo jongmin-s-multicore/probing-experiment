@@ -1,0 +1,20 @@
+PASS  dual ridge SSE == primal ridge SSE (3 alphas)  
+PASS  CKA(X,X)=1  
+PASS  CKA invariant to rotation + scale  
+PASS  CKA of independent Gaussians small  value 0.302
+PASS  folds: each episode in one fold, 5 folds used  sizes [30, 30, 30, 30, 30]
+PASS  folds: deterministic given seed  
+PASS  linear target: CKA > 0.9 and R2 > 0.9  CKA 0.950 R2 0.998 rev 0.996
+PASS  linear target: CIs contain point, ordered  CKA ci [0.9492514510080782, 0.9541876427788396] R2 ci [0.99814627685509, 0.9982195539063324]
+PASS  linear target: shuffled null clearly lower  null CKA mean 0.042 max 0.051; null R2 mean -0.045
+PASS  independent target: R2 <= 0.05 and CKA < 0.3  CKA 0.122 R2 -0.045
+PASS  verdict: linear -> criterion_met, independent -> criterion_not_met or invalid  criterion_met / invalid
+PASS  verdict: single dominant shared dimension (CKA~1 for any pairing is NOT the case: null drops) is handled  CKA 0.989 null 0.003
+PASS  integration: predicted_frame subset = inputs with t+1 cached  {'input_frame': 300, 'predicted_frame': 226, 'input_frame_matched_subset': 226}
+PASS  integration: input_frame R2 ~ 1 for a linear copy of the input frame  R2 1.000 CKA 0.724
+PASS  integration: predicted_frame (wrong frame) R2 ~ 0  pred-frame R2 -0.002, matched-subset input-frame R2 0.999
+PASS  integration: random-encoder source R2 ~ 0  
+PASS  integration: json written with code/config/env fields  
+PASS  guard: missing cache file detected before any computation  
+PASS  guard: unset env vars raise  
+SELFTEST PASSED (0 failures: [])
