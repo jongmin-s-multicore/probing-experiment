@@ -1,0 +1,51 @@
+name: "015_size_interchange"
+hypothesis: "notes/hypotheses.md 015 (Size interchange). 가설·설정 사용자 확정 2026-11-12. 사용자가 Colab 에서 직접 실행"
+seed: 0
+pilot: true                      # 본 실행 전까지 true (사람이 바꾼다)
+
+base:
+  config002: "../002_single_size_sweep/config.yaml"   # 데이터, 체크포인트, 레벨 역할 (읽기만)
+  config013: "../013_size_use_erasure/config.yaml"    # 레벨 평균 적합 규칙 재사용 (읽기만)
+  conditions: ["single_ind", "multi_60_ind_160"]      # (a), (b)
+  checkpoint: "model_latest"     # 사용자 확정 2026-11-12 (013 과 같음)
+
+predictor:
+  train_seeds: [0, 1, 2]         # 사용자 확정 2026-11-12 (013 과 같음)
+  random_init_seed: 1234         # 제안: 1234 + train_seed (013 과 같음), 사용자 확정 2026-11-12
+
+data:
+  eval_split: "test"
+  transitions: 12                # 013 과 같음 (에피소드당 12 전이)
+
+interchange:
+  pairs: [[a060, ind], [ind, a060], [ind, a160], [a160, ind], [a060, a160], [a160, a060]]   # 사용자 결정 2026-11-12: 학습 레벨 6개 방향 전부
+  apply_to: "z_part_all_tokens"  # 013 과 같은 위치
+  level_mean_fit: "train_split"  # 제안: 학습 레벨 평균은 train split 300 episode (013 규칙). 평가는 test. 사용자 확정 2026-11-12
+  target_motion_fit: "train_split"   # 제안: d 는 train split 의 실제 Δz 레벨 평균(평가 test 와 겹치지 않음). 사용자 확정 2026-11-12
+
+controls:
+  # 사용자 결정 2026-11-12: 주 비교값 = 크기를 맞춘 가짜 교체. 같은 20개 무작위 반반 shift(seed 15000, 변경 없음)를 쌍마다 패치별로
+  #   fake[p] * |m_T[p] - m_S[p]| / |fake[p]| 로 재스케일한다 (쌍별, 목표 T 에 따라 다름; |fake[p]| <= 1e-12 인 패치는 0 으로 두고 fit.json 에 개수 기록).
+  fake_swap: {n_repeats: 20, seed: 15000, norm_match: "per_patch_to_real_shift"}
+  fake_swap_unscaled: {report_only: true}   # 사용자 결정 2026-11-12: 재스케일 전 가짜 교체는 보고만 (판정 아님). 같은 20개 shift
+  random_directions: 20          # 보고만 (판정 아님). 제안, 사용자 확정 2026-11-12
+  random_dir_seed: 13000
+  random_init: true
+  primary_comparator: "fake_swap_norm_matched"   # 사용자 결정 2026-11-12 (이전: "fake_swap" 재스케일 없음)
+
+gate:
+  # 사용자 결정 2026-11-12: 관문 값 = 무작위 반반 분할 n_splits(20)회의 split-half cosine 평균 (분할 RandomState(seed + 1)), 임계값 0.5 그대로.
+  #   미달 쌍은 보고만, 판정 제외. 한 번의 분할(RandomState(seed)) cosine 은 fit.json 에 보고용 진단으로만 남는다.
+  d_reliability: {metric: "split_half_cosine", min: 0.5, aggregation: "mean_over_splits", n_splits: 20}
+
+success:
+  min_seeds: 2                   # 사용자 확정 2026-11-12 (013 과 같음)
+  ci: 0.90                       # 사용자 확정 2026-11-12 (013 과 같음)
+  min_moved: 0.10               # 사용자 결정 2026-11-12: (b) seed 평균 (moved − fake_swap 평균) ≥ 0.10
+  require_b_greater_than_a: true # 사용자 결정 2026-11-12
+  require_reverse_sign: true     # 사용자 결정 2026-11-12: 관문 통과 쌍마다 S->T, T->S 둘 다 (b) seed 평균 (moved − fake_swap) > 0
+  pair_aggregation: "mean_over_gated_pairs"   # 사용자 결정 2026-11-12: 쌍별 값은 보고만
+  bootstrap: {unit: "episode", n: 2000, seed: 14000}   # 사용자 확정 2026-11-12 (013 과 같음)
+
+run:
+  max_attempts: 3

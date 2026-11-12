@@ -1,0 +1,203 @@
+[2026-11-12 13:35:32] log file: /home/jaekyungkim/mylab/experiments/015_size_interchange/logs/selftest_20261112-133532.log
+[2026-11-12 13:35:32] stage=selftest dry_run=False python=/home/jaekyungkim/miniconda3/envs/lab07/bin/python conda_env=base pilot_config_flag=True results_dir=/home/jaekyungkim/mylab/experiments/015_size_interchange/results
+A  verdict rule (confirmed 2026-11-12)
+  [ok] config: min_seeds 2, min_moved 0.10, b>a, reverse sign required 
+  [ok] all four conditions met -> criterion_met 
+  [ok] 2 of 3 seeds with CI lower > 0 -> met 
+  [ok] 1 of 3 seeds -> not met 
+  [ok] CI lower exactly 0 does not count 
+  [ok] seed mean exactly 0.10 counts (>=) 
+  [ok] seed mean 0.0999 does not count 
+  [ok] (b) equal to (a) -> cond3 false (strict >) 
+  [ok] one gated pair with non-positive (b) seed mean -> cond4 false -> not met even if the mean is large 
+  [ok] pair seed mean exactly 0 is not > 0 
+  [ok] only gated pairs enter cond4 (a negative value in a non-gated pair is ignored) 
+  [ok] no gated pair -> not_evaluable 
+  [ok] gated pair without its reverse -> not_evaluable 
+  [ok] missing (b) seed -> not_evaluable 
+  [ok] NaN in (b) -> not_evaluable 
+  [ok] NaN pair value in (b) -> not_evaluable 
+  [ok] missing (a) seed -> not_evaluable 
+  [ok] not-detected reading says it does NOT mean 'unused' 
+B  level statistics, gate, fake swap, random shifts
+  [ok] m_L == mean over train episodes and frames 0..11; DZ_L == mean true change (independent numpy) 
+  [ok] m_L equals the 013 level_means function on the same episodes (reused rule) 
+  [ok] train episodes per level == 16 (train rows only) 
+  [ok] 6 directed pairs; |d| of the reverse direction equal; copy-through of reverse equal (both flip sign) 
+  [ok] gate cosine identical for S>T and T>S (bit-equal) 
+  [ok] planted level-dependent motion: all 6 pairs pass the gate (cosine >= 0.5) [0.993, 0.998, 0.993, 0.992, 0.998, 0.992]
+  [ok] identical motion in every level: d is pure noise, cosine low and pairs fail the gate [-0.148, 0.004, -0.148, -0.07, 0.004, -0.07]
+  [ok] a060 differs, ind == a160 in motion: pairs with a060 gated, ind<->a160 not gated 
+  [ok] everything reproducible (gate halves, fake swaps) for the same seeds 
+  [ok] gate split depends on config seed; fake swaps do not (seed 15000) 
+  [ok] fake swap seed matters 
+  [ok] fake-swap shift array shape (3 levels, 20 repeats, P, dz) 
+  [ok] fake swap repeat 0 of a060 == mean(half 1) - mean(half 2) of the per-episode means (independent numpy) 
+  [ok] planted: fake-swap shift is much smaller than the real swap shift (recorded as fake_over_real_frob < 0.5) [0.158, 0.082, 0.16, 0.171, 0.081, 0.168]
+  [ok] random-direction shifts: per-patch norm == |m_T - m_S| per patch for all 20 directions; 1 real + 20 fake + 20 random per target 
+  [ok] random directions: unit, reproducible with seed 13000, other seed differs 
+  [ok] copy-through diagnostic == shift . d / |d|^2 (independent) 
+C  fit / evaluation separation
+  [ok] fit reads only train-split rows (48 rows)
+  [ok] poison test: garbage in every test row changes neither m_L, DZ, fake swaps nor the gate 
+  [ok] evaluation episodes = test rows of the source level (10 each in the toy), disjoint from train rows 
+  [ok] --episodes-per-level 3 keeps the first 3 by rank_in_level of each source level 
+D  moved vs independent numpy, copy predictor, planted oracle, edit placement
+  [ok] eval_source_batch == independent numpy for real / fake / random shifts and both targets (max abs diff 3.1e-07)
+  [ok] copy predictor (pred = input): moved == 0 for every shift (Delta_hat is relative to the edited input) and response norm 0 
+  [ok] edit: only the z part (first dz coords) of every token changes, by exactly the shift; action/proprio coordinates untouched; the unedited call comes first 
+  [ok] input transitions are frames 0..11 of the real latents 
+     planted oracle: real 1.001 fake -0.000 random 0.000
+  [ok] planted oracle (size read from the patch mean): real swap moved ~ 1; fake swap and random directions ~ 0 
+  [ok] pass-through predictor (second look, other episodes) -> moved 0 
+  [ok] predictor with input-independent change (pred = z + 0.1) -> moved 0 
+  [ok] predictor that ignores its input entirely: moved == -(copy-through diagnostic) (shows what the diagnostic measures) (-5.5745 vs -5.5745)
+E  bootstrap and aggregate end to end (planted worlds)
+  [ok] boot_indices reproducible for seed 14000, different for another seed, stratified 
+  [ok] constants: point 0.5 and the CI collapses (slice offset handled) 
+  [ok] bootstrap CI contains the point and uses only the slice (mean of x over the pair's source episodes) 
+[2026-11-12 13:35:33]  source a060: 4/10 episodes (0s)
+[2026-11-12 13:35:33]  source ind: 4/10 episodes (0s)
+[2026-11-12 13:35:33]  source a160: 4/10 episodes (0s)
+[2026-11-12 13:35:33]  source a060: 4/10 episodes (0s)
+[2026-11-12 13:35:33]  source ind: 4/10 episodes (0s)
+[2026-11-12 13:35:33]  source a160: 4/10 episodes (0s)
+[2026-11-12 13:35:33]  source a060: 4/10 episodes (0s)
+[2026-11-12 13:35:33]  source ind: 4/10 episodes (0s)
+[2026-11-12 13:35:33]  source a160: 4/10 episodes (0s)
+[2026-11-12 13:35:34]  source a060: 4/10 episodes (0s)
+[2026-11-12 13:35:34]  source ind: 4/10 episodes (0s)
+[2026-11-12 13:35:34]  source a160: 4/10 episodes (0s)
+[2026-11-12 13:35:34]  source a060: 4/10 episodes (0s)
+[2026-11-12 13:35:34]  source ind: 4/10 episodes (0s)
+[2026-11-12 13:35:34]  source a160: 4/10 episodes (0s)
+[2026-11-12 13:35:34]  source a060: 4/10 episodes (0s)
+[2026-11-12 13:35:34]  source ind: 4/10 episodes (0s)
+[2026-11-12 13:35:34]  source a160: 4/10 episodes (0s)
+[2026-11-12 13:35:34] aggregate: conditions ['single_ind', 'multi_60_ind_160'] seeds [0, 1, 2]
+[2026-11-12 13:35:35] aggregate done (pilot=True): verdict criterion_met
+     planted b: moved 1.002 fake 0.002 diff 1.000 CI [1.000, 1.000]; verdict criterion_met
+  [ok] planted use in (b) only: criterion_met, all 4 conditions {'cond1_seeds_positive_ci_excl_0': True, 'cond2_seed_mean_b_ge_min_moved': True, 'cond3_b_greater_than_a': True, 'cond4_every_gated_pair_both_directions_positive_in_b': True}
+  [ok] copy predictor in (a): moved 0, response 0, fake 0 
+  [ok] random-init reference reported per condition and seed (copy -> 0) 
+  [ok] pair records: moved / fake_mean / rand_mean / diff / resp with CI, gated flag, fake repeat spread 
+  [ok] results.json fields: pilot true (config flag + separate dir), pilot_reasons, config_sha256, code_version, environment, interpretation null, missing_units empty 
+[2026-11-12 13:35:35]  source a060: 4/10 episodes (0s)
+[2026-11-12 13:35:35]  source ind: 4/10 episodes (0s)
+[2026-11-12 13:35:35]  source a160: 4/10 episodes (0s)
+[2026-11-12 13:35:35]  source a060: 4/10 episodes (0s)
+[2026-11-12 13:35:35]  source ind: 4/10 episodes (0s)
+[2026-11-12 13:35:35]  source a160: 4/10 episodes (0s)
+[2026-11-12 13:35:35]  source a060: 4/10 episodes (0s)
+[2026-11-12 13:35:35]  source ind: 4/10 episodes (0s)
+[2026-11-12 13:35:35]  source a160: 4/10 episodes (0s)
+[2026-11-12 13:35:35]  source a060: 4/10 episodes (0s)
+[2026-11-12 13:35:35]  source ind: 4/10 episodes (0s)
+[2026-11-12 13:35:35]  source a160: 4/10 episodes (0s)
+[2026-11-12 13:35:35]  source a060: 4/10 episodes (0s)
+[2026-11-12 13:35:35]  source ind: 4/10 episodes (0s)
+[2026-11-12 13:35:35]  source a160: 4/10 episodes (0s)
+[2026-11-12 13:35:35]  source a060: 4/10 episodes (0s)
+[2026-11-12 13:35:35]  source ind: 4/10 episodes (0s)
+[2026-11-12 13:35:35]  source a160: 4/10 episodes (0s)
+[2026-11-12 13:35:36] aggregate: conditions ['single_ind', 'multi_60_ind_160'] seeds [0, 1, 2]
+[2026-11-12 13:35:36] aggregate done (pilot=True): verdict criterion_not_met
+  [ok] no predictor moves (both copy): criterion_not_met 
+[2026-11-12 13:35:36]  source a060: 4/10 episodes (0s)
+[2026-11-12 13:35:36]  source ind: 4/10 episodes (0s)
+[2026-11-12 13:35:36]  source a160: 4/10 episodes (0s)
+[2026-11-12 13:35:36]  source a060: 4/10 episodes (0s)
+[2026-11-12 13:35:36]  source ind: 4/10 episodes (0s)
+[2026-11-12 13:35:36]  source a160: 4/10 episodes (0s)
+[2026-11-12 13:35:36]  source a060: 4/10 episodes (0s)
+[2026-11-12 13:35:37]  source ind: 4/10 episodes (0s)
+[2026-11-12 13:35:37]  source a160: 4/10 episodes (0s)
+[2026-11-12 13:35:37]  source a060: 4/10 episodes (0s)
+[2026-11-12 13:35:37]  source ind: 4/10 episodes (0s)
+[2026-11-12 13:35:37]  source a160: 4/10 episodes (0s)
+[2026-11-12 13:35:37]  source a060: 4/10 episodes (0s)
+[2026-11-12 13:35:37]  source ind: 4/10 episodes (0s)
+[2026-11-12 13:35:37]  source a160: 4/10 episodes (0s)
+[2026-11-12 13:35:37]  source a060: 4/10 episodes (0s)
+[2026-11-12 13:35:37]  source ind: 4/10 episodes (0s)
+[2026-11-12 13:35:37]  source a160: 4/10 episodes (0s)
+[2026-11-12 13:35:37] aggregate: conditions ['single_ind', 'multi_60_ind_160'] seeds [0, 1, 2]
+[2026-11-12 13:35:38] aggregate done (pilot=True): verdict criterion_not_met
+[2026-11-12 13:35:38] aggregate: conditions ['single_ind', 'multi_60_ind_160'] seeds [0, 1, 2]
+[2026-11-12 13:35:38] aggregate done (pilot=True): verdict criterion_not_met
+  [ok] equal use in (a) and (b): cond3 (b > a) fails -> criterion_not_met 
+[2026-11-12 13:35:38]  source a060: 4/10 episodes (0s)
+[2026-11-12 13:35:38]  source ind: 4/10 episodes (0s)
+[2026-11-12 13:35:38]  source a160: 4/10 episodes (0s)
+[2026-11-12 13:35:38]  source a060: 4/10 episodes (0s)
+[2026-11-12 13:35:39]  source ind: 4/10 episodes (0s)
+[2026-11-12 13:35:39]  source a160: 4/10 episodes (0s)
+[2026-11-12 13:35:39]  source a060: 4/10 episodes (0s)
+[2026-11-12 13:35:39]  source ind: 4/10 episodes (0s)
+[2026-11-12 13:35:39]  source a160: 4/10 episodes (0s)
+[2026-11-12 13:35:39]  source a060: 4/10 episodes (0s)
+[2026-11-12 13:35:39]  source ind: 4/10 episodes (0s)
+[2026-11-12 13:35:39]  source a160: 4/10 episodes (0s)
+[2026-11-12 13:35:39]  source a060: 4/10 episodes (0s)
+[2026-11-12 13:35:39]  source ind: 4/10 episodes (0s)
+[2026-11-12 13:35:39]  source a160: 4/10 episodes (0s)
+[2026-11-12 13:35:39]  source a060: 4/10 episodes (0s)
+[2026-11-12 13:35:39]  source ind: 4/10 episodes (0s)
+[2026-11-12 13:35:39]  source a160: 4/10 episodes (0s)
+[2026-11-12 13:35:39] aggregate: conditions ['single_ind', 'multi_60_ind_160'] seeds [0, 1, 2]
+[2026-11-12 13:35:40] aggregate done (pilot=True): verdict criterion_met
+  [ok] partial gate: metric averages only gated pairs (n_pairs 2), others reported not judged 
+[2026-11-12 13:35:40] aggregate: conditions ['single_ind', 'multi_60_ind_160'] seeds [0, 1, 2]
+[2026-11-12 13:35:40] aggregate done (pilot=True): verdict not_evaluable
+[2026-11-12 13:35:40] aggregate: conditions ['single_ind', 'multi_60_ind_160'] seeds [0, 1, 2]
+[2026-11-12 13:35:41] aggregate done (pilot=True): verdict not_evaluable
+  [ok] no pair passes the gate: not_evaluable (pair values still reported) 
+[2026-11-12 13:35:41] aggregate: conditions ['single_ind', 'multi_60_ind_160'] seeds [0, 1, 2]
+[2026-11-12 13:35:41] aggregate done (pilot=True): verdict not_evaluable
+  [ok] a missing (a) unit -> not_evaluable, listed in missing_units 
+[2026-11-12 13:35:41]  source a060: 4/10 episodes (0s)
+[2026-11-12 13:35:41]  source ind: 4/10 episodes (0s)
+[2026-11-12 13:35:41]  source a160: 4/10 episodes (0s)
+[2026-11-12 13:35:41]  source a060: 4/10 episodes (0s)
+[2026-11-12 13:35:41]  source ind: 4/10 episodes (0s)
+[2026-11-12 13:35:41]  source a160: 4/10 episodes (0s)
+[2026-11-12 13:35:41]  source a060: 4/10 episodes (0s)
+[2026-11-12 13:35:41]  source ind: 4/10 episodes (0s)
+[2026-11-12 13:35:42]  source a160: 4/10 episodes (0s)
+[2026-11-12 13:35:42]  source a060: 4/10 episodes (0s)
+[2026-11-12 13:35:42]  source ind: 4/10 episodes (0s)
+[2026-11-12 13:35:42]  source a160: 4/10 episodes (0s)
+[2026-11-12 13:35:42]  source a060: 4/10 episodes (0s)
+[2026-11-12 13:35:42]  source ind: 4/10 episodes (0s)
+[2026-11-12 13:35:42]  source a160: 4/10 episodes (0s)
+[2026-11-12 13:35:42]  source a060: 4/10 episodes (0s)
+[2026-11-12 13:35:42]  source ind: 4/10 episodes (0s)
+[2026-11-12 13:35:42]  source a160: 4/10 episodes (0s)
+[2026-11-12 13:35:42] aggregate: conditions ['single_ind', 'multi_60_ind_160'] seeds [0, 1, 2]
+[2026-11-12 13:35:42] aggregate done (pilot=True): verdict not_evaluable
+  [ok] fit record missing -> not_evaluable 
+  [ok] pilot logic: config pilot false + experiment results dir + no overrides -> no reasons; each override adds a reason 
+F  toy world model: compute_unit, determinism, batch invariance
+[2026-11-12 13:35:42]  source a060: 4/10 episodes (0s)
+[2026-11-12 13:35:43]  source ind: 4/10 episodes (0s)
+[2026-11-12 13:35:43]  source a160: 4/10 episodes (0s)
+[2026-11-12 13:35:43]  source a060: 10/10 episodes (0s)
+[2026-11-12 13:35:43]  source ind: 10/10 episodes (0s)
+[2026-11-12 13:35:43]  source a160: 10/10 episodes (0s)
+[2026-11-12 13:35:43]  source a060: 4/10 episodes (0s)
+[2026-11-12 13:35:44]  source ind: 4/10 episodes (0s)
+[2026-11-12 13:35:44]  source a160: 4/10 episodes (1s)
+  [ok] compute_unit shapes: real (10,), fake (20, 10), rand (20, 10), resp (10,) per directed pair, 6 pairs x 4 arrays x 2 predictors 
+  [ok] deterministic (same inputs twice) and batch-size invariant (4 vs 10 episodes) 
+  [ok] trained and random-init predictors give different values 
+  [ok] all values finite 
+     toy trained real moved (a060>ind) mean 1.139, fake mean -0.013 (NOT results)
+G  config consistency, attempts, preflight
+  [ok] config consistency with 013/002 (13 checks) []
+  [ok] changed bootstrap seed / fake-swap seed / gate threshold are detected ['controls (2026-11-12): fake swap 20 repeats seed 15000, random directions 20 seed 13000, random_init, comparator fake_swap', 'gate (2026-11-12): split-half cosine >= 0.5', 'success (2026-11-12): min_seeds 2, ci 0.90, min_moved 0.10, b>a, reverse sign, mean over gated pairs, bootstrap 2000 seed 14000 episode']
+  [ok] config: seeds explicit (global 0, train seeds, random-init 1234, fake swap 15000, random directions 13000, bootstrap 14000) and pilot flag true 
+  [ok] attempts: after 3 consecutive failures the 4th run is refused (max_attempts 3) 
+  [ok] preflight: run dir without the exp002_ prefix is not accepted, message names the expected folder 
+  [ok] preflight: missing fit result is reported (measure needs `fit` first) 
+  [ok] part file names distinct per (condition, seed) 
+selftest summary: passed=73 failed=0 skipped=0
