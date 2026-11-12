@@ -1,7 +1,7 @@
 name: "015_size_interchange"
 hypothesis: "notes/hypotheses.md 015 (Size interchange). 가설·설정 사용자 확정 2026-11-12. 사용자가 Colab 에서 직접 실행"
 seed: 0
-pilot: true                      # 본 실행 전까지 true (사람이 바꾼다)
+pilot: false                     # 사용자 지시 2026-11-12: 본 실행 (Colab L4, Claude 가 colab CLI 로 실행)
 
 base:
   config002: "../002_single_size_sweep/config.yaml"   # 데이터, 체크포인트, 레벨 역할 (읽기만)
